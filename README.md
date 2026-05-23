@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍽️ GastroCocha — Guía Gastronómica de Cochabamba
 
-## Getting Started
+Descubre los mejores platos típicos y restaurantes de las 16 provincias de Cochabamba, Bolivia. Con chatbot inteligente que recomienda por ubicación y presupuesto.
 
-First, run the development server:
+## 🚀 Deploy en 5 minutos
+
+### 1. Supabase (Base de datos gratuita)
+1. Ir a [supabase.com](https://supabase.com) → Create new project
+2. Ir a **SQL Editor** → pegar el contenido de `supabase-setup.sql` → Run
+3. Ir a **Settings → API** → copiar `URL` y `anon key`
+
+### 2. Vercel (Hosting gratuito)
+1. Subir este repo a GitHub
+2. Ir a [vercel.com](https://vercel.com) → Import → seleccionar el repo
+3. En **Environment Variables**, agregar:
+   - `NEXT_PUBLIC_SUPABASE_URL` = tu URL de Supabase
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = tu anon key
+4. Click **Deploy** ✅
+
+### 3. DeepSeek (Chatbot IA — opcional)
+1. Ir a [platform.deepseek.com](https://platform.deepseek.com)
+2. Crear API key → agregar en Vercel como `DEEPSEEK_API_KEY`
+3. Sin esta key, el chatbot funciona con respuestas inteligentes pre-programadas
+
+## 🧑‍💻 Desarrollo local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Abre http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Credenciales de prueba
+- **Admin**: `admin@gastrococha.bo` / `admin123`
+- **Usuario**: `demo@gastrococha.bo` / `demo123`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Estructura
+```
+gastro-next/
+├── app/                    # Páginas y API routes
+│   ├── page.tsx           # Home
+│   ├── login/             # Login/registro
+│   ├── plato/[slug]/      # Detalle de plato
+│   ├── provincia/[slug]/  # Detalle de provincia
+│   ├── ranking/           # Ranking global
+│   ├── registrar-negocio/ # Formulario público (preparado)
+│   ├── admin/             # Panel admin (protegido)
+│   └── api/               # Chatbot + Auth endpoints
+├── components/            # Componentes reutilizables
+├── lib/                   # Lógica de negocio
+│   ├── data.ts           # Capa de datos (mock/Supabase)
+│   ├── auth.ts           # Autenticación
+│   ├── seed-data.ts      # 16 provincias + platos
+│   └── utils.ts          # Haversine, formateo
+└── supabase-setup.sql    # SQL listo para Supabase
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ✨ Funcionalidades
+- 🗺️ **16 provincias** de Cochabamba con platos típicos
+- 🤖 **Chatbot inteligente** por ubicación, presupuesto y provincia
+- 🛡️ **Panel admin** con moderación de reseñas y solicitudes
+- 📋 **Registro de negocios** preparado (activable por admin)
+- ⭐ **Ranking** y reseñas de platos y restaurantes
+- 📱 **Responsive** — funciona en móvil y desktop
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 💰 Costo
+| Servicio | Costo |
+|---|---|
+| Vercel (hosting) | **$0** |
+| Supabase (DB) | **$0** |
+| DeepSeek (chatbot) | **~$0.50/mes** |
