@@ -102,7 +102,10 @@ export function InteractiveMap() {
           <div style="font-family: var(--font-sans); padding: 2px;">
             <strong style="color: var(--color-primary); font-size: 14px;">${place.nombre}</strong>
             <p style="margin: 4px 0 0; font-size: 12px; color: var(--color-text-muted);">${place.direccion || ""}</p>
-            <a href="/plato/silpancho#map" style="display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 600; color: white; background: var(--color-primary); padding: 4px 8px; border-radius: 6px; text-decoration: none;">Ver Platos</a>
+            <div style="display: flex; gap: 6px; margin-top: 8px;">
+              <a href="/ranking" style="display: inline-block; font-size: 11px; font-weight: 600; color: white; background: var(--color-primary); padding: 4px 8px; border-radius: 6px; text-decoration: none;">Ver Platos</a>
+              <a href="https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}" target="_blank" rel="noopener noreferrer" style="display: inline-block; font-size: 11px; font-weight: 600; color: var(--color-primary-dark); background: rgba(220, 38, 38, 0.08); border: 1px solid rgba(220, 38, 38, 0.15); padding: 3px 8px; border-radius: 6px; text-decoration: none;">🗺️ Abrir Maps</a>
+            </div>
           </div>
         `);
         markersGroupRef.current?.addLayer(marker);
@@ -225,7 +228,7 @@ export function InteractiveMap() {
 
           if (nearest.length > 0 && mapRef.current) {
             const listHtml = nearest
-              .map((c: any) => `• <strong>${c.nombre}</strong> (${c.km.toFixed(2)} km)`)
+              .map((c: any) => `• <strong>${c.nombre}</strong> (${c.km.toFixed(2)} km) <a href="https://www.google.com/maps/search/?api=1&query=${c.lat},${c.lng}" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); font-weight: 600; text-decoration: underline; font-size: 11px; margin-left: 4px;">Ir 🗺️</a>`)
               .join("<br>");
             
             L.popup()

@@ -105,19 +105,39 @@ export default async function PlatoPage({ params }: { params: Promise<{ slug: st
           </h2>
           <div style={{ display: "grid", gap: "0.75rem" }}>
             {lugares.map((lugar) => (
-              <div key={lugar.id} className="card" style={{ padding: "1rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.75rem" }}>
+              <div key={lugar.id} className="card" style={{ padding: "1rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
                 <div>
                   <div style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{lugar.nombre}</div>
                   {lugar.direccion && <div style={{ color: "var(--color-text-muted)", fontSize: "0.8rem", marginTop: 2 }}>{lugar.direccion}</div>}
                   {lugar.telefono && <div style={{ color: "var(--color-text-muted)", fontSize: "0.8rem" }}>📞 {lugar.telefono}</div>}
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
                   {lugar.pivot?.precio_aproximado && (
                     <span className="badge badge-primary">{lugar.pivot.precio_aproximado} Bs</span>
                   )}
                   {lugar.pivot?.especialidad && (
                     <span className="badge badge-green">⭐ Especialidad</span>
                   )}
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${lugar.lat},${lugar.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: "0.8rem",
+                      padding: "0.4rem 0.8rem",
+                      textDecoration: "none",
+                      borderRadius: "8px",
+                      color: "var(--color-primary-dark)",
+                      background: "rgba(220, 38, 38, 0.06)",
+                      border: "1px solid rgba(220, 38, 38, 0.12)",
+                    }}
+                  >
+                    🗺️ Cómo llegar
+                  </a>
                 </div>
               </div>
             ))}
