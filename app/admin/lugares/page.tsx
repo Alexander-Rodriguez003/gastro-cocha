@@ -14,12 +14,13 @@ interface LugarRow {
   lng: number;
   activo: boolean;
   aprobado: boolean;
+  imagen_url?: string | null;
 }
 
 export default function AdminLugaresPage() {
   const [search, setSearch] = useState("");
   const [lugares, setLugares] = useState<LugarRow[]>(
-    LUGARES.map((l) => ({
+    LUGARES.map((l: any) => ({
       nombre: l.nombre,
       slug: l.slug,
       provincia_slug: l.provincia_slug,
@@ -29,6 +30,7 @@ export default function AdminLugaresPage() {
       lng: l.lng,
       activo: l.activo,
       aprobado: l.aprobado,
+      imagen_url: l.imagen_url || null,
     }))
   );
 
@@ -64,6 +66,22 @@ export default function AdminLugaresPage() {
     setEditingLugar(null);
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (editingLugar) {
+          setEditingLugar({
+            ...editingLugar,
+            imagen_url: reader.result as string
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleCreateLugar = () => {
     const nuevoSlug = `nuevo-local-${Date.now()}`;
     const nuevo: LugarRow = {
@@ -76,6 +94,7 @@ export default function AdminLugaresPage() {
       lng: -66.1568,
       activo: true,
       aprobado: true,
+      imagen_url: null,
     };
     setLugares((prev) => [nuevo, ...prev]);
     setEditingLugar(nuevo);
@@ -174,6 +193,40 @@ export default function AdminLugaresPage() {
 
             {/* Modal Body */}
             <form onSubmit={handleSaveEdit} style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.85rem", overflowY: "auto", maxHeight: "80vh" }}>
+              {/* Image Preview & Upload */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginBottom: "0.5rem" }}>
+                <div style={{
+                  width: 90, height: 90, borderRadius: 12, overflow: "hidden",
+                  background: "#E7E5E4", display: "flex", alignItems: "center", justifyContent: "center",
+                  border: "2px dashed rgba(217, 119, 6, 0.3)"
+                }}>
+                  {editingLugar.imagen_url ? (
+                    <img src={editingLugar.imagen_url} alt="Vista previa" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <span style={{ fontSize: "2rem" }}>📍</span>
+                  )}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, width: "100%" }}>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-primary-dark)", textAlign: "center" }}>
+                    Subir foto del local
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{ fontSize: "0.75rem", alignSelf: "center", cursor: "pointer" }}
+                  />
+                  <span style={{ fontSize: "0.7rem", color: "#78716C", textAlign: "center" }}>o pega un enlace de internet abajo:</span>
+                  <input
+                    type="text"
+                    placeholder="https://ejemplo.com/foto-restaurante.jpg"
+                    value={editingLugar.imagen_url || ""}
+                    onChange={(e) => setEditingLugar({ ...editingLugar, imagen_url: e.target.value })}
+                    style={{ padding: "0.45rem 0.65rem", borderRadius: 8, border: "1px solid #E7E5E4", outline: "none", fontSize: "0.8rem", width: "100%" }}
+                  />
+                </div>
+              </div>
+
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#78716C" }}>Nombre del Local</label>
                 <input

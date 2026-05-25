@@ -11,18 +11,20 @@ interface PlatoRow {
   precio_referencial: number;
   destacado: boolean;
   activo: boolean;
+  imagen_url?: string | null;
 }
 
 export default function AdminPlatosPage() {
   const [search, setSearch] = useState("");
   const [platos, setPlatos] = useState<PlatoRow[]>(
-    PLATOS.map((p) => ({
+    PLATOS.map((p: any) => ({
       nombre: p.nombre,
       slug: p.slug,
       provincia_slug: p.provincia_slug,
       precio_referencial: p.precio_referencial,
       destacado: p.destacado,
       activo: true,
+      imagen_url: p.imagen_url || null,
     }))
   );
 
@@ -64,6 +66,22 @@ export default function AdminPlatosPage() {
     setEditingPlato(null);
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (editingPlato) {
+          setEditingPlato({
+            ...editingPlato,
+            imagen_url: reader.result as string
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleCreatePlato = () => {
     const nuevoSlug = `nuevo-plato-${Date.now()}`;
     const nuevo: PlatoRow = {
@@ -73,6 +91,7 @@ export default function AdminPlatosPage() {
       precio_referencial: 25,
       destacado: false,
       activo: true,
+      imagen_url: null,
     };
     setPlatos((prev) => [nuevo, ...prev]);
     setEditingPlato(nuevo);
@@ -179,7 +198,41 @@ export default function AdminPlatosPage() {
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleSaveEdit} style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <form onSubmit={handleSaveEdit} style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.85rem", overflowY: "auto", maxHeight: "80vh" }}>
+              {/* Image Preview & Upload */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginBottom: "0.5rem" }}>
+                <div style={{
+                  width: 90, height: 90, borderRadius: 12, overflow: "hidden",
+                  background: "#E7E5E4", display: "flex", alignItems: "center", justifyContent: "center",
+                  border: "2px dashed rgba(217, 119, 6, 0.3)"
+                }}>
+                  {editingPlato.imagen_url ? (
+                    <img src={editingPlato.imagen_url} alt="Vista previa" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <span style={{ fontSize: "2rem" }}>🍽️</span>
+                  )}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, width: "100%" }}>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-primary-dark)", textAlign: "center" }}>
+                    Subir foto desde tu PC
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{ fontSize: "0.75rem", alignSelf: "center", cursor: "pointer" }}
+                  />
+                  <span style={{ fontSize: "0.7rem", color: "#78716C", textAlign: "center" }}>o pega un enlace de internet abajo:</span>
+                  <input
+                    type="text"
+                    placeholder="https://ejemplo.com/foto-plato.jpg"
+                    value={editingPlato.imagen_url || ""}
+                    onChange={(e) => setEditingPlato({ ...editingPlato, imagen_url: e.target.value })}
+                    style={{ padding: "0.45rem 0.65rem", borderRadius: 8, border: "1px solid #E7E5E4", outline: "none", fontSize: "0.8rem", width: "100%" }}
+                  />
+                </div>
+              </div>
+
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#78716C" }}>Nombre del Plato</label>
                 <input
