@@ -195,3 +195,33 @@ export async function getAdminStats() {
     totalProvincias: provinciasDB.length,
   };
 }
+
+export async function getLugaresByProvincia(provinciaSlug?: string): Promise<Lugar[]> {
+  if (!provinciaSlug) {
+    return lugaresDB.filter(l => l.aprobado && l.activo);
+  }
+  const prov = getProvinciaBySlug(provinciaSlug);
+  if (!prov) return [];
+  return lugaresDB.filter(l => l.provincia_id === prov.id && l.aprobado && l.activo);
+}
+
+export async function getProvinciaPorCoordenadas(lat: number, lng: number): Promise<Provincia | null> {
+  const activeProvincias = provinciasDB.filter(p => p.centro_lat !== null && p.centro_lng !== null);
+  if (activeProvincias.length === 0) return null;
+
+  let nearestProv: Provincia | null = null;
+  let minDist = Infinity;
+
+  activeProvincias.forEach(p => {
+    const dx = lat - (p.centro_lat ?? 0);
+    const dy = lng - (p.centro_lng ?? 0);
+    const dist = dx * dx + dy * dy; // fast squared distance
+    if (dist < minDist) {
+      minDist = dist;
+      nearestProv = p;
+    }
+  });
+
+  return nearestProv;
+}
+
