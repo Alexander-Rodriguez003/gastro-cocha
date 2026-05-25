@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, Search, Plus, Edit, Trash2, Eye, EyeOff, X } from "lucide-react";
 import { PLATOS, PROVINCIAS } from "@/lib/seed-data";
@@ -28,7 +28,28 @@ export default function AdminPlatosPage() {
     }))
   );
 
+  const [hasMounted, setHasMounted] = useState(false);
   const [editingPlato, setEditingPlato] = useState<PlatoRow | null>(null);
+
+  // Load from localStorage on mount safely
+  useEffect(() => {
+    const saved = localStorage.getItem("gastro_platos");
+    if (saved) {
+      try {
+        setPlatos(JSON.parse(saved));
+      } catch (err) {
+        console.error("Error al cargar platos de localStorage:", err);
+      }
+    }
+    setHasMounted(true);
+  }, []);
+
+  // Save to localStorage when platos state changes
+  useEffect(() => {
+    if (hasMounted) {
+      localStorage.setItem("gastro_platos", JSON.stringify(platos));
+    }
+  }, [platos, hasMounted]);
 
   const filtered = platos.filter((p) =>
     p.nombre.toLowerCase().includes(search.toLowerCase())

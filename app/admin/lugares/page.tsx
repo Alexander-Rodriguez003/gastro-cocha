@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, Search, MapPin, Eye, EyeOff, ExternalLink, Edit, Trash2, Plus, X } from "lucide-react";
 import { LUGARES, PROVINCIAS } from "@/lib/seed-data";
@@ -34,7 +34,28 @@ export default function AdminLugaresPage() {
     }))
   );
 
+  const [hasMounted, setHasMounted] = useState(false);
   const [editingLugar, setEditingLugar] = useState<LugarRow | null>(null);
+
+  // Load from localStorage safely on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("gastro_lugares");
+    if (saved) {
+      try {
+        setLugares(JSON.parse(saved));
+      } catch (err) {
+        console.error("Error al cargar locales de localStorage:", err);
+      }
+    }
+    setHasMounted(true);
+  }, []);
+
+  // Save to localStorage when lugares change
+  useEffect(() => {
+    if (hasMounted) {
+      localStorage.setItem("gastro_lugares", JSON.stringify(lugares));
+    }
+  }, [lugares, hasMounted]);
 
   const filtered = lugares.filter((l) =>
     l.nombre.toLowerCase().includes(search.toLowerCase())
