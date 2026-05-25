@@ -20,8 +20,32 @@ export default async function PlatoPage({ params }: { params: Promise<{ slug: st
         {/* Main info */}
         <div>
           {/* Image */}
-          <div style={{ height: 280, borderRadius: "var(--radius-lg)", background: `linear-gradient(135deg, hsl(${(plato.id * 37) % 360}, 60%, 80%), hsl(${(plato.id * 73) % 360}, 50%, 70%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "5rem", marginBottom: "1.5rem" }}>
-            🍽️
+          <div
+            style={{
+              height: 320,
+              borderRadius: "var(--radius-lg)",
+              overflow: "hidden",
+              position: "relative",
+              background: `linear-gradient(135deg, hsl(${(plato.id * 37) % 360}, 60%, 80%), hsl(${(plato.id * 73) % 360}, 50%, 70%))`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "1.5rem",
+            }}
+          >
+            {plato.imagen_url ? (
+              <img
+                src={plato.imagen_url}
+                alt={plato.nombre}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+            ) : (
+              <span style={{ fontSize: "5rem" }}>🍽️</span>
+            )}
           </div>
 
           {/* Header */}

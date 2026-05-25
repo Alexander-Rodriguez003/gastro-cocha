@@ -9,19 +9,31 @@ export function PlatoCard({ plato }: { plato: Plato }) {
   return (
     <Link href={`/plato/${plato.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
       <div className="card" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        {/* Image placeholder */}
+        {/* Image */}
         <div
           style={{
             height: 180,
+            position: "relative",
+            overflow: "hidden",
             background: `linear-gradient(135deg, hsl(${(plato.id * 37) % 360}, 60%, 85%), hsl(${(plato.id * 73) % 360}, 50%, 75%))`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "3rem",
-            position: "relative",
           }}
         >
-          🍽️
+          {plato.imagen_url ? (
+            <img
+              src={plato.imagen_url}
+              alt={plato.nombre}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+          ) : (
+            <span style={{ fontSize: "3rem" }}>🍽️</span>
+          )}
           {plato.destacado && (
             <span
               className="badge badge-primary"
@@ -30,6 +42,7 @@ export function PlatoCard({ plato }: { plato: Plato }) {
                 top: 12,
                 right: 12,
                 fontSize: "0.7rem",
+                zIndex: 2,
               }}
             >
               ⭐ Destacado
