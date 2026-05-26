@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getChatbotContext } from "@/lib/data";
 
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions";
 
@@ -28,48 +29,95 @@ export async function POST(request: NextRequest) {
     const context = await getChatbotContext(user_lat, user_lng, budget);
     const systemMessage = SYSTEM_PROMPT.replace("{CONTEXT}", context || "No hay datos disponibles aún.");
 
-    // If no API key configured, return a mock response based on context
-    if (!DEEPSEEK_API_KEY) {
-      const lastUserMsg = messages.filter((m: { role: string }) => m.role === "user").pop();
-      const mockReply = generateMockReply(lastUserMsg?.content || "", context);
-      return NextResponse.json({ reply: mockReply });
+    // ---- Option A: Google AI Studio (Gemini 1.5 Flash) ----
+    if (GEMINI_API_KEY) {
+      // Map history turns to Gemini's format: user -> user, assistant -> model
+      const formattedMessages = messages.slice(-8).map((m: any) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }]
+      }));
+
+      // Ensure that the final message in the history list is from the "user" role to satisfy Gemini constraints
+      if (formattedMessages.length === 0 || formattedMessages[formattedMessages.length - 1].role !== "user") {
+        const lastUser = messages.filter((m: any) => m.role === "user").pop();
+        if (lastUser) {
+          formattedMessages.push({ role: "user", parts: [{ text: lastUser.content }] });
+        }
+      }
+
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+      
+      const res = await fetch(geminiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: formattedMessages,
+          systemInstruction: {
+            parts: [{ text: systemMessage }]
+          },
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 800,
+          }
+        })
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Gemini API error:", errorText);
+        return NextResponse.json({ reply: "Lo siento, la IA de Gemini experimentó un inconveniente temporal. Intenta de nuevo." });
+      }
+
+      const geminiData = await res.json();
+      const reply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "No pude generar una respuesta con Gemini.";
+      return NextResponse.json({ reply });
     }
 
-    // Call DeepSeek API
-    const apiMessages = [
-      { role: "system", content: systemMessage },
-      ...messages.slice(-10), // Last 10 messages for context window
-    ];
+    // ---- Option B: DeepSeek API (Optional Fallback) ----
+    if (DEEPSEEK_API_KEY) {
+      const apiMessages = [
+        { role: "system", content: systemMessage },
+        ...messages.slice(-10),
+      ];
 
-    const res = await fetch(DEEPSEEK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: apiMessages,
-        max_tokens: 500,
-        temperature: 0.7,
-      }),
-    });
+      const res = await fetch(DEEPSEEK_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: apiMessages,
+          max_tokens: 500,
+          temperature: 0.7,
+        }),
+      });
 
-    if (!res.ok) {
-      const error = await res.text();
-      console.error("DeepSeek API error:", error);
-      return NextResponse.json({ reply: "Lo siento, el servicio de IA no está disponible en este momento. Intenta más tarde." });
+      if (!res.ok) {
+        const error = await res.text();
+        console.error("DeepSeek API error:", error);
+        return NextResponse.json({ reply: "Lo siento, el servicio de IA no está disponible en este momento. Intenta más tarde." });
+      }
+
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content || "No pude generar una respuesta.";
+      return NextResponse.json({ reply });
     }
 
-    const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content || "No pude generar una respuesta.";
+    // ---- Option C: Local Conversational Smart Reply Fallback ----
+    const lastUserMsg = messages.filter((m: { role: string }) => m.role === "user").pop();
+    const mockReply = generateMockReply(lastUserMsg?.content || "", context);
+    return NextResponse.json({ reply: mockReply });
 
-    return NextResponse.json({ reply });
   } catch (error) {
     console.error("Chatbot error:", error);
     return NextResponse.json({ reply: "Hubo un error procesando tu mensaje. Intenta de nuevo." }, { status: 500 });
   }
 }
+
 
 // Smart fallback when no DeepSeek API key is set
 function generateMockReply(question: string, context: string): string {
