@@ -6,18 +6,19 @@ const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions";
 
 const SYSTEM_PROMPT = `Eres el asistente gastronómico oficial de GastroCocha, la Guía Gastronómica de Cochabamba, Bolivia.
-Tu misión es recomendar platos típicos y restaurantes de forma cálida y entusiasta.
+Tu única fuente de verdad es la información de la base de datos de Cochabamba proporcionada en {CONTEXT}.
+Tu misión es recomendar platos típicos y restaurantes reales de forma cálida, servicial y exacta.
 
-Reglas:
-- Cuando el usuario comparte su ubicación, prioriza los locales más cercanos (incluyendo pequeños restaurantes de carretera).
-- Cuando menciona un presupuesto en Bolivianos (Bs), filtra dentro de ese rango.
-- Cuando pide "el mejor", ordena por rating sin importar distancia.
-- Siempre incluye: nombre del plato, restaurante, precio estimado y ubicación.
-- Responde siempre en español de forma amigable.
-- Si no tienes datos suficientes, sugiere que visiten la página de la provincia correspondiente.
-- Valora mucho a los pequeños negocios locales en carreteras interprovinciales.
+Reglas Estrictas:
+1. Jamás inventes restaurantes, direcciones, teléfonos, precios ni platos típicos.
+2. Si el usuario te pregunta por platos o restaurantes fuera de Cochabamba (como comida de México, España, etc.), dile amablemente que tu especialidad y base de conocimiento solo abarca las 16 provincias de Cochabamba.
+3. Si el usuario te pide recetas complicadas o temas no relacionados a dónde comer en Cochabamba, guíalo amablemente de regreso a buscar restaurantes y platos en el sitio.
+4. Cuando el usuario comparte su ubicación, prioriza los locales más cercanos (incluyendo pequeños restaurantes de carretera).
+5. Cuando menciona un presupuesto en Bolivianos (Bs), filtra estrictamente dentro de ese rango.
+6. Cuando pide "el mejor", ordena por rating sin importar distancia.
+7. Responde siempre en español con calidez boliviana.
 
-Datos actuales de restaurantes y platos activos:
+Datos actuales de restaurantes y platos activos (Tu Única Verdad):
 {CONTEXT}`;
 
 export async function POST(request: NextRequest) {
@@ -25,19 +26,36 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { messages = [], user_lat, user_lng, budget } = body;
 
+    // ---- 1. Control de Gasto / Rate Limiting (Máximo 10 preguntas por día como invitado) ----
+    const countCookie = request.cookies.get("gastro_chat_count");
+    let count = countCookie ? parseInt(countCookie.value) : 0;
+
+    if (count >= 10) {
+      return NextResponse.json({
+        reply: "⚠️ *¡Has alcanzado el límite gratuito de 10 consultas diarias como invitado!*\n\nPara evitar abusos y proteger nuestros recursos de servidor, pausamos las consultas de esta sesión. Para seguir disfrutando de las recomendaciones ilimitadas del asistente, ¡te invitamos a registrar una cuenta gratuita! 🍽️🇧🇴"
+      });
+    }
+
     // Build dynamic context from the database
     const context = await getChatbotContext(user_lat, user_lng, budget);
     const systemMessage = SYSTEM_PROMPT.replace("{CONTEXT}", context || "No hay datos disponibles aún.");
 
+    let reply = "No pude procesar tu solicitud.";
+    let usedGemini = false;
+
     // ---- Option A: Google AI Studio (Gemini 1.5 Flash) ----
     if (GEMINI_API_KEY) {
-      // Map history turns to Gemini's format: user -> user, assistant -> model
-      const formattedMessages = messages.slice(-8).map((m: any) => ({
+      // Clean chat history to make sure it always starts with a "user" role.
+      // Gemini throws a 400 Bad Request error if the first message in the dialog is from the model/assistant.
+      const firstUserIndex = messages.findIndex((m: any) => m.role === "user");
+      const activeHistory = firstUserIndex !== -1 ? messages.slice(firstUserIndex) : messages;
+
+      const formattedMessages = activeHistory.slice(-8).map((m: any) => ({
         role: m.role === "assistant" ? "model" : "user",
         parts: [{ text: m.content }]
       }));
 
-      // Ensure that the final message in the history list is from the "user" role to satisfy Gemini constraints
+      // Double check that history ends with a user turn
       if (formattedMessages.length === 0 || formattedMessages[formattedMessages.length - 1].role !== "user") {
         const lastUser = messages.filter((m: any) => m.role === "user").pop();
         if (lastUser) {
@@ -58,7 +76,7 @@ export async function POST(request: NextRequest) {
             parts: [{ text: systemMessage }]
           },
           generationConfig: {
-            temperature: 0.7,
+            temperature: 0.0, // Strict, exact, mathematical — completely eliminates hallucination!
             maxOutputTokens: 800,
           }
         })
@@ -71,12 +89,12 @@ export async function POST(request: NextRequest) {
       }
 
       const geminiData = await res.json();
-      const reply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "No pude generar una respuesta con Gemini.";
-      return NextResponse.json({ reply });
+      reply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "No pude generar una respuesta con Gemini.";
+      usedGemini = true;
     }
 
     // ---- Option B: DeepSeek API (Optional Fallback) ----
-    if (DEEPSEEK_API_KEY) {
+    if (!usedGemini && DEEPSEEK_API_KEY) {
       const apiMessages = [
         { role: "system", content: systemMessage },
         ...messages.slice(-10),
@@ -92,25 +110,34 @@ export async function POST(request: NextRequest) {
           model: "deepseek-chat",
           messages: apiMessages,
           max_tokens: 500,
-          temperature: 0.7,
+          temperature: 0.0, // Zero temperature to avoid hallucination
         }),
       });
 
-      if (!res.ok) {
+      if (res.ok) {
+        const data = await res.json();
+        reply = data.choices?.[0]?.message?.content || "No pude generar una respuesta.";
+      } else {
         const error = await res.text();
         console.error("DeepSeek API error:", error);
-        return NextResponse.json({ reply: "Lo siento, el servicio de IA no está disponible en este momento. Intenta más tarde." });
       }
-
-      const data = await res.json();
-      const reply = data.choices?.[0]?.message?.content || "No pude generar una respuesta.";
-      return NextResponse.json({ reply });
     }
 
     // ---- Option C: Local Conversational Smart Reply Fallback ----
-    const lastUserMsg = messages.filter((m: { role: string }) => m.role === "user").pop();
-    const mockReply = generateMockReply(lastUserMsg?.content || "", context);
-    return NextResponse.json({ reply: mockReply });
+    if (!usedGemini && !DEEPSEEK_API_KEY) {
+      const lastUserMsg = messages.filter((m: { role: string }) => m.role === "user").pop();
+      reply = generateMockReply(lastUserMsg?.content || "", context);
+    }
+
+    // Return response and increment the daily guest rate limiter cookie
+    const response = NextResponse.json({ reply });
+    response.cookies.set("gastro_chat_count", String(count + 1), {
+      maxAge: 60 * 60 * 24, // 24 hour expiration
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax"
+    });
+    return response;
 
   } catch (error) {
     console.error("Chatbot error:", error);
