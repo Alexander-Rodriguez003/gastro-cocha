@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
       
       const res = await fetch(geminiUrl, {
         method: "POST",
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({
           contents: formattedMessages,
-          systemInstruction: {
+          system_instruction: {
             parts: [{ text: systemMessage }]
           },
           generationConfig: {
