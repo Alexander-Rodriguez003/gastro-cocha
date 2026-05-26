@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     let reply = "No pude procesar tu solicitud.";
     let usedGemini = false;
 
-    // ---- Option A: Google AI Studio (Gemini 1.5 Flash) ----
+    // ---- Option A: Google AI Studio (Gemini 2.5 Flash) ----
     if (GEMINI_API_KEY) {
       // Clean chat history to make sure it always starts with a "user" role.
       // Gemini throws a 400 Bad Request error if the first message in the dialog is from the model/assistant.
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
       
       const res = await fetch(geminiUrl, {
         method: "POST",
