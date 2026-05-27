@@ -59,6 +59,7 @@ export function Navbar() {
         <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }} className="hidden-mobile">
           <NavLink href="/provincias">Provincias</NavLink>
           <NavLink href="/ranking">Ranking</NavLink>
+          <NavLink href="/negocios">Negocios</NavLink>
           <NavLink href="/registrar-negocio">Registrar Negocio</NavLink>
 
           {user ? (
@@ -111,6 +112,7 @@ export function Navbar() {
         <div style={{ padding: "1rem 1.5rem", display: "flex", flexDirection: "column", gap: "1rem", borderTop: "1px solid #E7E5E4" }}>
           <NavLink href="/provincias" onClick={() => setOpen(false)}>Provincias</NavLink>
           <NavLink href="/ranking" onClick={() => setOpen(false)}>Ranking</NavLink>
+          <NavLink href="/negocios" onClick={() => setOpen(false)}>Negocios</NavLink>
           <NavLink href="/registrar-negocio" onClick={() => setOpen(false)}>Registrar Negocio</NavLink>
           {user ? (
             <>
