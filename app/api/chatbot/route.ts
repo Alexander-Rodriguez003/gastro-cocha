@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 
       const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
       
-      const res = await fetch(geminiUrl, {
+      let res = await fetch(geminiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -82,9 +82,33 @@ export async function POST(request: NextRequest) {
         })
       });
 
+      // ---- Fallback to Gemini 2.5 Flash Lite if Google's primary model is experiencing high demand (503) ----
+      if (!res.ok) {
+        const primaryError = await res.clone().text();
+        console.warn("Primary Gemini 2.5 Flash is busy (503/429), switching to Gemini 2.5 Flash Lite... Details:", primaryError);
+
+        const liteUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
+        res = await fetch(liteUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: formattedMessages,
+            system_instruction: {
+              parts: [{ text: systemMessage }]
+            },
+            generationConfig: {
+              temperature: 0.0,
+              maxOutputTokens: 800,
+            }
+          })
+        });
+      }
+
       if (!res.ok) {
         const errorText = await res.text();
-        console.error("Gemini API error:", errorText);
+        console.error("Gemini API error (both primary and lite failed):", errorText);
         return NextResponse.json({ reply: "Lo siento, la IA de Gemini experimentó un inconveniente temporal. Intenta de nuevo." });
       }
 
