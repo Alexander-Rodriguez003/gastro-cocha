@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getPlatosDestacados, getAllProvincias } from "@/lib/data";
 import { Star, MapPin, ChevronRight, Utensils, TrendingUp, Navigation } from "lucide-react";
-import { PlatoCard } from "@/components/PlatoCard";
+import { FeaturedPlatos } from "@/components/home/FeaturedPlatos";
 import { ProvinciaGrid } from "@/components/ProvinciaGrid";
 import { MapWrapper } from "@/components/MapWrapper";
 
@@ -88,17 +88,7 @@ export default async function Home() {
           </Link>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: "1.25rem",
-          }}
-        >
-          {destacados.map((plato) => (
-            <PlatoCard key={plato.id} plato={plato} />
-          ))}
-        </div>
+        <FeaturedPlatos initialPlatos={destacados} />
       </section>
 
       {/* ===== PROVINCIAS ===== */}

@@ -83,6 +83,70 @@ export function InteractiveMap() {
     };
   }, []);
 
+  // 1.1 Listen for AI Chatbot Agent Events (Dynamic map focusing/navigation)
+  useEffect(() => {
+    const handleAiAction = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const data = customEvent.detail;
+      if (!data) return;
+
+      if (data.action === "focus_map") {
+        const lat = Number(data.lat);
+        const lng = Number(data.lng);
+        const label = data.label || "Ubicación recomendada";
+
+        if (mapRef.current && !isNaN(lat) && !isNaN(lng)) {
+          // Scroll dynamically to map viewport smoothly
+          document.getElementById("mapa-gastronomico")?.scrollIntoView({ behavior: "smooth" });
+
+          // Smoothly pan camera to coordinates
+          mapRef.current.setView([lat, lng], 16);
+
+          // Add a beautiful special neon pulse marker for the AI action!
+          const pulseIcon = L.divIcon({
+            className: "neon-map-pulse-marker",
+            html: `<div style="
+              width: 16px;
+              height: 16px;
+              background: #10B981;
+              border: 3px solid #FFFFFF;
+              border-radius: 50%;
+              box-shadow: 0 0 15px #10B981, 0 0 30px #06B6D4;
+              position: relative;
+            ">
+              <div style="
+                position: absolute;
+                top: -12px;
+                left: -12px;
+                width: 34px;
+                height: 34px;
+                border: 2px solid #06B6D4;
+                border-radius: 50%;
+                animation: markerPulse 1.2s infinite ease-out;
+              "></div>
+            </div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+          });
+
+          const activeMarker = L.marker([lat, lng], { icon: pulseIcon }).addTo(mapRef.current);
+          activeMarker.bindPopup(`
+            <div style="font-family: var(--font-sans); padding: 4px; color: #0f172a; min-width: 160px;">
+              <strong style="color: #059669; font-size: 13px; display: flex; align-items: center; gap: 4px;">📍 ${label}</strong>
+              <p style="margin: 6px 0 0; font-size: 11px; color: #64748b;">Enfocado por Asistente GastroCocha</p>
+              <a href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank" rel="noopener noreferrer" style="margin-top: 8px; display: block; text-align: center; font-size: 10px; font-weight: 700; color: white; background: linear-gradient(135deg, #10B981, #06B6D4); padding: 6px 10px; border-radius: 6px; text-decoration: none; box-shadow: 0 4px 10px rgba(16,185,129,0.3);">🗺️ Iniciar Maps</a>
+            </div>
+          `).openPopup();
+        }
+      }
+    };
+
+    window.addEventListener("gastro_action", handleAiAction);
+    return () => {
+      window.removeEventListener("gastro_action", handleAiAction);
+    };
+  }, []);
+
   // Helper to load places markers on map
   const loadPlacesMarkers = async (slug?: string) => {
     if (!markersGroupRef.current) return;
@@ -464,6 +528,12 @@ export function InteractiveMap() {
           )}
         </div>
       </div>
+      <style>{`
+        @keyframes markerPulse {
+          0% { transform: scale(0.35); opacity: 1; }
+          100% { transform: scale(1.2); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }
