@@ -235,7 +235,11 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
             {lugares.map((lugar) => (
               <div key={lugar.id} className="card" style={{ padding: "1rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
                 <div>
-                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{lugar.nombre}</div>
+                  <Link href={`/negocio/${lugar.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }} className="hover-neon-text">
+                      {lugar.nombre} <span style={{ fontSize: "0.85rem", opacity: 0.5 }}>➜</span>
+                    </div>
+                  </Link>
                   {lugar.direccion && <div style={{ color: "var(--color-text-muted)", fontSize: "0.8rem", marginTop: 2 }}>{lugar.direccion}</div>}
                   {lugar.telefono && <div style={{ color: "var(--color-text-muted)", fontSize: "0.8rem" }}>📞 {lugar.telefono}</div>}
                 </div>
@@ -320,6 +324,14 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
         @keyframes newReviewFade {
           0% { transform: scale(0.95); background: rgba(16, 185, 129, 0.1); opacity: 0.5; }
           100% { transform: scale(1); background: transparent; opacity: 1; }
+        }
+        .hover-neon-text {
+          transition: all 0.2s ease;
+        }
+        .hover-neon-text:hover {
+          color: #10B981 !important;
+          text-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+          transform: translateX(4px);
         }
       `}</style>
     </div>

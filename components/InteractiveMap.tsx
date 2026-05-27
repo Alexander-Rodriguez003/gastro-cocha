@@ -166,9 +166,9 @@ export function InteractiveMap() {
           <div style="font-family: var(--font-sans); padding: 2px;">
             <strong style="color: var(--color-primary); font-size: 14px;">${place.nombre}</strong>
             <p style="margin: 4px 0 0; font-size: 12px; color: var(--color-text-muted);">${place.direccion || ""}</p>
-            <div style="display: flex; gap: 6px; margin-top: 8px;">
-              <a href="/ranking" style="display: inline-block; font-size: 11px; font-weight: 600; color: white; background: var(--color-primary); padding: 4px 8px; border-radius: 6px; text-decoration: none;">Ver Platos</a>
-              <a href="https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}" target="_blank" rel="noopener noreferrer" style="display: inline-block; font-size: 11px; font-weight: 600; color: var(--color-primary-dark); background: rgba(220, 38, 38, 0.08); border: 1px solid rgba(220, 38, 38, 0.15); padding: 3px 8px; border-radius: 6px; text-decoration: none;">🗺️ Abrir Maps</a>
+            <div style="display: flex; gap: 6px; margin-top: 8px; min-width: 170px;">
+              <a href="/negocio/${place.slug}" style="display: inline-block; font-size: 10px; font-weight: 700; color: white; background: #10B981; padding: 4px 8px; border-radius: 6px; text-decoration: none; box-shadow: 0 2px 5px rgba(16,185,129,0.3);">⭐ Visitar Local</a>
+              <a href="https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}" target="_blank" rel="noopener noreferrer" style="display: inline-block; font-size: 10px; font-weight: 600; color: var(--color-primary-dark); background: rgba(220, 38, 38, 0.08); border: 1px solid rgba(220, 38, 38, 0.15); padding: 3px 8px; border-radius: 6px; text-decoration: none;">🗺️ Maps</a>
             </div>
           </div>
         `);
