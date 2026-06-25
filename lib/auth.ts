@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
-import { simpleHash } from "./utils";
-import { USERS_SEED } from "./seed-data";
 import { createHmac, randomBytes } from "crypto";
-import { loadJSONData, saveJSONData } from "./db_helper";
+import { getServiceSupabase } from "./supabase";
+import type { User } from "./types";
+
+const db = () => getServiceSupabase();
 
 export interface SessionUser {
   id: number;
@@ -13,7 +14,6 @@ export interface SessionUser {
 
 const JWT_SECRET = process.env.JWT_SECRET || randomBytes(32).toString("hex");
 
-// Simple signed token to prevent tampering
 function encode(data: SessionUser): string {
   const payload = Buffer.from(JSON.stringify(data)).toString("base64");
   const signature = createHmac("sha256", JWT_SECRET).update(payload).digest("base64");
@@ -25,98 +25,38 @@ function decode(token: string): SessionUser | null {
     const parts = token.split(".");
     if (parts.length !== 2) return null;
     const [payload, signature] = parts;
-    
-    // Verify signature
     const expectedSignature = createHmac("sha256", JWT_SECRET).update(payload).digest("base64");
-    if (signature !== expectedSignature) {
-      console.warn("Intento de violación de firma en token detectado!");
-      return null;
-    }
-
+    if (signature !== expectedSignature) return null;
     return JSON.parse(Buffer.from(payload, "base64").toString("utf-8"));
   } catch {
     return null;
   }
 }
 
-// Mock user store (will be replaced by Supabase queries)
-let userIdCounter = 1;
-const defaultUsers = [
-  ...USERS_SEED.map((u) => ({
-    id: userIdCounter++,
-    name: u.name,
-    email: u.email,
-    role: u.role as "user" | "admin" | "owner",
-    passwordHash: "", // Will be set on first call
-  })),
-  {
-    id: 100,
-    name: "Juana Mamani",
-    email: "juana@comedordonajuana.com",
-    role: "owner" as const,
-    passwordHash: "",
-  },
-  {
-    id: 101,
-    name: "Carlos Quispe",
-    email: "carlos@truchaselparaiso.com",
-    role: "owner" as const,
-    passwordHash: "",
-  },
-  {
-    id: 102,
-    name: "Palacio Owner",
-    email: "silpancho@elpalaciodelsilpancho.com",
-    role: "owner" as const,
-    passwordHash: "",
-  }
-];
-
-export let usersDB: any[] = defaultUsers;
-
-export function reloadUsers() {
-  const persisted = loadJSONData();
-  if (persisted && persisted.users) {
-    usersDB = persisted.users;
-  }
-}
-
-// Initialize password hashes
-let initialized = false;
-async function initHashes() {
-  reloadUsers();
-  if (initialized) return;
-  for (const u of usersDB) {
-    if (u.passwordHash) continue;
-    const seed = USERS_SEED.find((s) => s.email === u.email);
-    if (seed) {
-      u.passwordHash = await simpleHash(seed.password);
-    } else if (u.email === "juana@comedordonajuana.com") {
-      u.passwordHash = await simpleHash("juana123");
-    } else if (u.email === "carlos@truchaselparaiso.com") {
-      u.passwordHash = await simpleHash("carlos123");
-    } else if (u.email === "silpancho@elpalaciodelsilpancho.com") {
-      u.passwordHash = await simpleHash("silpancho123");
-    }
-  }
-  initialized = true;
-  saveJSONData({ users: usersDB });
+function hashPassword(password: string): string {
+  const crypto = require("crypto");
+  return crypto.createHash("sha256").update(password + "gastro-cocha-salt").digest("hex");
 }
 
 export async function login(
   email: string,
   password: string
 ): Promise<{ user: SessionUser; token: string } | null> {
-  await initHashes();
-  const hash = await simpleHash(password);
-  const user = usersDB.find((u) => u.email === email && u.passwordHash === hash);
-  if (!user) return null;
+  const hash = hashPassword(password);
+  const { data } = await db()
+    .from("users")
+    .select("id, name, email, role")
+    .eq("email", email)
+    .eq("password_hash", hash)
+    .single();
+
+  if (!data) return null;
 
   const session: SessionUser = {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    role: data.role,
   };
   return { user: session, token: encode(session) };
 }
@@ -126,25 +66,23 @@ export async function register(
   email: string,
   password: string
 ): Promise<{ user: SessionUser; token: string } | null> {
-  await initHashes();
-  if (usersDB.find((u) => u.email === email)) return null; // Email exists
+  const { data: existing } = await db().from("users").select("id").eq("email", email).single();
+  if (existing) return null;
 
-  const hash = await simpleHash(password);
-  const newUser = {
-    id: ++userIdCounter,
-    name,
-    email,
-    role: "user" as const,
-    passwordHash: hash,
-  };
-  usersDB.push(newUser);
-  saveJSONData({ users: usersDB });
+  const hash = hashPassword(password);
+  const { data, error } = await db()
+    .from("users")
+    .insert({ name, email, password_hash: hash, role: "user" })
+    .select("id, name, email, role")
+    .single();
+
+  if (error || !data) return null;
 
   const session: SessionUser = {
-    id: newUser.id,
-    name: newUser.name,
-    email: newUser.email,
-    role: newUser.role,
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    role: data.role,
   };
   return { user: session, token: encode(session) };
 }
@@ -162,42 +100,37 @@ export async function isAdmin(): Promise<boolean> {
 }
 
 export async function getOwnersList(): Promise<any[]> {
-  await initHashes();
-  return usersDB.filter(u => u.role === "owner").map(u => ({
-    id: u.id,
-    name: u.name,
-    email: u.email,
-    role: u.role
-  }));
+  const { data } = await db()
+    .from("users")
+    .select("id, name, email, role")
+    .eq("role", "owner");
+
+  return data || [];
 }
 
 export async function createOwnerAccount(name: string, email: string, passwordPlain: string): Promise<boolean> {
-  await initHashes();
-  const existing = usersDB.find(u => u.email === email);
+  const hash = hashPassword(passwordPlain);
+  const { data: existing } = await db().from("users").select("id").eq("email", email).single();
+
   if (existing) {
-    existing.role = "owner";
-    existing.passwordHash = await simpleHash(passwordPlain);
-    saveJSONData({ users: usersDB });
-    return true;
+    const { error } = await db()
+      .from("users")
+      .update({ role: "owner", password_hash: hash })
+      .eq("id", existing.id);
+    return !error;
   }
-  
-  const hash = await simpleHash(passwordPlain);
-  usersDB.push({
-    id: 1000 + Math.floor(Math.random() * 10000),
-    name,
-    email,
-    role: "owner" as const,
-    passwordHash: hash
-  });
-  saveJSONData({ users: usersDB });
-  return true;
+
+  const { error } = await db()
+    .from("users")
+    .insert({ name, email, password_hash: hash, role: "owner" });
+  return !error;
 }
 
 export async function resetUserPassword(email: string, passwordPlain: string): Promise<boolean> {
-  await initHashes();
-  const user = usersDB.find(u => u.email === email);
-  if (!user) return false;
-  user.passwordHash = await simpleHash(passwordPlain);
-  saveJSONData({ users: usersDB });
-  return true;
+  const hash = hashPassword(passwordPlain);
+  const { error } = await db()
+    .from("users")
+    .update({ password_hash: hash })
+    .eq("email", email);
+  return !error;
 }

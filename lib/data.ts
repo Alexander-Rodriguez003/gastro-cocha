@@ -1,807 +1,574 @@
-/**
- * Mock data layer — allows the app to run locally without Supabase.
- * In production, these functions query Supabase directly.
- */
-import { PROVINCIAS, PLATOS, LUGARES, RESENAS_SEED } from './seed-data';
-import type { Provincia, Plato, Lugar, Resena, LugarConPivot } from './types';
-import { loadJSONData, saveJSONData } from "./db_helper";
+import { getServiceSupabase } from './supabase';
+import type { Provincia, Plato, Lugar, Resena, LugarConPivot, PlatoConPivot, Especialidad } from './types';
 
-// ---- Provincias ----
-let provinciaIdCounter = 1;
-const provinciasDB: Provincia[] = PROVINCIAS.map(p => ({
-  id: provinciaIdCounter++,
-  nombre: p.nombre,
-  slug: p.slug,
-  descripcion: p.descripcion,
-  centro_lat: p.centro_lat,
-  centro_lng: p.centro_lng,
-  zoom_mapa: p.zoom_mapa,
-}));
+const db = () => getServiceSupabase();
 
-function getProvinciaBySlug(slug: string) {
-  return provinciasDB.find(p => p.slug === slug);
-}
-
-// ---- Platos ----
-let platoIdCounter = 1;
-const defaultPlatos: Plato[] = PLATOS.map(p => {
-  const prov = provinciasDB.find(pr => pr.slug === p.provincia_slug);
+function mapProvincia(row: any): Provincia {
   return {
-    id: platoIdCounter++,
-    provincia_id: prov?.id ?? 1,
-    nombre: p.nombre,
-    slug: p.slug,
-    descripcion: p.descripcion,
-    historia: p.historia,
-    ingredientes: p.ingredientes,
-    precio_referencial: p.precio_referencial,
-    destacado: p.destacado,
-    activo: true,
-    promedio_rating: 4.0 + Math.random() * 0.9,
-    total_resenas: Math.floor(Math.random() * 20) + 3,
-    imagen_url: p.imagen_url,
-    provincia: prov,
+    id: row.id,
+    nombre: row.nombre,
+    slug: row.slug,
+    descripcion: row.descripcion,
+    centro_lat: row.centro_lat ? Number(row.centro_lat) : null,
+    centro_lng: row.centro_lng ? Number(row.centro_lng) : null,
+    zoom_mapa: row.zoom_mapa,
+    created_at: row.created_at,
   };
-});
+}
 
-// ---- Lugares ----
-let lugarIdCounter = 1;
-const defaultLugares: Lugar[] = LUGARES.map(l => {
-  const prov = provinciasDB.find(pr => pr.slug === l.provincia_slug);
-  let email = null;
-  if (l.slug === "el-palacio-del-silpancho") {
-    email = "silpancho@elpalaciodelsilpancho.com";
-  }
+function mapPlato(row: any): Plato {
   return {
-    id: lugarIdCounter++,
-    provincia_id: prov?.id ?? 1,
-    nombre: l.nombre,
-    slug: l.slug,
-    direccion: l.direccion,
-    referencia: l.referencia ?? null,
-    telefono: l.telefono,
-    sitio_web: null,
-    lat: l.lat,
-    lng: l.lng,
-    activo: l.activo,
-    aprobado: l.aprobado,
-    contacto_propietario: null,
-    nombre_propietario: null,
-    email_propietario: email,
-    descripcion: null,
-    imagen_url: null,
-    provincia: prov,
-    especialidades: l.slug === "el-palacio-del-silpancho" ? [
-      {
-        id: 55001,
-        nombre: "Cappuccino de Invierno",
-        precio: 18.0,
-        imagen_url: null,
-        total_resenas: 0,
-        promedio_rating: null
-      }
-    ] : []
+    id: row.id,
+    provincia_id: row.provincia_id,
+    nombre: row.nombre,
+    slug: row.slug,
+    descripcion: row.descripcion,
+    historia: row.historia,
+    ingredientes: row.ingredientes,
+    precio_referencial: row.precio_referencial ? Number(row.precio_referencial) : null,
+    destacado: row.destacado,
+    activo: row.activo,
+    promedio_rating: row.promedio_rating ? Number(row.promedio_rating) : null,
+    total_resenas: row.total_resenas ?? 0,
+    imagen_url: row.imagen_url,
+    created_at: row.created_at,
+    provincia: row.provincias ? mapProvincia(row.provincias) : undefined,
   };
-});
+}
 
-// Build plato-lugar relations
-type PlatoLugarPivot = { plato_id: number; lugar_id: number; precio_aproximado: number | null; especialidad: boolean; imagen_url?: string | null };
-const defaultPlatoLugarPivots: PlatoLugarPivot[] = [];
-LUGARES.forEach(l => {
-  const lugar = defaultLugares.find(ld => ld.slug === l.slug);
-  if (!lugar) return;
-  l.platos_slugs.forEach(ps => {
-    const plato = defaultPlatos.find(pd => pd.slug === ps.slug);
-    if (!plato) return;
-    defaultPlatoLugarPivots.push({
-      plato_id: plato.id,
-      lugar_id: lugar.id,
-      precio_aproximado: ps.precio,
-      especialidad: ps.especialidad,
-      imagen_url: null
-    });
-  });
-});
-
-// ---- Reseñas ----
-let resenaIdCounter = 1;
-const defaultResenas: Resena[] = RESENAS_SEED.map((r, index) => {
-  const plato = defaultPlatos.find(p => p.slug === r.plato_slug);
-  
-  // Distribuir las reseñas en los últimos 60 días a partir de la fecha de la sesión
-  const date = new Date("2026-06-24T12:00:00Z");
-  date.setDate(date.getDate() - (index % 60));
-  const dateStr = date.toISOString().split('T')[0];
-
+function mapLugar(row: any): Lugar {
   return {
-    id: resenaIdCounter++,
-    user_id: 2,
-    plato_id: plato?.id ?? 1,
-    lugar_id: null,
-    rating: r.rating,
-    titulo: r.titulo,
-    comentario: r.comentario,
-    fecha_visita: dateStr,
-    is_approved: r.is_approved,
-    user: { id: 2, name: 'Usuario Demo' },
+    id: row.id,
+    provincia_id: row.provincia_id,
+    nombre: row.nombre,
+    slug: row.slug,
+    direccion: row.direccion,
+    referencia: row.referencia,
+    telefono: row.telefono,
+    sitio_web: row.sitio_web,
+    lat: Number(row.lat),
+    lng: Number(row.lng),
+    activo: row.activo,
+    aprobado: row.aprobado,
+    contacto_propietario: row.contacto_propietario,
+    nombre_propietario: row.nombre_propietario,
+    email_propietario: row.email_propietario,
+    descripcion: row.descripcion,
+    imagen_url: row.imagen_url,
+    created_at: row.created_at,
+    provincia: row.provincias ? mapProvincia(row.provincias) : undefined,
+    especialidades: row.especialidades ?? [],
   };
-});
-
-// Add pending reviews for testing
-defaultResenas.push(
-  {
-    id: 100,
-    user_id: 3,
-    plato_id: 1,
-    lugar_id: null,
-    rating: 2,
-    titulo: "No me gustó",
-    comentario: "La carne estaba muy delgada y sin sabor.",
-    fecha_visita: null,
-    is_approved: false,
-    user: { id: 3, name: "Carlos P." }
-  },
-  {
-    id: 101,
-    user_id: 4,
-    plato_id: 4,
-    lugar_id: null,
-    rating: 5,
-    titulo: "Excelente atención",
-    comentario: "Doña Rosa atiende como en casa. La mejor pensión de Cochabamba sin duda.",
-    fecha_visita: null,
-    is_approved: false,
-    user: { id: 4, name: "María L." }
-  }
-);
-
-// ---- Solicitudes predeterminadas ----
-const defaultSolicitudes = [
-  {
-    id: 1, nombre: "Comedor Doña Juana", direccion: "Carretera Cbba-Oruro Km 15, al lado del puente",
-    telefono: "+591 71222333", nombre_propietario: "Juana Mamani", email_propietario: "juana@comedordonajuana.com",
-    provincia: "Quillacollo", lat: -17.41, lng: -66.35, platos_que_sirve: "Fricasé, Chicharrón, Trancapecho",
-    especialidades: "Fricasé Especial de la Casa", fecha: "2026-05-20", status: "pendiente" as const,
-  },
-  {
-    id: 2, nombre: "Truchas El Paraíso", direccion: "Entrada a Villa Tunari, curva del río",
-    telefono: "+591 71444555", nombre_propietario: "Carlos Quispe", email_propietario: "carlos@truchaselparaiso.com",
-    provincia: "Chapare", lat: -16.98, lng: -65.42, platos_que_sirve: "Trucha frita, Tambaquí, Surubí",
-    especialidades: "Tambaquí a la Leña", fecha: "2026-05-21", status: "pendiente" as const,
-  },
-];
-
-// Carga o inicialización
-export let platosDB: Plato[] = defaultPlatos;
-export let lugaresDB: Lugar[] = defaultLugares;
-export let platoLugarPivots: PlatoLugarPivot[] = defaultPlatoLugarPivots;
-export let resenasDB: Resena[] = defaultResenas;
-export let solicitudesDB: any[] = defaultSolicitudes;
-
-export function reloadData() {
-  const persisted = loadJSONData();
-  if (persisted) {
-    if (persisted.platos) {
-      // Always sync imagen_url from seed data — prevents stale null values
-      // when images are added after the database.json was first saved
-      platosDB = persisted.platos.map((p: Plato) => {
-        const seed = defaultPlatos.find(d => d.slug === p.slug);
-        return seed?.imagen_url && !p.imagen_url
-          ? { ...p, imagen_url: seed.imagen_url }
-          : p;
-      });
-    }
-    if (persisted.lugares) lugaresDB = persisted.lugares;
-    if (persisted.platoLugarPivots) platoLugarPivots = persisted.platoLugarPivots;
-    if (persisted.resenas) resenasDB = persisted.resenas;
-    if (persisted.solicitudes) solicitudesDB = persisted.solicitudes;
-  }
 }
 
-
-// Initial load
-reloadData();
-
-export function saveAllData() {
-  saveJSONData({
-    platos: platosDB,
-    lugares: lugaresDB,
-    platoLugarPivots: platoLugarPivots,
-    resenas: resenasDB,
-    solicitudes: solicitudesDB,
-  });
+function mapResena(row: any): Resena {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    plato_id: row.plato_id,
+    lugar_id: row.lugar_id,
+    rating: row.rating,
+    titulo: row.titulo,
+    comentario: row.comentario,
+    fecha_visita: row.fecha_visita,
+    is_approved: row.is_approved,
+    created_at: row.created_at,
+    especialidad_nombre: row.especialidad_nombre,
+    user: row.users ? { id: row.users.id, name: row.users.name } : undefined,
+    plato: row.platos ? mapPlato(row.platos) : undefined,
+    lugar: row.lugares ? mapLugar(row.lugares) : undefined,
+  };
 }
-
-const persisted = loadJSONData();
-if (!persisted || !persisted.lugares) {
-  saveAllData();
-}
-
-// =============================================
-// Public API functions (mock implementations)
-// =============================================
 
 export async function getAllProvincias(): Promise<Provincia[]> {
-  return provinciasDB;
+  const { data, error } = await db().from('provincias').select('*').order('nombre');
+  if (error) throw error;
+  return (data || []).map(mapProvincia);
 }
 
 export async function getProvinciaDetail(slug: string): Promise<{ provincia: Provincia; platos: Plato[] } | null> {
-  reloadData();
-  const prov = getProvinciaBySlug(slug);
-  if (!prov) return null;
-  const platos = platosDB.filter(p => p.provincia_id === prov.id && p.activo);
-  return { provincia: prov, platos };
+  const { data: prov, error } = await db().from('provincias').select('*').eq('slug', slug).single();
+  if (error || !prov) return null;
+  const { data: platos } = await db().from('platos').select('*').eq('provincia_id', prov.id).eq('activo', true);
+  return { provincia: mapProvincia(prov), platos: (platos || []).map(mapPlato) };
 }
 
 export async function getPlatosDestacados(): Promise<Plato[]> {
-  reloadData();
-  return platosDB.filter(p => p.destacado && p.activo);
+  const { data, error } = await db().from('platos').select('*, provincias(*)').eq('destacado', true).eq('activo', true);
+  if (error) throw error;
+  return (data || []).map(mapPlato);
 }
 
 export async function getPlatoDetail(slug: string): Promise<{ plato: Plato; lugares: LugarConPivot[]; resenas: Resena[] } | null> {
-  reloadData();
-  const plato = platosDB.find(p => p.slug === slug);
-  if (!plato) return null;
+  const { data: plato, error } = await db().from('platos').select('*, provincias(*)').eq('slug', slug).single();
+  if (error || !plato) return null;
 
-  const pivots = platoLugarPivots.filter(pl => pl.plato_id === plato.id);
-  const lugares: LugarConPivot[] = pivots.map(pv => {
-    const lugar = lugaresDB.find(l => l.id === pv.lugar_id)!;
-    return { ...lugar, pivot: { precio_aproximado: pv.precio_aproximado, especialidad: pv.especialidad } };
-  }).filter(l => l.aprobado && l.activo);
+  const { data: pivots } = await db()
+    .from('plato_lugar')
+    .select('*, lugares(*)')
+    .eq('plato_id', plato.id);
 
-  const resenas = resenasDB.filter(r => r.plato_id === plato.id && r.is_approved);
+  const lugares: LugarConPivot[] = (pivots || [])
+    .filter((pv: any) => pv.lugares?.aprobado && pv.lugares?.activo)
+    .map((pv: any) => ({
+      ...mapLugar(pv.lugares),
+      pivot: {
+        precio_aproximado: pv.precio_aproximado ? Number(pv.precio_aproximado) : null,
+        especialidad: pv.especialidad,
+        imagen_url: pv.imagen_url || null,
+      },
+    }));
 
-  return { plato, lugares, resenas };
+  const { data: resenas } = await db()
+    .from('resenas')
+    .select('*, users(id, name)')
+    .eq('plato_id', plato.id)
+    .eq('is_approved', true)
+    .order('created_at', { ascending: false });
+
+  return { plato: mapPlato(plato), lugares, resenas: (resenas || []).map(mapResena) };
 }
 
 export async function getLugarDetail(slug: string): Promise<{ lugar: Lugar; platos: any[]; resenas: Resena[] } | null> {
-  reloadData();
-  const lugar = lugaresDB.find(l => l.slug === slug);
-  if (!lugar || !lugar.aprobado) return null;
+  const { data: lugar, error } = await db().from('lugares').select('*, provincias(*)').eq('slug', slug).single();
+  if (error || !lugar || !lugar.aprobado) return null;
 
-  const pivots = platoLugarPivots.filter(pl => pl.lugar_id === lugar.id);
-  const platos = pivots.map(pv => {
-    const plato = platosDB.find(p => p.id === pv.plato_id);
-    if (!plato) return null;
-    return {
-      ...plato,
-      pivot: {
-        precio_aproximado: pv.precio_aproximado,
-        especialidad: pv.especialidad,
-        imagen_url: (pv as any).imagen_url || null
-      }
-    };
-  }).filter(Boolean);
+  const { data: pivots } = await db()
+    .from('plato_lugar')
+    .select('*, platos(*)')
+    .eq('lugar_id', lugar.id);
 
-  const resenas = resenasDB.filter(r => r.lugar_id === lugar.id && r.is_approved);
+  const platos = (pivots || []).map((pv: any) => ({
+    ...mapPlato(pv.platos),
+    pivot: {
+      precio_aproximado: pv.precio_aproximado ? Number(pv.precio_aproximado) : null,
+      especialidad: pv.especialidad,
+      imagen_url: pv.imagen_url || null,
+    },
+  }));
 
-  return { lugar, platos, resenas };
+  const { data: resenas } = await db()
+    .from('resenas')
+    .select('*, users(id, name)')
+    .eq('lugar_id', lugar.id)
+    .eq('is_approved', true)
+    .order('created_at', { ascending: false });
+
+  return { lugar: mapLugar(lugar), platos, resenas: (resenas || []).map(mapResena) };
 }
 
 export async function getRankingGlobal(): Promise<any[]> {
-  reloadData();
-  // 1. Get typical dishes with dynamic rating recalculation
-  const typicalRankings = platosDB.filter(p => p.activo).map(p => {
-    const reviews = resenasDB.filter(r => r.plato_id === p.id && r.is_approved);
+  const { data: platos } = await db().from('platos').select('*').eq('activo', true);
+  if (!platos) return [];
+
+  const { data: allResenas } = await db().from('resenas').select('*').eq('is_approved', true);
+
+  const typicalRankings = platos.map((p: any) => {
+    const reviews = (allResenas || []).filter((r: any) => r.plato_id === p.id);
     const count = reviews.length;
-    const avg = count > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / count : p.promedio_rating;
+    const avg = count > 0 ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / count : (p.promedio_rating ? Number(p.promedio_rating) : 4.0);
     return {
-      id: p.id,
-      nombre: p.nombre,
-      slug: p.slug,
-      descripcion: p.descripcion,
-      promedio_rating: avg,
-      total_resenas: count,
-      imagen_url: p.imagen_url,
-      es_especialidad: false,
+      id: p.id, nombre: p.nombre, slug: p.slug, descripcion: p.descripcion,
+      promedio_rating: avg, total_resenas: count, imagen_url: p.imagen_url, es_especialidad: false,
     };
   });
 
-  // 2. Compile custom specialties from places
-  const specialtiesMap = new Map<string, { nombre: string; reviews: number[]; lugaresIds: number[] }>();
-
-  // Collect from reviews that have specialty_nombre
-  resenasDB.filter(r => r.is_approved && r.especialidad_nombre).forEach(r => {
+  const specialtiesMap = new Map<string, { nombre: string; reviews: any[]; lugaresIds: number[] }>();
+  (allResenas || []).filter((r: any) => r.especialidad_nombre).forEach((r: any) => {
     const name = r.especialidad_nombre!.trim();
     const key = name.toLowerCase();
-    if (!specialtiesMap.has(key)) {
-      specialtiesMap.set(key, { nombre: name, reviews: [], lugaresIds: [] });
-    }
+    if (!specialtiesMap.has(key)) specialtiesMap.set(key, { nombre: name, reviews: [], lugaresIds: [] });
     const item = specialtiesMap.get(key)!;
-    item.reviews.push(r.rating);
-    if (r.lugar_id && !item.lugaresIds.includes(r.lugar_id)) {
-      item.lugaresIds.push(r.lugar_id);
-    }
+    item.reviews.push(r);
+    if (r.lugar_id && !item.lugaresIds.includes(r.lugar_id)) item.lugaresIds.push(r.lugar_id);
   });
 
-  // Also collect any registered specialties in places even if they don't have reviews yet
-  lugaresDB.forEach(l => {
-    if (l.especialidades) {
-      l.especialidades.forEach(esp => {
-        const key = esp.nombre.toLowerCase();
-        if (!specialtiesMap.has(key)) {
-          specialtiesMap.set(key, { nombre: esp.nombre, reviews: [], lugaresIds: [] });
-        }
-        const item = specialtiesMap.get(key)!;
-        if (!item.lugaresIds.includes(l.id)) {
-          item.lugaresIds.push(l.id);
-        }
-      });
-    }
+  const { data: lugares } = await db().from('lugares').select('*');
+  (lugares || []).forEach((l: any) => {
+    const espList: Especialidad[] = l.especialidades || [];
+    espList.forEach((esp: Especialidad) => {
+      const key = esp.nombre.toLowerCase();
+      if (!specialtiesMap.has(key)) specialtiesMap.set(key, { nombre: esp.nombre, reviews: [], lugaresIds: [] });
+      const item = specialtiesMap.get(key)!;
+      if (!item.lugaresIds.includes(l.id)) item.lugaresIds.push(l.id);
+    });
   });
 
   const specialtyRankings = Array.from(specialtiesMap.values()).map((sp, idx) => {
     const count = sp.reviews.length;
-    const avg = count > 0 ? sp.reviews.reduce((sum, r) => sum + r, 0) / count : 4.0; // default 4.0
-
-    // Find highest rated restaurant offering this specialty
-    let bestLugar: Lugar | null = null;
+    const avg = count > 0 ? sp.reviews.reduce((sum, r) => sum + r.rating, 0) / count : 4.0;
+    let bestLugar: any = null;
     let maxRating = -1;
     let customImage: string | null = null;
-
-    sp.lugaresIds.forEach(lId => {
-      const lugar = lugaresDB.find(l => l.id === lId);
+    sp.lugaresIds.forEach((lId: number) => {
+      const lugar = (lugares || []).find((l: any) => l.id === lId);
       if (lugar) {
-        const lReviews = resenasDB.filter(r => r.lugar_id === lugar.id && r.is_approved);
-        const lAvg = lReviews.length > 0 ? lReviews.reduce((sum, r) => sum + r.rating, 0) / lReviews.length : 4.0;
-        
-        const espObj = lugar.especialidades?.find(e => e.nombre.toLowerCase() === sp.nombre.toLowerCase());
-        const espImg = espObj?.imagen_url || lugar.imagen_url;
-
-        if (lAvg > maxRating) {
-          maxRating = lAvg;
-          bestLugar = lugar;
-          customImage = espImg;
-        }
+        const lReviews = (allResenas || []).filter((r: any) => r.lugar_id === lugar.id);
+        const lAvg = lReviews.length > 0 ? lReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / lReviews.length : 4.0;
+        const espObj = (lugar.especialidades || []).find((e: Especialidad) => e.nombre.toLowerCase() === sp.nombre.toLowerCase());
+        if (lAvg > maxRating) { maxRating = lAvg; bestLugar = lugar; customImage = espObj?.imagen_url || lugar.imagen_url; }
       }
     });
-
     return {
-      id: 10000 + idx,
-      nombre: sp.nombre,
+      id: 10000 + idx, nombre: sp.nombre,
       slug: sp.nombre.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-      descripcion: `Especialidad de la casa, destacada en: ${bestLugar ? (bestLugar as Lugar).nombre : "Varios locales"}.`,
-      promedio_rating: avg,
-      total_resenas: count,
-      imagen_url: customImage || "/images/placeholder-plate.jpg",
-      es_especialidad: true,
-      lugar_slug: bestLugar ? (bestLugar as Lugar).slug : null,
+      descripcion: `Especialidad de la casa, destacada en: ${bestLugar ? bestLugar.nombre : "Varios locales"}.`,
+      promedio_rating: avg, total_resenas: count, imagen_url: customImage || "/images/placeholder-plate.jpg",
+      es_especialidad: true, lugar_slug: bestLugar ? bestLugar.slug : null,
     };
   });
 
-  // Combine and sort by rating descending, then by reviews count
-  return [...typicalRankings, ...specialtyRankings]
-    .sort((a, b) => {
-      const rA = a.promedio_rating ?? 0;
-      const rB = b.promedio_rating ?? 0;
-      if (rB !== rA) return rB - rA;
-      return b.total_resenas - a.total_resenas;
-    });
+  return [...typicalRankings, ...specialtyRankings].sort((a: any, b: any) => {
+    const rA = a.promedio_rating ?? 0;
+    const rB = b.promedio_rating ?? 0;
+    if (rB !== rA) return rB - rA;
+    return b.total_resenas - a.total_resenas;
+  });
 }
 
 export async function getChatbotContext(lat?: number, lng?: number, budget?: number): Promise<string> {
-  reloadData();
-  let results = platoLugarPivots.map(pv => {
-    const plato = platosDB.find(p => p.id === pv.plato_id);
-    const lugar = lugaresDB.find(l => l.id === pv.lugar_id);
-    if (!plato || !lugar || !lugar.aprobado || !lugar.activo) return null;
-    const prov = provinciasDB.find(pr => pr.id === plato.provincia_id);
-    return { plato: plato.nombre, lugar: lugar.nombre, direccion: lugar.direccion, precio: pv.precio_aproximado, rating: plato.promedio_rating, lat: lugar.lat, lng: lugar.lng, provincia: prov?.nombre };
-  }).filter(Boolean) as Array<{ plato: string; lugar: string; direccion: string | null; precio: number | null; rating: number | null; lat: number; lng: number; provincia: string | undefined }>;
+  let query = db()
+    .from('plato_lugar')
+    .select('*, platos(*), lugares(*)');
 
-  if (budget) {
-    results = results.filter(r => r.precio !== null && r.precio <= budget);
-  }
+  const { data: pivots } = await query;
+
+  let results = (pivots || [])
+    .filter((pv: any) => pv.lugares?.aprobado && pv.lugares?.activo)
+    .map((pv: any) => {
+      const plato = pv.platos;
+      const lugar = pv.lugares;
+      return {
+        plato: plato?.nombre, lugar: lugar?.nombre, direccion: lugar?.direccion,
+        precio: pv.precio_aproximado ? Number(pv.precio_aproximado) : null,
+        rating: plato?.promedio_rating ? Number(plato.promedio_rating) : null,
+        lat: lugar?.lat ? Number(lugar.lat) : 0,
+        lng: lugar?.lng ? Number(lugar.lng) : 0,
+      };
+    }).filter(Boolean);
+
+  if (budget) results = results.filter(r => r.precio !== null && r.precio! <= budget);
 
   if (lat && lng) {
     const { haversine } = await import('./utils');
     results = results.map(r => ({ ...r, distancia_km: haversine(lat, lng, r.lat, r.lng) }))
-      .sort((a, b) => (a.distancia_km ?? 999) - (b.distancia_km ?? 999));
+      .sort((a: any, b: any) => (a.distancia_km ?? 999) - (b.distancia_km ?? 999));
   }
 
-  return results.slice(0, 15).map(r => {
-    let line = `- ${r.plato} en "${r.lugar}" (${r.provincia})`;
+  return results.slice(0, 15).map((r: any) => {
+    let line = `- ${r.plato} en "${r.lugar}"`;
     if (r.precio) line += ` | ${r.precio} Bs`;
     if (r.rating) line += ` | ★${r.rating.toFixed(1)}`;
-    if ('distancia_km' in r) line += ` | ${(r as { distancia_km: number }).distancia_km.toFixed(1)} km`;
+    if (r.distancia_km) line += ` | ${r.distancia_km.toFixed(1)} km`;
     if (r.direccion) line += ` | ${r.direccion}`;
     return line;
   }).join('\n');
 }
+
 export async function getStaticGastroDatabase(): Promise<string> {
-  reloadData();
+  const { data: provincias } = await db().from('provincias').select('*');
+  if (!provincias) return '';
   const result: string[] = [];
-  provinciasDB.forEach(prov => {
-    const provPlatos = platosDB.filter(p => p.provincia_id === prov.id);
-    if (provPlatos.length > 0) {
-      const platosList = provPlatos.map(p => p.nombre).join(", ");
-      result.push(`- Provincia ${prov.nombre}: ${platosList}`);
-    } else {
-      result.push(`- Provincia ${prov.nombre}: (Sin platos típicos registrados aún)`);
+  for (const prov of provincias) {
+    const { data: platosData } = await db().from('platos').select('nombre').eq('provincia_id', prov.id);
+    if (platosData && platosData.length > 0) {
+      result.push(`- Provincia ${prov.nombre}: ${platosData.map(p => p.nombre).join(', ')}`);
     }
-  });
-  return result.join("\n");
+  }
+  return result.join('\n');
 }
 
-// ---- Solicitudes de Registro (Server-side in-memory store) ----
 export interface Solicitud {
-  id: number;
-  nombre: string;
-  direccion: string;
-  telefono: string;
-  nombre_propietario: string;
-  email_propietario: string | null;
-  provincia: string;
-  lat: number;
-  lng: number;
-  platos_que_sirve: string;
-  especialidades: string | null;
-  fecha: string;
-  status: "pendiente" | "aprobado" | "rechazado";
+  id: number; nombre: string; direccion: string; telefono: string;
+  nombre_propietario: string; email_propietario: string | null;
+  provincia: string; lat: number; lng: number;
+  platos_que_sirve: string; especialidades: string | null;
+  fecha: string; status: "pendiente" | "aprobado" | "rechazado";
 }
 
 export async function getSolicitudes(): Promise<Solicitud[]> {
-  reloadData();
-  return solicitudesDB;
+  const { data, error } = await db().from('solicitudes').select('*').order('fecha', { ascending: false });
+  if (error) throw error;
+  return (data || []).map((r: any) => ({
+    ...r, lat: Number(r.lat), lng: Number(r.lng),
+  }));
 }
 
 export async function createSolicitud(data: Omit<Solicitud, "id" | "fecha" | "status">): Promise<Solicitud> {
-  reloadData();
-  const newId = solicitudesDB.length > 0 ? Math.max(...solicitudesDB.map(s => s.id)) + 1 : 1;
-  const newSol: Solicitud = {
-    ...data,
-    id: newId,
-    fecha: new Date().toISOString().split("T")[0],
-    status: "pendiente"
-  };
-  solicitudesDB.push(newSol);
-  saveAllData();
-  return newSol;
+  const { data: newSol, error } = await db().from('solicitudes').insert({
+    ...data, status: 'pendiente', fecha: new Date().toISOString().split('T')[0],
+  }).select().single();
+  if (error) throw error;
+  return { ...newSol, lat: Number(newSol.lat), lng: Number(newSol.lng) };
 }
 
 export async function updateSolicitudStatus(id: number, status: "aprobado" | "rechazado"): Promise<boolean> {
-  reloadData();
-  const sol = solicitudesDB.find(s => s.id === id);
-  if (!sol) return false;
-  sol.status = status;
+  const { error } = await db().from('solicitudes').update({ status }).eq('id', id);
+  if (error) throw error;
 
   if (status === "aprobado") {
-    // Dynamically insert into lugaresDB!
-    const newLugarId = lugaresDB.length > 0 ? Math.max(...lugaresDB.map(l => l.id)) + 1 : 1;
-    const slug = sol.nombre.toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove accents
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+    const { data: sol } = await db().from('solicitudes').select('*').eq('id', id).single();
+    if (sol) {
+      const slug = sol.nombre.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-    const prov = provinciasDB.find(p => p.nombre.toLowerCase() === sol.provincia.toLowerCase()) || provinciasDB[0];
+      const { data: provincias } = await db().from('provincias').select('*');
+      const prov = provincias?.find((p: any) => p.nombre.toLowerCase() === sol.provincia.toLowerCase()) || provincias?.[0];
 
-    const especialidadesList = sol.especialidades
-      ? sol.especialidades.split(",").map((esp: string, i: number) => ({
-          id: 50000 + i + Math.floor(Math.random() * 1000),
-          nombre: esp.trim(),
-          precio: 25.0,
-          imagen_url: null,
-          total_resenas: 0,
-          promedio_rating: null,
-        }))
-      : [];
+      const especialidadesList = sol.especialidades
+        ? sol.especialidades.split(",").map((esp: string, i: number) => ({
+            id: 50000 + i + Math.floor(Math.random() * 1000),
+            nombre: esp.trim(), precio: 25.0, imagen_url: null, total_resenas: 0, promedio_rating: null,
+          }))
+        : [];
 
-    const newLugar: Lugar = {
-      id: newLugarId,
-      provincia_id: prov.id,
-      nombre: sol.nombre,
-      slug,
-      direccion: sol.direccion,
-      referencia: null,
-      telefono: sol.telefono,
-      sitio_web: null,
-      lat: sol.lat,
-      lng: sol.lng,
-      activo: true,
-      aprobado: true,
-      contacto_propietario: sol.nombre_propietario,
-      nombre_propietario: sol.nombre_propietario,
-      email_propietario: sol.email_propietario,
-      descripcion: null,
-      imagen_url: null,
-      provincia: prov,
-      especialidades: especialidadesList,
-    };
-    lugaresDB.push(newLugar);
+      const { data: newLugar } = await db().from('lugares').insert({
+        provincia_id: prov?.id || 1, nombre: sol.nombre, slug, direccion: sol.direccion,
+        telefono: sol.telefono, lat: Number(sol.lat), lng: Number(sol.lng),
+        activo: true, aprobado: true, contacto_propietario: sol.nombre_propietario,
+        nombre_propietario: sol.nombre_propietario, email_propietario: sol.email_propietario,
+        especialidades: especialidadesList,
+      }).select().single();
+      if (!newLugar) return true;
 
-    // Map plates associated with this restaurant
-    const platosList = sol.platos_que_sirve.split(",").map((p: string) => p.trim().toLowerCase());
-    platosList.forEach((platoName: string) => {
-      const plato = platosDB.find(p => p.nombre.toLowerCase().includes(platoName) || platoName.includes(p.nombre.toLowerCase()));
-      if (plato) {
-        platoLugarPivots.push({
-          plato_id: plato.id,
-          lugar_id: newLugar.id,
-          precio_aproximado: plato.precio_referencial,
-          especialidad: false,
-          imagen_url: null
-        } as any);
+      const { data: platos } = await db().from('platos').select('*');
+      const platosList = sol.platos_que_sirve?.split(",").map((p: string) => p.trim().toLowerCase()) || [];
+      for (const platoName of platosList) {
+        const plato = platos?.find((p: any) =>
+          p.nombre.toLowerCase().includes(platoName) || platoName.includes(p.nombre.toLowerCase())
+        );
+        if (plato) {
+          await db().from('plato_lugar').insert({
+            plato_id: plato.id, lugar_id: newLugar.id,
+            precio_aproximado: plato.precio_referencial, especialidad: false,
+          });
+        }
       }
-    });
+    }
   }
-  saveAllData();
   return true;
 }
 
 export async function getReviewsAdmin(): Promise<Resena[]> {
-  reloadData();
-  return resenasDB;
+  const { data, error } = await db()
+    .from('resenas')
+    .select('*, users(id, name), platos(*), lugares(*)')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data || []).map(mapResena);
 }
 
 export async function updateReviewStatus(id: number, approve: boolean): Promise<boolean> {
-  reloadData();
-  const resena = resenasDB.find(r => r.id === id);
-  if (!resena) return false;
-  resena.is_approved = approve;
-  (resena as any).reviewed = true;
-  saveAllData();
+  const { error } = await db().from('resenas').update({ is_approved: approve, reviewed: true }).eq('id', id);
+  if (error) throw error;
   return true;
 }
 
-// Admin stats
 export async function getAdminStats() {
-  reloadData();
+  const { count: totalPlatos } = await db().from('platos').select('*', { count: 'exact', head: true }).eq('activo', true);
+  const { count: totalLugares } = await db().from('lugares').select('*', { count: 'exact', head: true }).eq('aprobado', true);
+  const { count: solicitudesPendientes } = await db().from('solicitudes').select('*', { count: 'exact', head: true }).eq('status', 'pendiente');
+  const { count: resenasPendientes } = await db().from('resenas').select('*', { count: 'exact', head: true }).eq('is_approved', false).eq('reviewed', false);
+  const { count: totalProvincias } = await db().from('provincias').select('*', { count: 'exact', head: true });
+
   return {
-    totalPlatos: platosDB.filter(p => p.activo).length,
-    totalLugares: lugaresDB.filter(l => l.aprobado).length,
-    solicitudesPendientes: solicitudesDB.filter(s => s.status === "pendiente").length,
-    resenasPendientes: resenasDB.filter(r => !r.is_approved && !(r as any).reviewed).length,
-    totalProvincias: provinciasDB.length,
+    totalPlatos: totalPlatos || 0, totalLugares: totalLugares || 0,
+    solicitudesPendientes: solicitudesPendientes || 0,
+    resenasPendientes: resenasPendientes || 0, totalProvincias: totalProvincias || 0,
   };
 }
 
 export async function getLugaresByProvincia(provinciaSlug?: string): Promise<Lugar[]> {
-  reloadData();
-  if (!provinciaSlug) {
-    return lugaresDB.filter(l => l.aprobado && l.activo);
+  let query = db().from('lugares').select('*, provincias(*)').eq('aprobado', true).eq('activo', true);
+  if (provinciaSlug) {
+    const { data: prov } = await db().from('provincias').select('id').eq('slug', provinciaSlug).single();
+    if (prov) query = query.eq('provincia_id', prov.id);
   }
-  const prov = getProvinciaBySlug(provinciaSlug);
-  if (!prov) return [];
-  return lugaresDB.filter(l => l.provincia_id === prov.id && l.aprobado && l.activo);
+  const { data, error } = await query.order('nombre');
+  if (error) throw error;
+  return (data || []).map(mapLugar);
 }
 
 export async function getAllLugaresAdmin(): Promise<Lugar[]> {
-  reloadData();
-  return lugaresDB.filter(l => l.aprobado);
+  const { data, error } = await db().from('lugares').select('*, provincias(*)').eq('aprobado', true).order('nombre');
+  if (error) throw error;
+  return (data || []).map(mapLugar);
 }
 
 export async function getProvinciaPorCoordenadas(lat: number, lng: number): Promise<Provincia | null> {
   const { isWithinCochabamba } = await import("./utils");
-  if (!isWithinCochabamba(lat, lng)) {
-    return null;
-  }
+  if (!isWithinCochabamba(lat, lng)) return null;
 
-  const activeProvincias = provinciasDB.filter(p => p.centro_lat !== null && p.centro_lng !== null);
-  if (activeProvincias.length === 0) return null;
+  const { data: provincias } = await db().from('provincias').select('*');
+  if (!provincias || provincias.length === 0) return null;
 
-  let nearestProv: Provincia | null = null;
+  let nearestProv: any = null;
   let minDist = Infinity;
-
-  activeProvincias.forEach(p => {
-    const dx = lat - (p.centro_lat ?? 0);
-    const dy = lng - (p.centro_lng ?? 0);
-    const dist = dx * dx + dy * dy; // fast squared distance
-    if (dist < minDist) {
-      minDist = dist;
-      nearestProv = p;
-    }
+  provincias.forEach((p: any) => {
+    if (p.centro_lat === null || p.centro_lng === null) return;
+    const dx = lat - Number(p.centro_lat);
+    const dy = lng - Number(p.centro_lng);
+    const dist = dx * dx + dy * dy;
+    if (dist < minDist) { minDist = dist; nearestProv = p; }
   });
-
-  return nearestProv;
+  return nearestProv ? mapProvincia(nearestProv) : null;
 }
 
 export async function getLugarByOwnerEmail(email: string): Promise<Lugar | null> {
-  reloadData();
-  const lugar = lugaresDB.find(l => l.email_propietario?.toLowerCase() === email.toLowerCase());
-  if (!lugar) return null;
-  return lugar;
+  const { data, error } = await db().from('lugares').select('*, provincias(*)')
+    .ilike('email_propietario', email).single();
+  if (error || !data) return null;
+  return mapLugar(data);
 }
 
 export async function updateLugarDetails(
   lugarId: number,
   data: { telefono: string; direccion: string; descripcion: string; imagen_url?: string }
 ): Promise<boolean> {
-  reloadData();
-  const lugar = lugaresDB.find(l => l.id === lugarId);
-  if (!lugar) return false;
-  lugar.telefono = data.telefono;
-  lugar.direccion = data.direccion;
-  lugar.descripcion = data.descripcion;
-  if (data.imagen_url) {
-    lugar.imagen_url = data.imagen_url;
-  }
-  saveAllData();
+  const update: any = { telefono: data.telefono, direccion: data.direccion, descripcion: data.descripcion };
+  if (data.imagen_url) update.imagen_url = data.imagen_url;
+  const { error } = await db().from('lugares').update(update).eq('id', lugarId);
+  if (error) throw error;
   return true;
 }
 
 export async function updateLugarOwnerEmail(lugarId: number, email: string): Promise<boolean> {
-  reloadData();
-  const lugar = lugaresDB.find(l => l.id === lugarId);
-  if (!lugar) return false;
-  lugar.email_propietario = email;
-  saveAllData();
+  const { error } = await db().from('lugares').update({ email_propietario: email }).eq('id', lugarId);
+  if (error) throw error;
   return true;
 }
 
 export async function updatePlatoLugarPivot(
-  lugarId: number,
-  platoId: number,
+  lugarId: number, platoId: number,
   data: { precio_aproximado: number; imagen_url?: string }
 ): Promise<boolean> {
-  reloadData();
-  const pivot = platoLugarPivots.find(p => p.lugar_id === lugarId && p.plato_id === platoId);
-  if (!pivot) {
-    const newPivot = {
-      lugar_id: lugarId,
-      plato_id: platoId,
-      precio_aproximado: data.precio_aproximado,
-      especialidad: false,
-      imagen_url: data.imagen_url || null
-    } as any;
-    platoLugarPivots.push(newPivot);
+  const { data: existing } = await db().from('plato_lugar')
+    .select('id').eq('lugar_id', lugarId).eq('plato_id', platoId).single();
+
+  if (existing) {
+    const update: any = { precio_aproximado: data.precio_aproximado };
+    if (data.imagen_url !== undefined) update.imagen_url = data.imagen_url;
+    const { error } = await db().from('plato_lugar').update(update).eq('id', existing.id);
+    if (error) throw error;
   } else {
-    pivot.precio_aproximado = data.precio_aproximado;
-    if (data.imagen_url !== undefined) {
-      (pivot as any).imagen_url = data.imagen_url;
-    }
+    const { error } = await db().from('plato_lugar').insert({
+      lugar_id: lugarId, plato_id: platoId,
+      precio_aproximado: data.precio_aproximado, especialidad: false,
+      imagen_url: data.imagen_url || null,
+    });
+    if (error) throw error;
   }
-  saveAllData();
   return true;
 }
 
 export async function addSpecialty(
   lugarId: number,
-  data: { nombre: string; precio: number; imagen_url?: string }
+  dataItem: { nombre: string; precio: number; imagen_url?: string }
 ): Promise<boolean> {
-  reloadData();
-  const lugar = lugaresDB.find(l => l.id === lugarId);
+  const { data: lugar } = await db().from('lugares').select('especialidades').eq('id', lugarId).single();
   if (!lugar) return false;
-  
-  if (!lugar.especialidades) {
-    lugar.especialidades = [];
-  }
-  const newId = 50000 + lugar.especialidades.length + Math.floor(Math.random() * 1000);
-  lugar.especialidades.push({
-    id: newId,
-    nombre: data.nombre,
-    precio: data.precio,
-    imagen_url: data.imagen_url || null,
-    total_resenas: 0,
-    promedio_rating: null,
+
+  const espList: Especialidad[] = lugar.especialidades || [];
+  const newId = 50000 + espList.length + Math.floor(Math.random() * 1000);
+  espList.push({
+    id: newId, nombre: dataItem.nombre, precio: dataItem.precio,
+    imagen_url: dataItem.imagen_url || null, total_resenas: 0, promedio_rating: null,
   });
-  saveAllData();
+
+  const { error } = await db().from('lugares').update({ especialidades: espList }).eq('id', lugarId);
+  if (error) throw error;
   return true;
 }
 
 export async function deleteSpecialty(lugarId: number, specialtyId: number): Promise<boolean> {
-  reloadData();
-  const lugar = lugaresDB.find(l => l.id === lugarId);
-  if (!lugar || !lugar.especialidades) return false;
-  lugar.especialidades = lugar.especialidades.filter(e => e.id !== specialtyId);
-  saveAllData();
+  const { data: lugar } = await db().from('lugares').select('especialidades').eq('id', lugarId).single();
+  if (!lugar) return false;
+
+  const espList: Especialidad[] = (lugar.especialidades || []).filter((e: Especialidad) => e.id !== specialtyId);
+  const { error } = await db().from('lugares').update({ especialidades: espList }).eq('id', lugarId);
+  if (error) throw error;
   return true;
 }
 
 export async function getTrendingGlobal(): Promise<any[]> {
-  reloadData();
+  const { data: platos } = await db().from('platos').select('*').eq('activo', true);
+  if (!platos) return [];
+
+  const { data: allResenas } = await db().from('resenas').select('*').eq('is_approved', true);
   const referenceDate = new Date("2026-06-24T12:00:00Z");
 
-  const calculateHotScore = (reviews: Resena[]) => {
+  const calculateHotScore = (reviews: any[]) => {
     let score = 0;
-    reviews.forEach(r => {
+    reviews.forEach((r: any) => {
       if (!r.fecha_visita) return;
-      const rDate = new Date(r.fecha_visita);
-      const diffMs = referenceDate.getTime() - rDate.getTime();
+      const diffMs = referenceDate.getTime() - new Date(r.fecha_visita).getTime();
       const diffDays = diffMs / (1000 * 60 * 60 * 24);
-      if (diffDays < 0 || diffDays > 45) return; // ignore older than 45 days
-
-      // weight decay: 15 days is 1.0, 16-45 days is 0.3
+      if (diffDays < 0 || diffDays > 45) return;
       const weight = diffDays <= 15 ? 1.0 : 0.3;
       score += r.rating * weight;
     });
     return score;
   };
 
-  // 1. Get typical dishes
-  const typicalRankings = platosDB.filter(p => p.activo).map(p => {
-    const reviews = resenasDB.filter(r => r.plato_id === p.id && r.is_approved);
+  const typicalRankings = platos.map((p: any) => {
+    const reviews = (allResenas || []).filter((r: any) => r.plato_id === p.id);
     const count = reviews.length;
-    const avg = count > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / count : p.promedio_rating;
-    
+    const avg = count > 0 ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / count : (p.promedio_rating ? Number(p.promedio_rating) : 4.0);
     const hotScore = calculateHotScore(reviews);
-
     return {
-      id: p.id,
-      nombre: p.nombre,
-      slug: p.slug,
-      descripcion: p.descripcion,
-      promedio_rating: avg,
-      total_resenas: count,
-      imagen_url: p.imagen_url,
-      es_especialidad: false,
-      hot_score: hotScore,
+      id: p.id, nombre: p.nombre, slug: p.slug, descripcion: p.descripcion,
+      promedio_rating: avg, total_resenas: count, imagen_url: p.imagen_url,
+      es_especialidad: false, hot_score: hotScore,
     };
   });
 
-  // 2. Compile custom specialties
-  const specialtiesMap = new Map<string, { nombre: string; reviews: Resena[]; lugaresIds: number[] }>();
-
-  resenasDB.filter(r => r.is_approved && r.especialidad_nombre).forEach(r => {
+  const specialtiesMap = new Map<string, { nombre: string; reviews: any[]; lugaresIds: number[] }>();
+  (allResenas || []).filter((r: any) => r.especialidad_nombre).forEach((r: any) => {
     const name = r.especialidad_nombre!.trim();
     const key = name.toLowerCase();
-    if (!specialtiesMap.has(key)) {
-      specialtiesMap.set(key, { nombre: name, reviews: [], lugaresIds: [] });
-    }
+    if (!specialtiesMap.has(key)) specialtiesMap.set(key, { nombre: name, reviews: [], lugaresIds: [] });
     const item = specialtiesMap.get(key)!;
     item.reviews.push(r);
-    if (r.lugar_id && !item.lugaresIds.includes(r.lugar_id)) {
-      item.lugaresIds.push(r.lugar_id);
-    }
+    if (r.lugar_id && !item.lugaresIds.includes(r.lugar_id)) item.lugaresIds.push(r.lugar_id);
   });
 
-  lugaresDB.forEach(l => {
-    if (l.especialidades) {
-      l.especialidades.forEach(esp => {
-        const key = esp.nombre.toLowerCase();
-        if (!specialtiesMap.has(key)) {
-          specialtiesMap.set(key, { nombre: esp.nombre, reviews: [], lugaresIds: [] });
-        }
-        const item = specialtiesMap.get(key)!;
-        if (!item.lugaresIds.includes(l.id)) {
-          item.lugaresIds.push(l.id);
-        }
-      });
-    }
+  const { data: lugares } = await db().from('lugares').select('*');
+  (lugares || []).forEach((l: any) => {
+    (l.especialidades || []).forEach((esp: Especialidad) => {
+      const key = esp.nombre.toLowerCase();
+      if (!specialtiesMap.has(key)) specialtiesMap.set(key, { nombre: esp.nombre, reviews: [], lugaresIds: [] });
+      const item = specialtiesMap.get(key)!;
+      if (!item.lugaresIds.includes(l.id)) item.lugaresIds.push(l.id);
+    });
   });
 
   const specialtyRankings = Array.from(specialtiesMap.values()).map((sp, idx) => {
-    const reviews = sp.reviews;
-    const count = reviews.length;
-    const avg = count > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / count : 4.0;
-    
-    const hotScore = calculateHotScore(reviews);
-
-    let bestLugar: Lugar | null = null;
+    const count = sp.reviews.length;
+    const avg = count > 0 ? sp.reviews.reduce((sum, r) => sum + r.rating, 0) / count : 4.0;
+    const hotScore = calculateHotScore(sp.reviews);
+    let bestLugar: any = null;
     let maxRating = -1;
     let customImage: string | null = null;
-
-    sp.lugaresIds.forEach(lId => {
-      const lugar = lugaresDB.find(l => l.id === lId);
+    sp.lugaresIds.forEach((lId: number) => {
+      const lugar = (lugares || []).find((l: any) => l.id === lId);
       if (lugar) {
-        const lReviews = resenasDB.filter(r => r.lugar_id === lugar.id && r.is_approved);
-        const lAvg = lReviews.length > 0 ? lReviews.reduce((sum, r) => sum + r.rating, 0) / lReviews.length : 4.0;
-        
-        const espObj = lugar.especialidades?.find(e => e.nombre.toLowerCase() === sp.nombre.toLowerCase());
-        const espImg = espObj?.imagen_url || lugar.imagen_url;
-
-        if (lAvg > maxRating) {
-          maxRating = lAvg;
-          bestLugar = lugar;
-          customImage = espImg;
-        }
+        const lReviews = (allResenas || []).filter((r: any) => r.lugar_id === lugar.id);
+        const lAvg = lReviews.length > 0 ? lReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / lReviews.length : 4.0;
+        const espObj = (lugar.especialidades || []).find((e: Especialidad) => e.nombre.toLowerCase() === sp.nombre.toLowerCase());
+        if (lAvg > maxRating) { maxRating = lAvg; bestLugar = lugar; customImage = espObj?.imagen_url || lugar.imagen_url; }
       }
     });
-
     return {
-      id: 10000 + idx,
-      nombre: sp.nombre,
+      id: 10000 + idx, nombre: sp.nombre,
       slug: sp.nombre.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-      descripcion: `Especialidad de la casa, destacada en: ${bestLugar ? (bestLugar as Lugar).nombre : "Varios locales"}.`,
-      promedio_rating: avg,
-      total_resenas: count,
+      descripcion: `Especialidad de la casa, destacada en: ${bestLugar ? bestLugar.nombre : "Varios locales"}.`,
+      promedio_rating: avg, total_resenas: count,
       imagen_url: customImage || "/images/placeholder-plate.jpg",
-      es_especialidad: true,
-      lugar_slug: bestLugar ? (bestLugar as Lugar).slug : null,
+      es_especialidad: true, lugar_slug: bestLugar ? bestLugar.slug : null,
       hot_score: hotScore,
     };
   });
 
-  return [...typicalRankings, ...specialtyRankings]
-    .sort((a, b) => b.hot_score - a.hot_score);
+  return [...typicalRankings, ...specialtyRankings].sort((a: any, b: any) => b.hot_score - a.hot_score);
 }
-
