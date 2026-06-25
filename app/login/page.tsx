@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn, UserPlus, Eye, EyeOff, UtensilsCrossed } from "lucide-react";
 
@@ -10,6 +10,24 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+
+  useEffect(() => {
+    // Redirect if already logged in
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.user) {
+          if (data.user.role === "admin") {
+            window.location.href = "/admin";
+          } else if (data.user.role === "owner") {
+            window.location.href = "/owner";
+          } else {
+            window.location.href = "/";
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

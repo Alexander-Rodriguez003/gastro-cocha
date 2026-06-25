@@ -100,10 +100,7 @@ async function initHashes() {
     }
   }
   initialized = true;
-  const persisted = loadJSONData();
-  if (!persisted || !persisted.users) {
-    saveJSONData({ users: usersDB });
-  }
+  saveJSONData({ users: usersDB });
 }
 
 export async function login(
