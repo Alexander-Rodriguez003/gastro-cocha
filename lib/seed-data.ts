@@ -72,7 +72,7 @@ export const LUGARES = [
 ];
 
 export const USERS_SEED = [
-  { name: 'Admin GastroCocha', email: 'admin@gastrococha.bo', password: 'admin123', role: 'admin' as const },
+  { name: 'Admin GastroCocha', email: 'admin@gastrococha.bo', password: 'Alex78341428', role: 'admin' as const },
   { name: 'Usuario Demo', email: 'demo@gastrococha.bo', password: 'demo123', role: 'user' as const },
 ];
 

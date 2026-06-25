@@ -1025,7 +1025,7 @@
       "name": "Admin GastroCocha",
       "email": "admin@gastrococha.bo",
       "role": "admin",
-      "passwordHash": "aa1a5f0e4ffc8158950e9bfedcb4d5de9330d26897f6735efc12b706ad723087"
+      "passwordHash": ""
     },
     {
       "id": 2,

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { simpleHash } from "./utils";
 import { USERS_SEED } from "./seed-data";
-import { createHmac } from "crypto";
+import { createHmac, randomBytes } from "crypto";
 import { loadJSONData, saveJSONData } from "./db_helper";
 
 export interface SessionUser {
@@ -11,7 +11,7 @@ export interface SessionUser {
   role: "user" | "admin" | "owner";
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "gastro-cocha-secret-key-123456";
+const JWT_SECRET = process.env.JWT_SECRET || randomBytes(32).toString("hex");
 
 // Simple signed token to prevent tampering
 function encode(data: SessionUser): string {

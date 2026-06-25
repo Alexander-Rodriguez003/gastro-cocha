@@ -175,13 +175,6 @@ export default function LoginPage() {
             {loading ? "Procesando..." : tab === "login" ? "Ingresar" : "Crear Cuenta"}
           </button>
         </form>
-
-        {/* Demo credentials */}
-        <div style={{ marginTop: "1.5rem", padding: "1rem", background: "var(--color-surface-warm)", borderRadius: 12, fontSize: "0.8rem", color: "var(--color-primary-dark)" }}>
-          <strong>🔑 Credenciales de prueba:</strong>
-          <div style={{ marginTop: 4 }}>Admin: <code>admin@gastrococha.bo</code> / <code>admin123</code></div>
-          <div>Usuario: <code>demo@gastrococha.bo</code> / <code>demo123</code></div>
-        </div>
       </div>
     </div>
   );
