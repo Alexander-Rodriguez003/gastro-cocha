@@ -44,14 +44,14 @@ export function NegociosGrid({ initialLugares }: { initialLugares: Lugar[] }) {
       <div style={{ marginBottom: "2.5rem", textAlign: "center" }}>
         <h1 
           style={{ 
-            fontFamily: "var(--font-display)", 
-            fontWeight: 800, 
+            fontFamily: "Georgia, serif", 
+            fontWeight: 700, 
             fontSize: "2.25rem", 
             letterSpacing: "-0.02em",
             marginBottom: "0.5rem"
           }}
         >
-          🏪 Negocios y Restaurantes Gastronómicos
+          Negocios y Restaurantes Gastronómicos
         </h1>
         <p style={{ color: "var(--color-text-muted)", fontSize: "1rem" }}>
           Explora los rincones culinarios más famosos y tradicionales de Cochabamba
@@ -61,9 +61,9 @@ export function NegociosGrid({ initialLugares }: { initialLugares: Lugar[] }) {
       {/* SEARCH AND FILTER BAR (Premium cyber style) */}
       <div 
         style={{ 
-          background: "linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.4))",
+          background: "color-mix(in srgb, var(--color-bg-card) 70%, transparent)",
           backdropFilter: "blur(12px)",
-          border: "1px solid #E7E5E4",
+          border: "1px solid var(--color-border)",
           padding: "1.25rem",
           borderRadius: 20,
           boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
@@ -74,7 +74,7 @@ export function NegociosGrid({ initialLugares }: { initialLugares: Lugar[] }) {
         }}
       >
         <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-          <Search size={18} color="#A8A29E" style={{ position: "absolute", left: 16 }} />
+          <Search size={18} color="var(--color-text-muted)" style={{ position: "absolute", left: 16 }} />
           <input 
             type="text" 
             placeholder="Buscar por nombre, dirección o especialidad..."
@@ -84,21 +84,21 @@ export function NegociosGrid({ initialLugares }: { initialLugares: Lugar[] }) {
               width: "100%",
               padding: "0.85rem 1rem 0.85rem 2.75rem",
               borderRadius: 14,
-              border: "1px solid #E7E5E4",
-              background: "#FFFFFF",
+              border: "1px solid var(--color-border)",
+              background: "var(--color-bg-card)",
               fontSize: "0.95rem",
               fontFamily: "inherit",
               outline: "none",
               transition: "all 0.2s ease",
             }}
-            onFocus={(e) => e.target.style.borderColor = "#D97706"}
-            onBlur={(e) => e.target.style.borderColor = "#E7E5E4"}
+            onFocus={(e) => e.target.style.borderColor = "var(--color-primary)"}
+            onBlur={(e) => e.target.style.borderColor = "var(--color-border)"}
           />
         </div>
 
         {/* Province Filter Pills */}
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
-          <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#78716C", textTransform: "uppercase", letterSpacing: "0.05em", marginRight: "0.25rem" }}>
+          <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginRight: "0.25rem" }}>
             Filtrar por Provincia:
           </span>
           {provinces.map((prov) => (
@@ -111,13 +111,13 @@ export function NegociosGrid({ initialLugares }: { initialLugares: Lugar[] }) {
                 fontSize: "0.8rem",
                 fontWeight: 600,
                 cursor: "pointer",
-                border: selectedProvince === prov ? "1px solid #D97706" : "1px solid #E7E5E4",
-                background: selectedProvince === prov ? "rgba(217, 119, 6, 0.08)" : "#FFFFFF",
-                color: selectedProvince === prov ? "#D97706" : "#78716C",
+                border: selectedProvince === prov ? "1px solid var(--color-primary)" : "1px solid var(--color-border)",
+                background: selectedProvince === prov ? "rgba(217, 119, 6, 0.08)" : "var(--color-bg-card)",
+                color: selectedProvince === prov ? "var(--color-primary)" : "var(--color-text-muted)",
                 transition: "all 0.2s ease",
               }}
             >
-              {prov === "all" ? "🌐 Todas" : prov}
+              {prov === "all" ? "Todas" : prov}
             </button>
           ))}
         </div>
@@ -138,9 +138,9 @@ export function NegociosGrid({ initialLugares }: { initialLugares: Lugar[] }) {
               className="card"
               style={{
                 borderRadius: 20,
-                border: "1px solid rgba(28, 25, 23, 0.06)",
+                border: "1px solid var(--color-border)",
                 padding: "1.5rem",
-                background: "#FFFFFF",
+                background: "var(--color-bg-card)",
                 boxShadow: "0 4px 20px rgba(0,0,0,0.02)",
                 display: "flex",
                 flexDirection: "column",
@@ -152,13 +152,13 @@ export function NegociosGrid({ initialLugares }: { initialLugares: Lugar[] }) {
                 animation: "gridItemFadeIn 0.4s ease",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-6px) scale(1.01)";
-                e.currentTarget.style.borderColor = "#10B981";
-                e.currentTarget.style.boxShadow = "0 15px 30px rgba(16, 185, 129, 0.12)";
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.borderColor = "var(--color-primary)";
+                e.currentTarget.style.boxShadow = "var(--shadow-md)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0) scale(1)";
-                e.currentTarget.style.borderColor = "rgba(28, 25, 23, 0.06)";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.borderColor = "var(--color-border)";
                 e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.02)";
               }}
             >
@@ -166,15 +166,15 @@ export function NegociosGrid({ initialLugares }: { initialLugares: Lugar[] }) {
                 
                 {/* Header row */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                  <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.2rem", color: "#1C1917", lineHeight: 1.25 }}>
+                  <h2 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.25rem", color: "var(--color-text)", lineHeight: 1.25 }}>
                     {lugar.nombre}
                   </h2>
                   {lugar.provincia && (
                     <span 
                       style={{ 
-                        background: "rgba(16,185,129,0.06)", 
-                        border: "1px solid rgba(16,185,129,0.12)",
-                        color: "#047857",
+                        background: "var(--color-surface-green)", 
+                        border: "1px solid rgba(5, 150, 105, 0.15)",
+                        color: "var(--color-secondary-dark)",
                         padding: "0.25rem 0.6rem",
                         borderRadius: 8,
                         fontSize: "0.7rem",
@@ -212,9 +212,9 @@ export function NegociosGrid({ initialLugares }: { initialLugares: Lugar[] }) {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  background: "rgba(16, 185, 129, 0.06)",
-                  border: "1px solid rgba(16, 185, 129, 0.12)",
-                  color: "#047857",
+                  background: "rgba(5, 150, 105, 0.05)",
+                  border: "1px solid rgba(5, 150, 105, 0.15)",
+                  color: "var(--color-secondary-dark)",
                   padding: "0.6rem 1rem",
                   borderRadius: 12,
                   fontWeight: 700,
@@ -224,12 +224,14 @@ export function NegociosGrid({ initialLugares }: { initialLugares: Lugar[] }) {
                   textAlign: "center"
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#10B981";
+                  e.currentTarget.style.background = "var(--color-secondary)";
                   e.currentTarget.style.color = "#FFFFFF";
+                  e.currentTarget.style.borderColor = "var(--color-secondary)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(16, 185, 129, 0.06)";
-                  e.currentTarget.style.color = "#047857";
+                  e.currentTarget.style.background = "rgba(5, 150, 105, 0.05)";
+                  e.currentTarget.style.color = "var(--color-secondary-dark)";
+                  e.currentTarget.style.borderColor = "rgba(5, 150, 105, 0.15)";
                 }}
               >
                 <span>Visitar Landing Page</span>

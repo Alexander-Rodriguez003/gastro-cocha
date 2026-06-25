@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { LayoutDashboard, Utensils, MapPin, MessageSquare, Bell, ChevronLeft } from "lucide-react";
+import { LayoutDashboard, Utensils, MapPin, MessageSquare, Bell, ChevronLeft, Key } from "lucide-react";
 
 export function AdminSidebar({ userName }: { userName: string }) {
   return (
@@ -8,8 +8,8 @@ export function AdminSidebar({ userName }: { userName: string }) {
       <aside
         style={{
           width: 220,
-          background: "#1C1917",
-          color: "#FAFAF9",
+          background: "var(--color-bg-card)",
+          color: "var(--color-text)",
           padding: "1.5rem 0",
           display: "flex",
           flexDirection: "column",
@@ -18,11 +18,11 @@ export function AdminSidebar({ userName }: { userName: string }) {
         }}
         className="admin-sidebar"
       >
-        <div style={{ padding: "0 1rem 1rem", borderBottom: "1px solid #292524", marginBottom: "0.5rem" }}>
+        <div style={{ padding: "0 1rem 1rem", borderBottom: "1px solid var(--color-border)", marginBottom: "0.5rem" }}>
           <div style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700, fontSize: "0.95rem" }}>
             Panel Admin
           </div>
-          <div style={{ fontSize: "0.75rem", color: "#A8A29E", marginTop: 2 }}>
+          <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: 2 }}>
             {userName}
           </div>
         </div>
@@ -32,10 +32,11 @@ export function AdminSidebar({ userName }: { userName: string }) {
         <SidebarLink href="/admin/lugares" icon={<MapPin size={18} />} label="Lugares" />
         <SidebarLink href="/admin/solicitudes" icon={<Bell size={18} />} label="Solicitudes" />
         <SidebarLink href="/admin/resenas" icon={<MessageSquare size={18} />} label="Reseñas" />
+        <SidebarLink href="/admin/propietarios" icon={<Key size={18} />} label="Propietarios" />
 
         <div style={{ flex: 1 }} />
-        <div style={{ padding: "1rem", borderTop: "1px solid #292524" }}>
-          <Link href="/" style={{ color: "#A8A29E", fontSize: "0.8rem", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+        <div style={{ padding: "1rem", borderTop: "1px solid var(--color-border)" }}>
+          <Link href="/" style={{ color: "var(--color-text-muted)", fontSize: "0.8rem", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
             <ChevronLeft size={14} /> Volver al sitio
           </Link>
         </div>
@@ -59,13 +60,13 @@ function SidebarLink({ href, icon, label }: { href: string; icon: React.ReactNod
         display: "flex",
         alignItems: "center",
         gap: "0.6rem",
-        color: "#D6D3D1",
+        color: "var(--color-text-muted)",
         textDecoration: "none",
         fontSize: "0.85rem",
         transition: "all 0.15s",
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.background = "#292524"; e.currentTarget.style.color = "#F59E0B"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#D6D3D1"; }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-border)"; e.currentTarget.style.color = "var(--color-primary)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--color-text-muted)"; }}
     >
       {icon}
       {label}

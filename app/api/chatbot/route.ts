@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getChatbotContext } from "@/lib/data";
+import { getChatbotContext, getStaticGastroDatabase } from "@/lib/data";
+import { getSession } from "@/lib/auth";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
@@ -7,6 +8,9 @@ const DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions";
 
 const SYSTEM_PROMPT = `Eres el asistente gastronómico oficial de GastroCocha, la Guía Gastronómica de Cochabamba, Bolivia.
 Tu única fuente de verdad es la información de la base de datos de Cochabamba proporcionada en {CONTEXT}.
+Además, aquí tienes el registro completo de todas las provincias y sus platos típicos de GastroCocha (usa esta lista cuando te pregunten por los platos de cada provincia):
+{STATIC_DATABASE}
+
 Tu misión es recomendar platos típicos y restaurantes reales de forma cálida, servicial y exacta.
 
 Reglas Estrictas:
@@ -39,24 +43,101 @@ Regla de Oro: Solo anexa el bloque [[ACTION: ...]] al final de la respuesta conv
 Datos actuales de restaurantes y platos activos (Tu Única Verdad):
 {CONTEXT}`;
 
+// Simple in-memory cache to save API calls
+const queryCache = new Map<string, { reply: string; expires: number }>();
+// Simple in-memory IP rate limiter
+const ipLimiter = new Map<string, { count: number; resetTime: number }>();
+// Simple in-memory rate limiter for logged-in users (email -> { count, resetTime })
+const userLimiter = new Map<string, { count: number; resetTime: number }>();
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { messages = [], user_lat, user_lng, budget } = body;
+    const now = Date.now();
 
-    // ---- 1. Control de Gasto / Rate Limiting (Máximo 10 preguntas por día como invitado) ----
-    const countCookie = request.cookies.get("gastro_chat_count");
-    let count = countCookie ? parseInt(countCookie.value) : 0;
+    // ---- 1. IP Rate Limiter (Max 30 requests per hour per IP to prevent spam) ----
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || (request as any).ip || "127.0.0.1";
+    const limitInfo = ipLimiter.get(ip);
+    if (limitInfo) {
+      if (now > limitInfo.resetTime) {
+        ipLimiter.set(ip, { count: 1, resetTime: now + 60 * 60 * 1000 });
+      } else {
+        limitInfo.count += 1;
+        if (limitInfo.count > 30) {
+          return NextResponse.json({
+            reply: "⚠️ *Límite de seguridad alcanzado.*\n\nHas realizado demasiadas consultas en un corto periodo de tiempo. Por favor, espera unos minutos para continuar explorando la gastronomía de Cochabamba. 🍽️"
+          });
+        }
+      }
+    } else {
+      ipLimiter.set(ip, { count: 1, resetTime: now + 60 * 60 * 1000 });
+    }
 
-    if (count >= 10) {
-      return NextResponse.json({
-        reply: "⚠️ *¡Has alcanzado el límite gratuito de 10 consultas diarias como invitado!*\n\nPara evitar abusos y proteger nuestros recursos de servidor, pausamos las consultas de esta sesión. Para seguir disfrutando de las recomendaciones ilimitadas del asistente, ¡te invitamos a registrar una cuenta gratuita! 🍽️🇧🇴"
-      });
+    // ---- 2. Check Auth Session and Enforce Respective Limits ----
+    const session = await getSession();
+    const isLogged = !!session;
+    let guestCount = 0;
+
+    if (!isLogged) {
+      // Guest: Cookie-based rate limiting (10 queries per day)
+      const countCookie = request.cookies.get("gastro_chat_count");
+      guestCount = countCookie ? parseInt(countCookie.value) : 0;
+
+      if (guestCount >= 10) {
+        return NextResponse.json({
+          reply: "⚠️ *¡Has alcanzado el límite gratuito de 10 consultas diarias como invitado!*\n\nPara evitar abusos de nuestra API, pausamos las consultas de esta sesión. ¡Inicia sesión o crea una cuenta gratuita para disfrutar de un límite de 50 consultas diarias! 🍽️"
+        });
+      }
+    } else {
+      // Registered User: In-memory rate limiting (50 queries per day)
+      const email = session.email;
+      const limitInfo = userLimiter.get(email);
+      
+      if (limitInfo) {
+        if (now > limitInfo.resetTime) {
+          userLimiter.set(email, { count: 1, resetTime: now + 24 * 60 * 60 * 1000 });
+        } else {
+          if (limitInfo.count >= 50) {
+            return NextResponse.json({
+              reply: "⚠️ *¡Has alcanzado tu límite de 50 consultas diarias para usuarios registrados!*\n\nPara garantizar un servicio rápido y gratuito para toda la comunidad, limitamos las consultas diarias por cuenta. Por favor, regresa mañana para continuar explorando la gastronomía de Cochabamba. 🍽️"
+            });
+          }
+          limitInfo.count += 1;
+        }
+      } else {
+        userLimiter.set(email, { count: 1, resetTime: now + 24 * 60 * 60 * 1000 });
+      }
     }
 
     // Build dynamic context from the database
     const context = await getChatbotContext(user_lat, user_lng, budget);
-    const systemMessage = SYSTEM_PROMPT.replace("{CONTEXT}", context || "No hay datos disponibles aún.");
+    const staticDb = await getStaticGastroDatabase();
+    
+    // ---- 3. Intercept Trivial Messages (Greetings, Thanks, Help) to save API calls ----
+    const lastUserMsg = messages.filter((m: any) => m.role === "user").pop()?.content || "";
+    const cleanQuery = lastUserMsg.trim().toLowerCase();
+    
+    // Check if query is in cache
+    const cached = queryCache.get(cleanQuery);
+    if (cached && now < cached.expires) {
+      return NextResponse.json({ reply: cached.reply });
+    }
+
+    const q = cleanQuery.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const isGreeting = /^(hola|buenos dias|buenas tardes|buenas noches|buenas|hey|ola|hi|que tal|saludos|como estas|como te va)$/.test(q);
+    const asksThanks = /^(gracias|genial|perfecto|excelente|chevere|bueno|ok|gracias!|muchas gracias|entendido)$/.test(q);
+    const asksHelp = /^(ayuda|como funciona|que puedes hacer|que haces|help|quien eres)$/.test(q);
+
+    if (isGreeting || asksThanks || asksHelp) {
+      const reply = generateMockReply(lastUserMsg, context);
+      queryCache.set(cleanQuery, { reply, expires: now + 60 * 60 * 1000 }); // Cache local replies for 1 hour
+      return NextResponse.json({ reply });
+    }
+
+    const systemMessage = SYSTEM_PROMPT
+      .replace("{CONTEXT}", context || "No hay datos disponibles aún.")
+      .replace("{STATIC_DATABASE}", staticDb);
 
     let reply = "No pude procesar tu solicitud.";
     let usedGemini = false;
@@ -94,8 +175,8 @@ export async function POST(request: NextRequest) {
             parts: [{ text: systemMessage }]
           },
           generationConfig: {
-            temperature: 0.0, // Strict, exact, mathematical — completely eliminates hallucination!
-            maxOutputTokens: 800,
+            temperature: 0.2,
+            maxOutputTokens: 2000,
           }
         })
       });
@@ -117,22 +198,21 @@ export async function POST(request: NextRequest) {
               parts: [{ text: systemMessage }]
             },
             generationConfig: {
-              temperature: 0.0,
-              maxOutputTokens: 800,
+              temperature: 0.2,
+              maxOutputTokens: 2000,
             }
           })
         });
       }
 
-      if (!res.ok) {
+      if (res.ok) {
+        const geminiData = await res.json();
+        reply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "No pude generar una respuesta con Gemini.";
+        usedGemini = true;
+      } else {
         const errorText = await res.text();
         console.error("Gemini API error (both primary and lite failed):", errorText);
-        return NextResponse.json({ reply: "Lo siento, la IA de Gemini experimentó un inconveniente temporal. Intenta de nuevo." });
       }
-
-      const geminiData = await res.json();
-      reply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "No pude generar una respuesta con Gemini.";
-      usedGemini = true;
     }
 
     // ---- Option B: DeepSeek API (Optional Fallback) ----
@@ -151,8 +231,8 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           model: "deepseek-chat",
           messages: apiMessages,
-          max_tokens: 500,
-          temperature: 0.0, // Zero temperature to avoid hallucination
+          max_tokens: 1500,
+          temperature: 0.2,
         }),
       });
 
@@ -171,14 +251,21 @@ export async function POST(request: NextRequest) {
       reply = generateMockReply(lastUserMsg?.content || "", context);
     }
 
-    // Return response and increment the daily guest rate limiter cookie
+    // Cache successful AI responses for 10 minutes (except fallbacks or errors)
+    if (reply && reply !== "No pude procesar tu solicitud." && !reply.includes("Hubo un error")) {
+      queryCache.set(cleanQuery, { reply, expires: Date.now() + 10 * 60 * 1000 });
+    }
+
+    // Return response and increment the daily guest rate limiter cookie if applicable
     const response = NextResponse.json({ reply });
-    response.cookies.set("gastro_chat_count", String(count + 1), {
-      maxAge: 60 * 60 * 24, // 24 hour expiration
-      path: "/",
-      httpOnly: true,
-      sameSite: "lax"
-    });
+    if (!isLogged) {
+      response.cookies.set("gastro_chat_count", String(guestCount + 1), {
+        maxAge: 60 * 60 * 24, // 24 hour expiration
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax"
+      });
+    }
     return response;
 
   } catch (error) {

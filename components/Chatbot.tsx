@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, MapPin, Loader2, Sparkles, Navigation, CheckCircle2 } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Sparkles, Navigation, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ChatMessage } from "@/lib/types";
 
@@ -12,7 +12,7 @@ export function Chatbot() {
     {
       role: "assistant",
       content:
-        "¡Hola! 👋 Soy tu asistente gastronómico de Cochabamba.\n\nPuedo recomendarte platos y restaurantes según tu ubicación o presupuesto.\n\n• \"¿Dónde como silpancho barato?\"\n• \"¿Qué hay cerca de mí?\"\n• \"El mejor plato de Cochabamba\"",
+        "¡Hola! Soy tu asistente gastronómico de Cochabamba.\n\nPuedo recomendarte platos y restaurantes según tu ubicación o presupuesto. Prueba preguntarme:\n\n• \"¿Dónde puedo comer un silpancho económico?\"\n• \"¿Qué restaurantes hay cerca de mí?\"\n• \"¿Cuál es el mejor pique macho de la ciudad?\"",
     },
   ]);
   const [input, setInput] = useState("");
@@ -76,10 +76,10 @@ export function Chatbot() {
           // Trigger visual notification of the AI's action
           let actionLabel = "Ejecutando acción";
           if (actionObj.action === "focus_map") actionLabel = `📍 Enfocando: ${actionObj.label || "Ubicación"}`;
-          if (actionObj.action === "navigate") actionLabel = `⚡ Redirigiendo a: ${actionObj.url}`;
-          if (actionObj.action === "fill_form") actionLabel = "📝 Rellenando formulario de registro...";
-          if (actionObj.action === "filter_list") actionLabel = `🔍 Filtrando platos < ${actionObj.max_price} Bs`;
-          if (actionObj.action === "add_review") actionLabel = `💬 Agregando reseña de 5 estrellas...`;
+          if (actionObj.action === "navigate") actionLabel = `Redirigiendo a: ${actionObj.url}`;
+          if (actionObj.action === "fill_form") actionLabel = "Rellenando formulario...";
+          if (actionObj.action === "filter_list") actionLabel = `Filtrando platos < ${actionObj.max_price} Bs`;
+          if (actionObj.action === "add_review") actionLabel = `Agregando reseña...`;
           
           setActiveAction(actionLabel);
           setTimeout(() => setActiveAction(null), 4500);
@@ -88,7 +88,7 @@ export function Chatbot() {
           if (actionObj.action === "navigate" && actionObj.url) {
             router.push(actionObj.url);
           } else {
-            // Dispatch dynamic Custom Event for map, forms, ranking and filters to hook into client-side!
+            // Dispatch event for other client components
             window.dispatchEvent(new CustomEvent("gastro_action", { detail: actionObj }));
           }
         } catch (err) {
@@ -108,7 +108,7 @@ export function Chatbot() {
         ...prev,
         {
           role: "assistant",
-          content: "Error de conexión. Verifica tu internet.",
+          content: "Error de conexión. Verifica tu conexión a internet.",
         },
       ]);
     } finally {
@@ -118,127 +118,113 @@ export function Chatbot() {
 
   return (
     <>
-      {/* ===== Floating neon pulse trigger button ===== */}
+      {/* ===== Floating gastronomic trigger button ===== */}
       <button
         onClick={() => {
           setOpen(!open);
           if (!userLocation) requestLocation();
         }}
         aria-label="Abrir chat"
-        className="neon-trigger-pulse"
+        className="gastro-chat-trigger"
         style={{
           position: "fixed",
           bottom: "1.5rem",
           right: "1.5rem",
-          width: 62,
-          height: 62,
+          width: 60,
+          height: 60,
           borderRadius: "50%",
-          background: "linear-gradient(135deg, #10B981, #06B6D4)", // Vibrant Emerald/Cyan gaming gradient
-          color: "#020617",
+          background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))",
+          color: "#FFFFFF",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           cursor: "pointer",
-          boxShadow: "0 0 25px rgba(16, 185, 129, 0.6), 0 0 50px rgba(6, 182, 212, 0.3)",
-          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          boxShadow: "var(--shadow-lg), 0 4px 20px rgba(217, 119, 6, 0.25)",
+          transition: "all 0.3s ease",
           zIndex: 9999,
-          border: "2px solid #34D399",
+          border: "none",
           outline: "none",
         }}
       >
-        {open ? <X size={26} style={{ strokeWidth: 2.5 }} /> : <MessageCircle size={26} style={{ strokeWidth: 2.5 }} />}
+        {open ? <X size={24} /> : <MessageCircle size={24} />}
       </button>
 
-      {/* ===== Cyber Neon Glassmorphic Chat Panel (Geometry Dash Essence) ===== */}
+      {/* ===== Warm Gastronomic Chat Panel ===== */}
       {open && (
         <div
           style={{
             position: "fixed",
             bottom: "6rem",
             right: "1.5rem",
-            width: 390,
+            width: 380,
             maxWidth: "calc(100vw - 2rem)",
-            height: 540,
+            height: 520,
             maxHeight: "calc(100vh - 8rem)",
-            background: "rgba(9, 15, 30, 0.95)", // Deep space gaming dark background
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            border: "2px solid #10B981", // Pulse neon Emerald frame
-            borderRadius: 24,
-            boxShadow: "0 0 40px rgba(16, 185, 129, 0.25), 0 25px 50px rgba(0, 0, 0, 0.6)",
+            background: "var(--color-bg-card)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "var(--radius-xl)",
+            boxShadow: "var(--shadow-lg), 0 10px 40px rgba(28, 25, 23, 0.12)",
             zIndex: 9998,
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
-            animation: "neonPanelSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+            animation: "chatPanelSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
           }}
         >
           {/* Header */}
           <div
             style={{
               padding: "1.25rem",
-              background: "linear-gradient(90deg, rgba(16,185,129,0.15), rgba(6,182,212,0.15))",
-              borderBottom: "1px solid rgba(16, 185, 129, 0.2)",
+              background: "var(--color-surface-warm)",
+              borderBottom: "1px solid var(--color-border)",
               position: "relative",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <div
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  backgroundColor: "#10B981",
-                  boxShadow: "0 0 8px #10B981",
-                  animation: "neonPulse 1.5s infinite",
-                }}
-              />
+            <div style={{ display: "flex", alignItems: "center", justifyItems: "center", gap: "0.5rem" }}>
               <span
                 style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 900,
-                  fontSize: "1rem",
-                  letterSpacing: "0.05em",
-                  color: "#FFFFFF",
-                  textShadow: "0 0 10px rgba(16, 185, 129, 0.5)",
+                  fontFamily: "Georgia, serif",
+                  fontWeight: 700,
+                  fontSize: "1.1rem",
+                  color: "var(--color-primary-dark)",
                 }}
               >
-                GastroCocha AI Agent
+                GastroCocha AI
               </span>
-              <Sparkles size={14} color="#06B6D4" style={{ filter: "drop-shadow(0 0 4px #06B6D4)" }} />
+              <Sparkles size={14} color="var(--color-primary)" />
             </div>
             <div
               style={{
                 fontSize: "0.75rem",
-                color: "rgba(255, 255, 255, 0.6)",
-                marginTop: "0.35rem",
+                color: "var(--color-text-muted)",
+                marginTop: "0.25rem",
                 display: "flex",
                 alignItems: "center",
-                gap: "0.35rem",
+                gap: "0.25rem",
               }}
             >
-              <Navigation size={12} color="#06B6D4" />
+              <Navigation size={12} color="var(--color-secondary)" />
               {userLocation ? (
-                <span style={{ color: "#34D399", fontWeight: 600 }}>GPS Geolocalizado</span>
+                <span style={{ color: "var(--color-secondary-dark)", fontWeight: 600 }}>Ubicación activada</span>
               ) : (
-                <span>GPS Desactivado · Recomendaciones globales</span>
+                <span>Recomendaciones globales</span>
               )}
             </div>
           </div>
 
-          {/* Action Pop-up Notification (Rhythmic gaming cue) */}
+          {/* Action Pop-up Notification */}
           {activeAction && (
             <div
               style={{
-                background: "linear-gradient(90deg, #10B981, #06B6D4)",
-                color: "#020617",
+                background: "var(--color-secondary)",
+                color: "#FFFFFF",
                 padding: "0.5rem 1rem",
                 fontSize: "0.75rem",
-                fontWeight: 700,
+                fontWeight: 600,
                 display: "flex",
                 alignItems: "center",
                 gap: "0.5rem",
-                boxShadow: "0 0 15px rgba(16,185,129,0.4)",
+                boxShadow: "var(--shadow-sm)",
                 animation: "actionFlash 0.3s ease",
               }}
             >
@@ -256,6 +242,7 @@ export function Chatbot() {
               display: "flex",
               flexDirection: "column",
               gap: "1rem",
+              background: "var(--color-bg)",
             }}
           >
             {messages.map((msg, i) => (
@@ -271,19 +258,13 @@ export function Chatbot() {
                       : "16px 16px 16px 4px",
                   background:
                     msg.role === "user"
-                      ? "linear-gradient(135deg, #059669, #047857)" // Neon Green for User
-                      : "rgba(255, 255, 255, 0.05)", // Glass dark gray for Assistant
-                  border:
-                    msg.role === "user"
-                      ? "1px solid #10B981"
-                      : "1px solid rgba(255, 255, 255, 0.1)",
-                  color: "#FFFFFF",
+                      ? "var(--color-primary)"
+                      : "var(--color-bg-card)",
+                  border: "1px solid var(--color-border)",
+                  color: msg.role === "user" ? "#FFFFFF" : "var(--color-text)",
                   fontSize: "0.85rem",
                   lineHeight: 1.6,
-                  boxShadow:
-                    msg.role === "user"
-                      ? "0 4px 12px rgba(16, 185, 129, 0.15)"
-                      : "none",
+                  boxShadow: "var(--shadow-sm)",
                   whiteSpace: "pre-wrap",
                 }}
               >
@@ -297,58 +278,59 @@ export function Chatbot() {
                   display: "flex",
                   alignItems: "center",
                   gap: "0.5rem",
-                  color: "#94A3B8",
+                  color: "var(--color-text-muted)",
                   fontSize: "0.8rem",
-                  background: "rgba(255, 255, 255, 0.02)",
+                  background: "var(--color-bg-card)",
                   padding: "0.5rem 1rem",
                   borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.05)",
+                  border: "1px solid var(--color-border)",
                 }}
               >
                 <Loader2
-                  size={16}
-                  color="#10B981"
+                  size={14}
+                  color="var(--color-primary)"
+                  className="animate-spin"
                   style={{ animation: "spin 1s linear infinite" }}
                 />
-                Procesando consulta...
+                Buscando sabores...
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Futuristic Glowing Input */}
+          {/* Input field */}
           <div
             style={{
               padding: "1rem",
-              borderTop: "1px solid rgba(16, 185, 129, 0.2)",
+              borderTop: "1px solid var(--color-border)",
               display: "flex",
               gap: "0.5rem",
-              background: "rgba(2, 6, 23, 0.4)",
+              background: "var(--color-bg-card)",
             }}
           >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="Escribe: 'Márcame La Quillacolleña en el mapa'..."
+              placeholder="¿Dónde puedo comer silpancho?"
               style={{
                 flex: 1,
                 padding: "0.75rem 1rem",
                 borderRadius: 12,
-                border: "1px solid rgba(16, 185, 129, 0.3)",
-                background: "rgba(15, 23, 42, 0.6)",
-                color: "#FFFFFF",
+                border: "1px solid var(--color-border)",
+                background: "var(--color-bg)",
+                color: "var(--color-text)",
                 fontSize: "0.85rem",
                 outline: "none",
-                transition: "all 0.3s ease",
+                transition: "all 0.2s ease",
               }}
               onFocus={(e) => {
-                e.target.style.border = "1px solid #06B6D4";
-                e.target.style.boxShadow = "0 0 10px rgba(6, 182, 212, 0.4)";
+                e.target.style.border = "1px solid var(--color-primary)";
+                e.target.style.background = "#FFFFFF";
               }}
               onBlur={(e) => {
-                e.target.style.border = "1px solid rgba(16, 185, 129, 0.3)";
-                e.target.style.boxShadow = "none";
+                e.target.style.border = "1px solid var(--color-border)";
+                e.target.style.background = "var(--color-bg)";
               }}
             />
             <button
@@ -357,49 +339,41 @@ export function Chatbot() {
               style={{
                 padding: "0.75rem",
                 borderRadius: 12,
-                background: "linear-gradient(135deg, #10B981, #06B6D4)",
+                background: "var(--color-primary)",
                 border: "none",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 transition: "all 0.2s ease",
-                boxShadow: "0 0 10px rgba(16, 185, 129, 0.4)",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.05)";
+                e.currentTarget.style.background = "var(--color-primary-dark)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.background = "var(--color-primary)";
               }}
             >
-              <Send size={18} color="#020617" style={{ strokeWidth: 2.5 }} />
+              <Send size={18} color="#FFFFFF" />
             </button>
           </div>
         </div>
       )}
 
-      {/* Cyber Animations (Geometry Dash Pulsing Essence) */}
       <style>{`
-        @keyframes neonPanelSlideIn {
-          from { opacity: 0; transform: scale(0.9) translateY(40px); }
+        @keyframes chatPanelSlideIn {
+          from { opacity: 0; transform: scale(0.95) translateY(20px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
         }
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
-        @keyframes neonPulse {
-          0% { opacity: 0.5; box-shadow: 0 0 4px #10B981; }
-          50% { opacity: 1; box-shadow: 0 0 12px #10B981; }
-          100% { opacity: 0.5; box-shadow: 0 0 4px #10B981; }
-        }
         @keyframes actionFlash {
           from { transform: translateY(-10px); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
         }
-        .neon-trigger-pulse:hover {
-          transform: scale(1.1) rotate(5deg) !important;
-          box-shadow: 0 0 35px rgba(16, 185, 129, 0.8), 0 0 70px rgba(6, 182, 212, 0.5) !important;
+        .gastro-chat-trigger:hover {
+          transform: scale(1.08);
         }
       `}</style>
     </>

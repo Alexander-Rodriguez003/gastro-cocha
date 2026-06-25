@@ -40,16 +40,16 @@ export function FeaturedPlatos({ initialPlatos }: { initialPlatos: Plato[] }) {
 
   return (
     <div>
-      {/* Dynamic Filter Status Toast (Neon glowing badge) */}
+      {/* Dynamic Filter Status Toast */}
       {maxPrice !== Infinity && (
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            background: "linear-gradient(135deg, rgba(6,182,212,0.1), rgba(16,185,129,0.1))",
-            border: "1px solid #10B981",
-            boxShadow: "0 0 15px rgba(16,185,129,0.15)",
+            background: "var(--color-surface-warm)",
+            border: "1px solid rgba(217, 119, 6, 0.25)",
+            boxShadow: "var(--shadow-sm)",
             padding: "0.6rem 1.0rem",
             borderRadius: 12,
             marginBottom: "1.25rem",
@@ -57,15 +57,15 @@ export function FeaturedPlatos({ initialPlatos }: { initialPlatos: Plato[] }) {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.85rem", fontWeight: 600 }}>
-            <Sparkles size={16} color="#10B981" />
-            <span>Filtro de IA activo: Platos de hasta <strong style={{ color: "#10B981" }}>{maxPrice} Bs</strong></span>
+            <Sparkles size={16} color="var(--color-primary)" />
+            <span>Filtro de IA activo: Platos de hasta <strong style={{ color: "var(--color-primary-dark)" }}>{maxPrice} Bs</strong></span>
           </div>
           <button
             onClick={() => setMaxPrice(Infinity)}
             style={{
-              background: "rgba(16, 185, 129, 0.15)",
-              border: "1px solid rgba(16, 185, 129, 0.3)",
-              color: "#047857",
+              background: "rgba(217, 119, 6, 0.08)",
+              border: "1px solid rgba(217, 119, 6, 0.2)",
+              color: "var(--color-primary-dark)",
               fontSize: "0.75rem",
               fontWeight: 700,
               padding: "0.3rem 0.65rem",
@@ -76,10 +76,10 @@ export function FeaturedPlatos({ initialPlatos }: { initialPlatos: Plato[] }) {
               gap: 4,
               transition: "all 0.2s ease",
             }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+            onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.03)"}
             onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
           >
-            <RefreshCw size={12} /> Reestablecer
+            <RefreshCw size={12} /> Restablecer
           </button>
         </div>
       )}

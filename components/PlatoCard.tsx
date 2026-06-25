@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { Plato } from "@/lib/types";
-import { Star, MapPin } from "lucide-react";
+import { Star, MapPin, Utensils } from "lucide-react";
 
 export function PlatoCard({ plato }: { plato: Plato }) {
   const [localPlato, setLocalPlato] = useState(plato);
@@ -31,8 +31,12 @@ export function PlatoCard({ plato }: { plato: Plato }) {
   const rating = localPlato.promedio_rating?.toFixed(1) ?? "—";
   const precio = localPlato.precio_referencial ? `${localPlato.precio_referencial.toFixed(0)} Bs` : "Consultar";
 
+  const linkHref = (localPlato as any).es_especialidad && (localPlato as any).lugar_slug
+    ? `/negocio/${(localPlato as any).lugar_slug}`
+    : `/plato/${localPlato.slug}`;
+
   return (
-    <Link href={`/plato/${localPlato.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+    <Link href={linkHref} style={{ textDecoration: "none", color: "inherit" }}>
       <div className="card" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
         {/* Image */}
         <div
@@ -57,9 +61,29 @@ export function PlatoCard({ plato }: { plato: Plato }) {
               }}
             />
           ) : (
-            <span style={{ fontSize: "3rem" }}>🍽️</span>
+            <Utensils size={48} color="var(--color-primary-light)" style={{ opacity: 0.5 }} />
           )}
-          {localPlato.destacado && (
+          {(localPlato as any).es_especialidad ? (
+            <span
+              className="badge"
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                fontSize: "0.7rem",
+                zIndex: 2,
+                background: "var(--color-secondary)",
+                color: "white",
+                padding: "0.25rem 0.5rem",
+                borderRadius: "6px",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                fontFamily: "var(--font-display)"
+              }}
+            >
+              Especialidad
+            </span>
+          ) : localPlato.destacado ? (
             <span
               className="badge badge-primary"
               style={{
@@ -70,14 +94,14 @@ export function PlatoCard({ plato }: { plato: Plato }) {
                 zIndex: 2,
               }}
             >
-              ⭐ Destacado
+              Destacado
             </span>
-          )}
+          ) : null}
         </div>
 
         {/* Content */}
         <div style={{ padding: "1rem", flex: 1, display: "flex", flexDirection: "column" }}>
-          <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.05rem", marginBottom: "0.35rem" }}>
+          <h3 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.1rem", marginBottom: "0.35rem", color: "var(--color-text)" }}>
             {localPlato.nombre}
           </h3>
 

@@ -123,7 +123,7 @@ export default function AdminLugaresPage() {
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
-      <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: 4, color: "#78716C", textDecoration: "none", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
+      <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--color-text-muted)", textDecoration: "none", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
         <ChevronLeft size={16} /> Panel Admin
       </Link>
 
@@ -137,12 +137,12 @@ export default function AdminLugaresPage() {
       </div>
 
       <div style={{ position: "relative", marginBottom: "1.25rem" }}>
-        <Search size={18} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#78716C" }} />
+        <Search size={18} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar locales..."
-          style={{ width: "100%", padding: "0.65rem 0.9rem 0.65rem 2.5rem", borderRadius: 12, border: "1px solid #E7E5E4", background: "#FFFBF5", fontSize: "0.9rem", outline: "none" }}
+          style={{ width: "100%", padding: "0.65rem 0.9rem 0.65rem 2.5rem", borderRadius: 12, border: "1px solid var(--color-border)", background: "var(--color-bg-card)", fontSize: "0.9rem", outline: "none" }}
         />
       </div>
 
@@ -153,16 +153,16 @@ export default function AdminLugaresPage() {
               <div style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
                 {lugar.nombre}
                 {lugar.aprobado && (
-                  <span style={{ background: "#D1FAE5", color: "#047857", padding: "2px 8px", borderRadius: 999, fontSize: "0.7rem", fontWeight: 600 }}>
+                  <span style={{ background: "var(--color-surface-green)", color: "var(--color-secondary-dark)", padding: "2px 8px", borderRadius: 999, fontSize: "0.7rem", fontWeight: 600 }}>
                     Aprobado
                   </span>
                 )}
               </div>
-              <div style={{ color: "#78716C", fontSize: "0.8rem", marginTop: 2 }}>
+              <div style={{ color: "var(--color-text-muted)", fontSize: "0.8rem", marginTop: 2 }}>
                 <MapPin size={12} style={{ display: "inline", verticalAlign: "middle" }} /> {lugar.direccion} — <span style={{ textTransform: "capitalize", fontWeight: 600 }}>{lugar.provincia_slug.replace(/-/g, " ")}</span>
               </div>
               {lugar.telefono && (
-                <div style={{ color: "#78716C", fontSize: "0.8rem" }}>📞 {lugar.telefono}</div>
+                <div style={{ color: "var(--color-text-muted)", fontSize: "0.8rem" }}>📞 {lugar.telefono}</div>
               )}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -170,16 +170,16 @@ export default function AdminLugaresPage() {
                 href={`https://www.google.com/maps?q=${lugar.lat},${lugar.lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "#D97706", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}
+                style={{ color: "var(--color-primary)", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}
               >
                 <ExternalLink size={14} /> Ver mapa
               </a>
               <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                 <button onClick={() => handleEditClick(lugar)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }} title="Editar">
-                  <Edit size={16} color="#D97706" />
+                  <Edit size={16} color="var(--color-primary)" />
                 </button>
                 <button onClick={() => toggleActivo(lugar.slug)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }} title={lugar.activo ? "Desactivar" : "Activar"}>
-                  {lugar.activo ? <Eye size={18} color="#059669" /> : <EyeOff size={18} color="#78716C" />}
+                  {lugar.activo ? <Eye size={18} color="var(--color-secondary)" /> : <EyeOff size={18} color="var(--color-text-muted)" />}
                 </button>
                 <button onClick={() => handleDelete(lugar.slug)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }} title="Eliminar">
                   <Trash2 size={16} color="#EF4444" />
@@ -198,16 +198,16 @@ export default function AdminLugaresPage() {
           alignItems: "center", justifyContent: "center", padding: "1.5rem"
         }}>
           <div style={{
-            background: "#FFFBF5", borderRadius: 16, border: "1px solid rgba(220, 38, 38, 0.12)",
+            background: "var(--color-bg-card)", borderRadius: 16, border: "var(--color-border)",
             width: "100%", maxWidth: 500, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)",
             overflow: "hidden", display: "flex", flexDirection: "column"
           }}>
             {/* Modal Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 1.5rem", borderBottom: "1px solid #E7E5E4", background: "rgba(217, 119, 6, 0.04)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--color-border)", background: "color-mix(in srgb, var(--color-primary) 4%, transparent)" }}>
               <h3 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700, fontSize: "1.15rem", color: "var(--color-primary-dark)" }}>
                 ✏️ Editar Información de Local
               </h3>
-              <button onClick={() => setEditingLugar(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#78716C", padding: 4 }}>
+              <button onClick={() => setEditingLugar(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)", padding: 4 }}>
                 <X size={20} />
               </button>
             </div>
@@ -218,7 +218,7 @@ export default function AdminLugaresPage() {
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginBottom: "0.5rem" }}>
                 <div style={{
                   width: 90, height: 90, borderRadius: 12, overflow: "hidden",
-                  background: "#E7E5E4", display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "var(--color-border)", display: "flex", alignItems: "center", justifyContent: "center",
                   border: "2px dashed rgba(217, 119, 6, 0.3)"
                 }}>
                   {editingLugar.imagen_url ? (
@@ -237,45 +237,45 @@ export default function AdminLugaresPage() {
                     onChange={handleImageUpload}
                     style={{ fontSize: "0.75rem", alignSelf: "center", cursor: "pointer" }}
                   />
-                  <span style={{ fontSize: "0.7rem", color: "#78716C", textAlign: "center" }}>o pega un enlace de internet abajo:</span>
+                  <span style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", textAlign: "center" }}>o pega un enlace de internet abajo:</span>
                   <input
                     type="text"
                     placeholder="https://ejemplo.com/foto-restaurante.jpg"
                     value={editingLugar.imagen_url || ""}
                     onChange={(e) => setEditingLugar({ ...editingLugar, imagen_url: e.target.value })}
-                    style={{ padding: "0.45rem 0.65rem", borderRadius: 8, border: "1px solid #E7E5E4", outline: "none", fontSize: "0.8rem", width: "100%" }}
+                    style={{ padding: "0.45rem 0.65rem", borderRadius: 8, border: "1px solid var(--color-border)", outline: "none", fontSize: "0.8rem", width: "100%" }}
                   />
                 </div>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#78716C" }}>Nombre del Local</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)" }}>Nombre del Local</label>
                 <input
                   type="text"
                   required
                   value={editingLugar.nombre}
                   onChange={(e) => setEditingLugar({ ...editingLugar, nombre: e.target.value })}
-                  style={{ padding: "0.55rem 0.75rem", borderRadius: 10, border: "1px solid #E7E5E4", outline: "none", fontSize: "0.9rem" }}
+                  style={{ padding: "0.55rem 0.75rem", borderRadius: 10, border: "1px solid var(--color-border)", outline: "none", fontSize: "0.9rem" }}
                 />
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#78716C" }}>Dirección</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)" }}>Dirección</label>
                 <input
                   type="text"
                   required
                   value={editingLugar.direccion}
                   onChange={(e) => setEditingLugar({ ...editingLugar, direccion: e.target.value })}
-                  style={{ padding: "0.55rem 0.75rem", borderRadius: 10, border: "1px solid #E7E5E4", outline: "none", fontSize: "0.9rem" }}
+                  style={{ padding: "0.55rem 0.75rem", borderRadius: 10, border: "1px solid var(--color-border)", outline: "none", fontSize: "0.9rem" }}
                 />
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#78716C" }}>Provincia Origen</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)" }}>Provincia Origen</label>
                 <select
                   value={editingLugar.provincia_slug}
                   onChange={(e) => setEditingLugar({ ...editingLugar, provincia_slug: e.target.value })}
-                  style={{ padding: "0.55rem 0.75rem", borderRadius: 10, border: "1px solid #E7E5E4", background: "white", outline: "none", fontSize: "0.9rem", cursor: "pointer" }}
+                  style={{ padding: "0.55rem 0.75rem", borderRadius: 10, border: "1px solid var(--color-border)", background: "var(--color-bg-card)", outline: "none", fontSize: "0.9rem", cursor: "pointer" }}
                 >
                   {PROVINCIAS.map((p) => (
                     <option key={p.slug} value={p.slug}>{p.nombre}</option>
@@ -284,37 +284,37 @@ export default function AdminLugaresPage() {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#78716C" }}>Teléfono de Contacto</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)" }}>Teléfono de Contacto</label>
                 <input
                   type="text"
                   value={editingLugar.telefono}
                   onChange={(e) => setEditingLugar({ ...editingLugar, telefono: e.target.value })}
-                  style={{ padding: "0.55rem 0.75rem", borderRadius: 10, border: "1px solid #E7E5E4", outline: "none", fontSize: "0.9rem" }}
+                  style={{ padding: "0.55rem 0.75rem", borderRadius: 10, border: "1px solid var(--color-border)", outline: "none", fontSize: "0.9rem" }}
                 />
               </div>
 
               {/* Coordinates Grid */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#78716C" }}>Latitud (GPS)</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)" }}>Latitud (GPS)</label>
                   <input
                     type="number"
                     step="any"
                     required
                     value={editingLugar.lat}
                     onChange={(e) => setEditingLugar({ ...editingLugar, lat: Number(e.target.value) })}
-                    style={{ padding: "0.55rem 0.75rem", borderRadius: 10, border: "1px solid #E7E5E4", outline: "none", fontSize: "0.9rem" }}
+                    style={{ padding: "0.55rem 0.75rem", borderRadius: 10, border: "1px solid var(--color-border)", outline: "none", fontSize: "0.9rem" }}
                   />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#78716C" }}>Longitud (GPS)</label>
+                  <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)" }}>Longitud (GPS)</label>
                   <input
                     type="number"
                     step="any"
                     required
                     value={editingLugar.lng}
                     onChange={(e) => setEditingLugar({ ...editingLugar, lng: Number(e.target.value) })}
-                    style={{ padding: "0.55rem 0.75rem", borderRadius: 10, border: "1px solid #E7E5E4", outline: "none", fontSize: "0.9rem" }}
+                    style={{ padding: "0.55rem 0.75rem", borderRadius: 10, border: "1px solid var(--color-border)", outline: "none", fontSize: "0.9rem" }}
                   />
                 </div>
               </div>

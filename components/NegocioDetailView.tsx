@@ -1,62 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Star, MapPin, ChevronLeft, Phone, Share2, Sparkles, Sliders, MessageSquare, Check, ArrowRight, Compass, Utensils } from "lucide-react";
+import { Star, MapPin, ChevronLeft, Phone, Sparkles, MessageSquare, ArrowRight, Compass, Utensils } from "lucide-react";
 import Link from "next/link";
-import type { Lugar, Plato, Resena } from "@/lib/types";
+import type { Lugar, Plato, Resena, PlatoConPivot } from "@/lib/types";
 
 interface NegocioDetailViewProps {
   initialLugar: Lugar;
-  platos: Plato[];
+  platos: PlatoConPivot[];
   resenas: Resena[];
 }
-
-type AccentColor = "green" | "cyan" | "magenta" | "amber";
-
-const ACCENT_THEMES = {
-  green: {
-    hex: "#10B981",
-    bgGlow: "rgba(16, 185, 129, 0.15)",
-    borderGlow: "rgba(16, 185, 129, 0.4)",
-    gradient: "linear-gradient(135deg, #10B981, #059669)",
-  },
-  cyan: {
-    hex: "#06B6D4",
-    bgGlow: "rgba(6, 182, 212, 0.15)",
-    borderGlow: "rgba(6, 182, 212, 0.4)",
-    gradient: "linear-gradient(135deg, #06B6D4, #0891B2)",
-  },
-  magenta: {
-    hex: "#D946EF",
-    bgGlow: "rgba(217, 70, 239, 0.15)",
-    borderGlow: "rgba(217, 70, 239, 0.4)",
-    gradient: "linear-gradient(135deg, #D946EF, #C084FC)",
-  },
-  amber: {
-    hex: "#F59E0B",
-    bgGlow: "rgba(245, 158, 11, 0.15)",
-    borderGlow: "rgba(245, 158, 11, 0.4)",
-    gradient: "linear-gradient(135deg, #F59E0B, #D97706)",
-  },
-};
 
 export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDetailViewProps) {
   const [lugar, setLugar] = useState<Lugar>(initialLugar);
   const [localResenas, setLocalResenas] = useState<Resena[]>(resenas);
-  const [activeAccent, setActiveAccent] = useState<AccentColor>("green");
   const [reviewAddedBanner, setReviewAddedBanner] = useState<string | null>(null);
 
-  const theme = ACCENT_THEMES[activeAccent];
-
-  // 1. Load custom saved neon theme accent for this restaurant
-  useEffect(() => {
-    const savedTheme = localStorage.getItem(`gastro_negocio_theme_${initialLugar.slug}`);
-    if (savedTheme && (savedTheme === "green" || savedTheme === "cyan" || savedTheme === "magenta" || savedTheme === "amber")) {
-      setActiveAccent(savedTheme);
-    }
-  }, [initialLugar.slug]);
-
-  // 2. Load custom persistent user/AI reviews for this place from localStorage
+  // Load custom persistent user/AI reviews for this place from localStorage
   useEffect(() => {
     const savedReviews = localStorage.getItem(`gastro_reviews_lugar_${initialLugar.slug}`);
     if (savedReviews) {
@@ -69,13 +29,7 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
     }
   }, [initialLugar.slug, resenas]);
 
-  // 3. Save theme preference
-  const selectTheme = (color: AccentColor) => {
-    setActiveAccent(color);
-    localStorage.setItem(`gastro_negocio_theme_${initialLugar.slug}`, color);
-  };
-
-  // 4. Listen for dynamic AI reviews submission
+  // Listen for dynamic AI reviews submission
   useEffect(() => {
     const handleAiAction = (e: Event) => {
       const customEvent = e as CustomEvent;
@@ -115,7 +69,7 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
           return updated;
         });
 
-        // Trigger dynamic glow toast
+        // Trigger dynamic banner
         setReviewAddedBanner(`⭐ ¡Tu valoración de ${newReview.rating} estrellas ha sido publicada por la IA!`);
         setTimeout(() => setReviewAddedBanner(null), 7000);
 
@@ -147,23 +101,23 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
       {reviewAddedBanner && (
         <div
           style={{
-            background: "linear-gradient(135deg, rgba(6,182,212,0.1), rgba(16,185,129,0.1))",
-            border: `2px solid ${theme.hex}`,
+            background: "var(--color-surface-warm)",
+            border: `1px solid var(--color-primary-light)`,
             borderRadius: "var(--radius-lg)",
             padding: "1.25rem",
             marginBottom: "2.0rem",
             display: "flex",
             alignItems: "center",
             gap: "1rem",
-            boxShadow: `0 0 20px ${theme.bgGlow}`,
+            boxShadow: "var(--shadow-md)",
             animation: "reviewPulseBanner 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
           }}
         >
-          <div style={{ background: theme.hex, color: "#020617", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "var(--color-primary)", color: "#FFFFFF", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Sparkles size={20} />
           </div>
           <div>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1rem", color: theme.hex }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1rem", color: "var(--color-primary-dark)" }}>
               ✨ ¡Reseña Publicada por el Chatbot!
             </div>
             <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginTop: 2 }}>
@@ -173,22 +127,18 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
         </div>
       )}
 
-      {/* ===== HEADER BANNER (Geometry Dash Cyber Neon Space Layout) ===== */}
+      {/* ===== HEADER BANNER (Gastronomic Elegant Cover Layout) ===== */}
       <div
         style={{
-          background: "linear-gradient(135deg, #0f172a, #020617)",
-          border: `2px solid ${theme.hex}`,
-          borderRadius: 24,
-          padding: "2.5rem 2rem",
-          color: "#FFFFFF",
-          boxShadow: `0 0 30px ${theme.bgGlow}, 0 20px 40px rgba(0,0,0,0.5)`,
-          marginBottom: "2.5rem",
           position: "relative",
+          height: "380px",
+          borderRadius: "var(--radius-xl)",
           overflow: "hidden",
-          transition: "all 0.5s ease",
+          boxShadow: "var(--shadow-lg)",
+          marginBottom: "2.5rem",
         }}
       >
-        {/* Decorative Grid Mesh Background */}
+        {/* Background Image */}
         <div
           style={{
             position: "absolute",
@@ -196,36 +146,50 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
             left: 0,
             width: "100%",
             height: "100%",
-            backgroundImage: "radial-gradient(rgba(255,255,255,0.03) 1px, transparent 0)",
-            backgroundSize: "24px 24px",
-            pointerEvents: "none",
+            backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.75)), url(${
+              lugar.imagen_url ||
+              "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80"
+            })`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
         />
 
-        <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          
+        {/* Content Overlay */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: "2.5rem 2rem",
+            color: "#FFFFFF",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1rem",
+            zIndex: 2,
+          }}
+        >
           {/* Badge & Rating row */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
             <span
               style={{
-                background: theme.bgGlow,
-                border: `1px solid ${theme.hex}`,
-                color: theme.hex,
+                background: "var(--color-secondary)",
+                color: "#FFFFFF",
                 padding: "0.4rem 1rem",
                 borderRadius: 12,
                 fontSize: "0.75rem",
                 fontWeight: 700,
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
-                textShadow: `0 0 8px ${theme.hex}`,
               }}
             >
-              🚀 Restaurante Verificado
+              🍽️ Restaurante Verificado
             </span>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255, 255, 255, 0.05)", padding: "0.4rem 0.8rem", borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)" }}>
-              <Star size={16} fill={theme.hex} color={theme.hex} style={{ filter: `drop-shadow(0 0 4px ${theme.hex})` }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(0, 0, 0, 0.4)", padding: "0.4rem 0.8rem", borderRadius: 12, backdropFilter: "blur(4px)" }}>
+              <Star size={16} fill="var(--color-primary-light)" color="var(--color-primary-light)" />
               <span style={{ fontWeight: 800, fontSize: "0.95rem" }}>{avgRating}</span>
-              <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem" }}>({localResenas.length} opiniones)</span>
+              <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.8rem" }}>({localResenas.length} opiniones)</span>
             </div>
           </div>
 
@@ -233,41 +197,41 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
           <div>
             <h1
               style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 900,
-                fontSize: "2.75rem",
-                letterSpacing: "-0.02em",
+                fontFamily: "Georgia, serif",
+                fontWeight: 700,
+                fontSize: "3rem",
+                letterSpacing: "-0.01em",
                 lineHeight: 1.1,
-                textShadow: `0 0 20px ${theme.bgGlow}`,
+                textShadow: "0 2px 4px rgba(0,0,0,0.5)",
               }}
             >
               {lugar.nombre}
             </h1>
             
             {/* Meta details */}
-            <div style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap", marginTop: "1rem", fontSize: "0.9rem", color: "rgba(255,255,255,0.7)" }}>
+            <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", marginTop: "1rem", fontSize: "0.9rem", color: "rgba(255,255,255,0.9)" }}>
               {lugar.provincia && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <MapPin size={16} color={theme.hex} />
+                  <MapPin size={16} color="var(--color-primary-light)" />
                   <strong>{lugar.provincia.nombre}</strong> (Cochabamba)
                 </span>
               )}
               {lugar.direccion && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <Compass size={16} color={theme.hex} />
+                  <Compass size={16} color="var(--color-primary-light)" />
                   {lugar.direccion}
                 </span>
               )}
               {lugar.telefono && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <Phone size={16} color={theme.hex} />
+                  <Phone size={16} color="var(--color-primary-light)" />
                   {lugar.telefono}
                 </span>
               )}
             </div>
           </div>
 
-          <hr style={{ border: "0", borderTop: "1px solid rgba(255, 255, 255, 0.1)", margin: "0.5rem 0" }} />
+          <hr style={{ border: "0", borderTop: "1px solid rgba(255, 255, 255, 0.2)", margin: "0.5rem 0" }} />
 
           {/* Business action triggers */}
           <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
@@ -277,8 +241,8 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  background: theme.gradient,
-                  color: "#020617",
+                  background: "var(--color-primary)",
+                  color: "#FFFFFF",
                   padding: "0.75rem 1.5rem",
                   borderRadius: 12,
                   fontWeight: 700,
@@ -287,11 +251,17 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 8,
-                  boxShadow: `0 0 15px ${theme.hex}`,
+                  boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
                   transition: "all 0.2s ease",
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.03)"}
-                onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.boxShadow = "0 6px 12px rgba(0,0,0,0.2)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
+                }}
               >
                 🗺️ Cómo Llegar (Google Maps)
               </a>
@@ -299,8 +269,8 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
                 <a
                   href={`tel:${lugar.telefono}`}
                   style={{
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.12)",
+                    background: "rgba(255,255,255,0.15)",
+                    border: "1px solid rgba(255,255,255,0.25)",
                     color: "#FFFFFF",
                     padding: "0.75rem 1.25rem",
                     borderRadius: 12,
@@ -310,57 +280,21 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 6,
+                    backdropFilter: "blur(4px)",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.25)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.15)";
                   }}
                 >
                   📞 Llamar
                 </a>
               )}
             </div>
-
-            {/* ===== GEOMETRY DASH THEME CUSTOMIZER BUTTON WHEEL ===== */}
-            <div
-              style={{
-                background: "rgba(15, 23, 42, 0.6)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 16,
-                padding: "0.5rem 0.85rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-              }}
-            >
-              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "rgba(255,255,255,0.6)", display: "flex", alignItems: "center", gap: 4 }}>
-                <Sliders size={12} color={theme.hex} /> Accent:
-              </span>
-              <div style={{ display: "flex", gap: "0.35rem" }}>
-                {(["green", "cyan", "magenta", "amber"] as AccentColor[]).map((col) => (
-                  <button
-                    key={col}
-                    onClick={() => selectTheme(col)}
-                    aria-label={`Theme ${col}`}
-                    style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: 6,
-                      background: ACCENT_THEMES[col].gradient,
-                      border: activeAccent === col ? "2px solid #FFFFFF" : "1px solid rgba(0,0,0,0.3)",
-                      boxShadow: activeAccent === col ? `0 0 10px ${ACCENT_THEMES[col].hex}` : "none",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: 0,
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    {activeAccent === col && <Check size={10} color="#000000" style={{ strokeWidth: 3 }} />}
-                  </button>
-                ))}
-              </div>
-            </div>
-
           </div>
-
         </div>
       </div>
 
@@ -370,8 +304,8 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
         {/* SIGNATURE DISHES MENU */}
         <section>
           <div style={{ marginBottom: "1.5rem" }}>
-            <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "1.5rem", display: "flex", alignItems: "center", gap: 8 }}>
-              <Utensils size={24} color={theme.hex} />
+            <h2 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.75rem", display: "flex", alignItems: "center", gap: 8, color: "var(--color-text)" }}>
+              <Utensils size={24} color="var(--color-primary)" />
               Menú y Especialidades de la Casa
             </h2>
             <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", marginTop: 4 }}>
@@ -380,43 +314,53 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
           </div>
 
           {platos.length > 0 ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1.25rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1.5rem" }}>
               {platos.map((plato) => (
                 <div
                   key={plato.id}
                   className="card"
                   style={{
-                    padding: "1.25rem",
-                    border: `1px solid rgba(28,25,23,0.08)`,
+                    padding: "1.5rem",
+                    background: "var(--color-bg-card)",
+                    border: `1px solid var(--color-border)`,
                     borderRadius: 16,
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
-                    gap: "1rem",
-                    transition: "all 0.3s ease",
+                    gap: "1.25rem",
+                    transition: "all 0.25s ease-in-out",
                     position: "relative",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-4px)";
-                    e.currentTarget.style.borderColor = theme.hex;
-                    e.currentTarget.style.boxShadow = `0 10px 20px ${theme.bgGlow}`;
+                    e.currentTarget.style.transform = "translateY(-3px)";
+                    e.currentTarget.style.borderColor = "var(--color-primary)";
+                    e.currentTarget.style.boxShadow = "var(--shadow-md)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.borderColor = "rgba(28,25,23,0.08)";
+                    e.currentTarget.style.borderColor = "var(--color-border)";
                     e.currentTarget.style.boxShadow = "none";
                   }}
                 >
                   <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                      <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.1rem" }}>{plato.nombre}</h3>
-                      {plato.precio_referencial && (
-                        <span style={{ fontWeight: 800, color: "var(--color-primary-dark)", fontSize: "1.05rem" }}>
-                          {plato.precio_referencial} Bs
-                        </span>
-                      )}
+                    <div style={{ display: "flex", gap: "1rem", marginBottom: "0.75rem", alignItems: "center" }}>
+                      <img
+                        src={plato.pivot?.imagen_url || plato.imagen_url || "/images/placeholder-plate.jpg"}
+                        alt={plato.nombre}
+                        style={{ width: 75, height: 75, borderRadius: "12px", objectFit: "cover", background: "var(--color-border)" }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                          <h3 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.1rem", color: "var(--color-text)" }}>
+                            {plato.nombre}
+                          </h3>
+                          <span style={{ fontWeight: 700, color: "var(--color-primary-dark)", fontSize: "1.05rem", fontFamily: "var(--font-display)" }}>
+                            {plato.pivot?.precio_aproximado || plato.precio_referencial || "—"} Bs
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", marginTop: 6, lineHeight: 1.5 }}>
+                    <p style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", marginTop: 8, lineHeight: 1.6 }}>
                       {plato.descripcion.length > 120 ? `${plato.descripcion.slice(0, 117)}...` : plato.descripcion}
                     </p>
                   </div>
@@ -429,10 +373,13 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
                       gap: 4,
                       fontSize: "0.8rem",
                       fontWeight: 700,
-                      color: theme.hex,
+                      color: "var(--color-primary)",
                       textDecoration: "none",
                       marginTop: "0.5rem",
+                      transition: "color 0.2s ease",
                     }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = "var(--color-primary-dark)"}
+                    onMouseLeave={(e) => e.currentTarget.style.color = "var(--color-primary)"}
                   >
                     Ver detalle del plato <ArrowRight size={14} />
                   </Link>
@@ -444,13 +391,76 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
               No hay especialidades cargadas en este menú aún.
             </div>
           )}
+
+          {/* Especialidades de la Casa */}
+          {lugar.especialidades && lugar.especialidades.length > 0 && (
+            <div style={{ marginTop: "2.5rem" }}>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <h3 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.4rem", display: "flex", alignItems: "center", gap: 8, color: "var(--color-text)" }}>
+                  <Sparkles size={20} color="var(--color-secondary)" style={{ display: "inline", verticalAlign: "middle" }} />
+                  Creaciones y Especialidades Propias
+                </h3>
+                <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", marginTop: 4 }}>
+                  Platos únicos diseñados por nuestros chefs para consentir tu paladar.
+                </p>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1.5rem" }}>
+                {lugar.especialidades.map((spec) => (
+                  <div
+                    key={spec.id}
+                    className="card"
+                    style={{
+                      padding: "1.25rem",
+                      background: "var(--color-bg-card)",
+                      border: `1px solid var(--color-border)`,
+                      borderRadius: 16,
+                      display: "flex",
+                      gap: "1rem",
+                      alignItems: "center",
+                      transition: "all 0.25s ease-in-out",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-3px)";
+                      e.currentTarget.style.borderColor = "var(--color-secondary)";
+                      e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.borderColor = "var(--color-border)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    <img
+                      src={spec.imagen_url || "/images/placeholder-plate.jpg"}
+                      alt={spec.nombre}
+                      style={{ width: 75, height: 75, borderRadius: "12px", objectFit: "cover", background: "var(--color-border)" }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.05rem", color: "var(--color-text)" }}>
+                        {spec.nombre}
+                      </h4>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                        <span style={{ fontWeight: 700, color: "var(--color-secondary-dark)", fontSize: "1.05rem", fontFamily: "var(--font-display)" }}>
+                          {spec.precio} Bs
+                        </span>
+                        <span style={{ background: "var(--color-surface-warm)", color: "var(--color-primary-dark)", fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: 4, fontWeight: 700, textTransform: "uppercase" }}>
+                          Especialidad
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* REVIEWS SECTION */}
         <section id="resenas-seccion">
           <div style={{ marginBottom: "1.5rem" }}>
-            <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "1.5rem", display: "flex", alignItems: "center", gap: 8 }}>
-              <MessageSquare size={24} color={theme.hex} />
+            <h2 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.75rem", display: "flex", alignItems: "center", gap: 8, color: "var(--color-text)" }}>
+              <MessageSquare size={24} color="var(--color-primary)" />
               Opiniones de los Clientes
             </h2>
             <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", marginTop: 4 }}>
@@ -459,30 +469,32 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
           </div>
 
           {localResenas.length > 0 ? (
-            <div style={{ display: "grid", gap: "0.75rem" }}>
+            <div style={{ display: "grid", gap: "1rem" }}>
               {localResenas.map((resena) => (
                 <div
                   key={resena.id}
                   className="card"
                   style={{
-                    padding: "1.25rem",
+                    padding: "1.5rem",
                     borderRadius: 16,
-                    border: resena.user_id === 99 ? `1px solid ${theme.hex}` : "1px solid var(--color-border)",
-                    background: resena.user_id === 99 ? "rgba(255,255,255,0.01)" : "var(--color-surface)",
-                    boxShadow: resena.user_id === 99 ? `0 0 10px ${theme.bgGlow}` : "none",
+                    border: resena.user_id === 99 ? `1px solid var(--color-primary-light)` : "1px solid var(--color-border)",
+                    background: resena.user_id === 99 ? "var(--color-surface-warm)" : "var(--color-bg-card)",
+                    boxShadow: "var(--shadow-sm)",
                     animation: resena.user_id === 99 ? "newReviewFade 0.6s cubic-bezier(0.19, 1, 0.22, 1)" : "none",
-                    transition: "all 0.3s ease",
+                    transition: "all 0.2s ease",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                    <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>{resena.titulo || "Recomendado"}</div>
-                    <div className="stars" style={{ fontSize: "0.85rem", color: resena.user_id === 99 ? theme.hex : "inherit" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+                    <div style={{ fontWeight: 700, fontSize: "1rem", color: "var(--color-text)", fontFamily: "Georgia, serif" }}>
+                      {resena.titulo || "Recomendado"}
+                    </div>
+                    <div className="stars" style={{ fontSize: "0.85rem" }}>
                       {"★".repeat(resena.rating)}{"☆".repeat(5 - resena.rating)}
                     </div>
                   </div>
-                  <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", lineHeight: 1.6 }}>{resena.comentario}</p>
+                  <p style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", lineHeight: 1.6 }}>{resena.comentario}</p>
                   {resena.user && (
-                    <div style={{ marginTop: "0.6rem", fontSize: "0.75rem", color: "var(--color-text-muted)", fontWeight: 500 }}>
+                    <div style={{ marginTop: "0.75rem", fontSize: "0.75rem", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                       — {resena.user.name}
                     </div>
                   )}
@@ -507,19 +519,14 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
 
       </div>
 
-      {/* Rhythmic Game keyframes styles */}
       <style>{`
         @keyframes reviewPulseBanner {
           0% { transform: translateY(-20px) scale(0.92); opacity: 0; }
           100% { transform: translateY(0) scale(1); opacity: 1; }
         }
         @keyframes newReviewFade {
-          0% { transform: scale(0.95); background: ${theme.bgGlow}; opacity: 0.5; }
-          100% { transform: scale(1); background: transparent; opacity: 1; }
-        }
-        .hover-neon-text:hover {
-          color: ${theme.hex} !important;
-          text-shadow: 0 0 5px ${theme.hex};
+          0% { transform: scale(0.95); background: var(--color-surface-warm); opacity: 0.5; }
+          100% { transform: scale(1); background: var(--color-bg-card); opacity: 1; }
         }
       `}</style>
 

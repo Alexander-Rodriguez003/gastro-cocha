@@ -1,182 +1,390 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800&family=Inter:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 /* =============================================
-   Design System — Gastro Cocha
-   Inspired by warm Cochabamba colors
+   Design System — GastroCocha
+   Editorial style inspired by Pizzeria Beddia
+   Warm cream · Ink black · Forest green accent
    ============================================= */
 
 :root {
-  /* Primary: warm terracotta/amber */
-  --color-primary: #D97706;
-  --color-primary-light: #F59E0B;
-  --color-primary-dark: #B45309;
-  
-  /* Secondary: deep green (nature/valleys) */
-  --color-secondary: #059669;
-  --color-secondary-light: #10B981;
-  --color-secondary-dark: #047857;
-  
-  /* Accent: rich burgundy (chicha) */
-  --color-accent: #9F1239;
-  --color-accent-light: #E11D48;
-  
-  /* Neutrals */
-  --color-bg: #FFFBF5;
-  --color-bg-card: #FFFFFF;
-  --color-text: #1C1917;
-  --color-text-muted: #78716C;
-  --color-border: #E7E5E4;
-  
-  /* Surfaces */
-  --color-surface-warm: #FEF3C7;
-  --color-surface-green: #D1FAE5;
-  
-  --font-display: 'Outfit', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
-  
-  --radius: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
-  --shadow-glow: 0 0 20px rgba(217, 119, 6, 0.15);
+  /* ---- Core Palette ---- */
+  --color-cream:        #F7F4EE;   /* page background */
+  --color-ink:          #1A1714;   /* primary text / buttons */
+  --color-ink-soft:     #3D3830;   /* headings */
+  --color-muted:        #8A8178;   /* secondary text */
+  --color-border:       #E0DDD6;   /* dividers */
+  --color-border-light: #EAE7E0;   /* subtle borders */
+
+  /* ---- Accents ---- */
+  --color-forest:       #2A5C3F;   /* "ABIERTO HOY" badge bg */
+  --color-forest-text:  #F0FAF4;   /* badge text */
+  --color-amber:        #C8702A;   /* secondary accent / links */
+  --color-amber-light:  #F3E8D8;   /* amber surface */
+
+  /* ---- Surfaces ---- */
+  --color-bg:           #F7F4EE;
+  --color-bg-card:      #FFFFFF;
+  --color-bg-dark:      #111010;   /* footer */
+  --color-bg-dark-2:    #1A1714;   /* footer section */
+
+  /* ---- Legacy tokens (kept for admin/chatbot/other pages) ---- */
+  --color-primary:      #C8702A;
+  --color-primary-light:#E8945A;
+  --color-primary-dark: #A35A1E;
+  --color-secondary:    #2A5C3F;
+  --color-secondary-light: #3A7F56;
+  --color-secondary-dark: #1E4530;
+  --color-accent:       #7C2D3E;
+  --color-accent-light: #C44B61;
+  --color-text:         #1A1714;
+  --color-text-muted:   #8A8178;
+  --color-surface-warm: #F3E8D8;
+  --color-surface-green: #D8EFE2;
+  --color-danger:       #DC2626;
+  --color-danger-bg:    #FEE2E2;
+  --color-info:         #2563EB;
+  --color-info-bg:      #DBEAFE;
+
+  /* ---- Typography ---- */
+  --font-serif:   'Playfair Display', Georgia, serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+
+  /* ---- Spacing & Radius ---- */
+  --radius:       4px;
+  --radius-pill:  999px;
+  --radius-md:    8px;
+  --radius-lg:    12px;
+  --radius-xl:    20px;
+
+  /* ---- Shadows ---- */
+  --shadow-sm:    0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:    0 4px 12px rgba(0,0,0,0.07);
+  --shadow-lg:    0 12px 32px rgba(0,0,0,0.10);
+  --shadow-glow:  0 0 24px rgba(200, 112, 42, 0.15);
+
+  /* ---- Transitions ---- */
+  --ease:         cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #0C0A09;
-    --color-bg-card: #1C1917;
-    --color-text: #FAFAF9;
-    --color-text-muted: #A8A29E;
-    --color-border: #292524;
-    --color-surface-warm: #451A03;
-    --color-surface-green: #064E3B;
-  }
+/* ============================================================
+   BASE RESET
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
 
-/* ---- Base ---- */
 body {
   font-family: var(--font-body);
   background-color: var(--color-bg);
-  color: var(--color-text);
+  color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
+  color: var(--color-ink-soft);
+  line-height: 1.1;
 }
 
-/* ---- Scrollbar ---- */
-::-webkit-scrollbar { width: 6px; }
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
 
-/* ---- Components ---- */
+/* ============================================================
+   BUTTONS
+   ============================================================ */
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  color: white;
-  padding: 0.625rem 1.5rem;
-  border-radius: var(--radius);
-  font-weight: 600;
-  font-family: var(--font-display);
-  transition: all 0.2s ease;
-  border: none;
-  cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  background: var(--color-ink);
+  color: var(--color-cream);
+  padding: 0.7rem 1.75rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+  border: 1.5px solid var(--color-ink);
+  cursor: pointer;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease), transform 0.15s var(--ease);
+  text-decoration: none;
 }
 .btn-primary:hover {
+  background: transparent;
+  color: var(--color-ink);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
 
 .btn-secondary {
-  background: var(--color-bg-card);
-  color: var(--color-text);
-  padding: 0.625rem 1.5rem;
-  border-radius: var(--radius);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--color-ink);
+  padding: 0.7rem 1.75rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.875rem;
+  border: 1.5px solid var(--color-ink);
+  cursor: pointer;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+  text-decoration: none;
+}
+.btn-secondary:hover {
+  background: var(--color-ink);
+  color: var(--color-cream);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  color: var(--color-muted);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
   font-weight: 500;
   border: 1px solid var(--color-border);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s var(--ease);
 }
-.btn-secondary:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
+.btn-ghost:hover {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
 }
 
+/* ============================================================
+   BADGE / PILL
+   ============================================================ */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
+  gap: 0.35rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.7rem;
   font-weight: 600;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .badge-primary {
-  background: var(--color-surface-warm);
+  background: var(--color-amber-light);
   color: var(--color-primary-dark);
+}
+.badge-forest {
+  background: var(--color-forest);
+  color: var(--color-forest-text);
+}
+.badge-ink {
+  background: var(--color-ink);
+  color: var(--color-cream);
+}
+.badge-secondary {
+  background: var(--color-surface-green);
+  color: var(--color-secondary-dark);
 }
 .badge-green {
   background: var(--color-surface-green);
   color: var(--color-secondary-dark);
 }
 
-/* Stars */
+/* ============================================================
+   CARD (legacy — used in admin/ranking/etc.)
+   ============================================================ */
+.card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: box-shadow 0.25s var(--ease), transform 0.25s var(--ease);
+}
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   STARS
+   ============================================================ */
 .stars {
   color: var(--color-primary);
   letter-spacing: 2px;
 }
 
-/* ---- Chatbot ---- */
+/* ============================================================
+   HERO GRADIENT (legacy — used if hero image fails)
+   ============================================================ */
+.hero-gradient {
+  background: linear-gradient(135deg, #F3E8D8 0%, #EDE4D4 50%, #F7F4EE 100%);
+}
+
+/* ============================================================
+   HERO CTA PILL (floating button over hero image)
+   ============================================================ */
+.hero-cta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(247, 244, 238, 0.92);
+  color: var(--color-ink);
+  padding: 0.65rem 1.5rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s var(--ease), transform 0.2s var(--ease);
+}
+.hero-cta-pill:hover {
+  background: #ffffff;
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   CARD IMAGE HOVER
+   ============================================================ */
+.card-img-wrap {
+  overflow: hidden;
+}
+.card-img-wrap img {
+  transition: transform 0.5s var(--ease);
+}
+.card-img-wrap:hover img {
+  transform: scale(1.04);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 0;
+}
+
+/* ============================================================
+   CHECKERED PATTERN (footer top border)
+   ============================================================ */
+.checkered-border {
+  height: 16px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-ink) 0px,
+    var(--color-ink) 16px,
+    var(--color-cream) 16px,
+    var(--color-cream) 32px
+  );
+}
+
+/* ============================================================
+   SECTION LINK ("Ver más →")
+   ============================================================ */
+.section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: var(--font-body);
+  letter-spacing: 0.03em;
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 0.2s;
+}
+.section-link:hover { opacity: 0.6; }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes filterToastIn {
+  0%   { transform: translateY(-10px) scale(0.95); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes cardItemZoomIn {
+  from { transform: scale(0.92) translateY(10px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes gridPulseFade {
+  from { opacity: 0.6; }
+  to   { opacity: 1; }
+}
+
+.animate-fade-in       { animation: fadeUp 0.55s var(--ease) forwards; }
+.animate-fade-in-delay-1 { animation: fadeUp 0.55s 0.1s var(--ease) both; }
+.animate-fade-in-delay-2 { animation: fadeUp 0.55s 0.2s var(--ease) both; }
+.animate-fade-in-delay-3 { animation: fadeUp 0.55s 0.3s var(--ease) both; }
+
+/* ============================================================
+   CHATBOT (unchanged)
+   ============================================================ */
 .chatbot-trigger {
   position: fixed;
   bottom: 1.5rem;
   right: 1.5rem;
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-  color: white;
+  background: var(--color-ink);
+  color: var(--color-cream);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: var(--shadow-lg), 0 0 30px rgba(217,119,6,0.3);
-  transition: all 0.3s ease;
+  box-shadow: var(--shadow-lg);
+  transition: all 0.25s var(--ease);
   z-index: 1000;
   border: none;
 }
 .chatbot-trigger:hover {
-  transform: scale(1.1);
-  box-shadow: var(--shadow-lg), 0 0 40px rgba(217,119,6,0.5);
+  transform: scale(1.08);
+  background: var(--color-ink-soft);
 }
 
 .chatbot-panel {
   position: fixed;
-  bottom: 6rem;
+  bottom: 5.5rem;
   right: 1.5rem;
   width: 380px;
-  max-height: 520px;
+  max-height: 540px;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
@@ -185,39 +393,23 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: slideUp 0.3s ease;
+  animation: slideUp 0.28s var(--ease);
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ---- Animations ---- */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.5s ease forwards;
-}
-
-.animate-fade-in-delay-1 { animation-delay: 0.1s; opacity: 0; }
-.animate-fade-in-delay-2 { animation-delay: 0.2s; opacity: 0; }
-.animate-fade-in-delay-3 { animation-delay: 0.3s; opacity: 0; }
-
-/* ---- Hero gradient ---- */
-.hero-gradient {
-  background: linear-gradient(135deg, #FEF3C7 0%, #FECACA 50%, #FDE68A 100%);
-}
-@media (prefers-color-scheme: dark) {
-  .hero-gradient {
-    background: linear-gradient(135deg, #451A03 0%, #7F1D1D 50%, #78350F 100%);
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
   }
 }
 
-/* ---- Responsive chatbot ---- */
+/* ============================================================
+   RESPONSIVE UTILITIES
+   ============================================================ */
 @media (max-width: 480px) {
   .chatbot-panel {
     width: calc(100vw - 2rem);

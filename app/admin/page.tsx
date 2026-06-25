@@ -17,7 +17,7 @@ export default async function AdminPage() {
         <StatCard icon={<Utensils size={24} />} label="Platos Activos" value={stats.totalPlatos} color="var(--color-primary)" />
         <StatCard icon={<MapPin size={24} />} label="Lugares Aprobados" value={stats.totalLugares} color="var(--color-secondary)" />
         <StatCard icon={<Bell size={24} />} label="Solicitudes Pendientes" value={stats.solicitudesPendientes} color="var(--color-accent)" alert={stats.solicitudesPendientes > 0} />
-        <StatCard icon={<MessageSquare size={24} />} label="Reseñas Pendientes" value={stats.resenasPendientes} color="#6366F1" alert={stats.resenasPendientes > 0} />
+        <StatCard icon={<MessageSquare size={24} />} label="Reseñas Pendientes" value={stats.resenasPendientes} color="var(--color-info)" alert={stats.resenasPendientes > 0} />
         <StatCard icon={<Users size={24} />} label="Provincias" value={stats.totalProvincias} color="#8B5CF6" />
       </div>
 
@@ -28,6 +28,7 @@ export default async function AdminPage() {
         <AdminLink href="/admin/lugares" icon="📍" title="Gestionar Lugares" desc="Restaurantes y locales de carretera" />
         <AdminLink href="/admin/solicitudes" icon="📋" title="Solicitudes de Registro" desc={`${stats.solicitudesPendientes} pendientes de aprobación`} />
         <AdminLink href="/admin/resenas" icon="💬" title="Moderar Reseñas" desc={`${stats.resenasPendientes} reseñas por aprobar`} />
+        <AdminLink href="/admin/propietarios" icon="🔑" title="Propietarios de Negocios" desc="Asignar accesos, crear y resetear contraseñas de dueños" />
       </div>
     </div>
   );

@@ -35,6 +35,15 @@ export interface Plato {
   fotos?: Foto[];
 }
 
+export interface Especialidad {
+  id: number;
+  nombre: string;
+  precio: number;
+  imagen_url: string | null;
+  total_resenas: number;
+  promedio_rating: number | null;
+}
+
 export interface Lugar {
   id: number;
   provincia_id: number;
@@ -58,12 +67,14 @@ export interface Lugar {
   provincia?: Provincia;
   platos?: PlatoConPivot[];
   resenas?: Resena[];
+  especialidades?: Especialidad[];
 }
 
 export interface LugarConPivot extends Lugar {
   pivot?: {
     precio_aproximado: number | null;
     especialidad: boolean;
+    imagen_url?: string | null;
   };
 }
 
@@ -71,6 +82,7 @@ export interface PlatoConPivot extends Plato {
   pivot?: {
     precio_aproximado: number | null;
     especialidad: boolean;
+    imagen_url?: string | null;
   };
 }
 
@@ -89,6 +101,7 @@ export interface Resena {
   user?: UserPublic;
   plato?: Plato;
   lugar?: Lugar;
+  especialidad_nombre?: string | null; // For custom specialties reviews
 }
 
 export interface Favorito {
@@ -112,7 +125,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'owner';
   password_hash?: string;
   created_at?: string;
 }

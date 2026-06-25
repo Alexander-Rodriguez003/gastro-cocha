@@ -120,7 +120,7 @@ export default function AdminPlatosPage() {
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
-      <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: 4, color: "#78716C", textDecoration: "none", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
+      <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--color-text-muted)", textDecoration: "none", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
         <ChevronLeft size={16} /> Panel Admin
       </Link>
 
@@ -135,14 +135,14 @@ export default function AdminPlatosPage() {
 
       {/* Search */}
       <div style={{ position: "relative", marginBottom: "1.25rem" }}>
-        <Search size={18} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#78716C" }} />
+        <Search size={18} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar platos..."
           style={{
             width: "100%", padding: "0.65rem 0.9rem 0.65rem 2.5rem", borderRadius: 12,
-            border: "1px solid #E7E5E4", background: "#FFFBF5", fontSize: "0.9rem", outline: "none",
+            border: "1px solid var(--color-border)", background: "var(--color-bg-card)", fontSize: "0.9rem", outline: "none",
           }}
         />
       </div>
@@ -151,7 +151,7 @@ export default function AdminPlatosPage() {
       <div style={{ overflowX: "auto" }} className="card">
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
           <thead>
-            <tr style={{ borderBottom: "2px solid #E7E5E4", textAlign: "left" }}>
+            <tr style={{ borderBottom: "2px solid var(--color-border)", textAlign: "left" }}>
               <th style={{ padding: "0.75rem 1rem", fontFamily: "'Outfit', sans-serif", fontWeight: 600 }}>Plato</th>
               <th style={{ padding: "0.75rem 1rem" }}>Provincia</th>
               <th style={{ padding: "0.75rem 1rem" }}>Precio</th>
@@ -162,13 +162,13 @@ export default function AdminPlatosPage() {
           </thead>
           <tbody>
             {filtered.map((plato) => (
-              <tr key={plato.slug} style={{ borderBottom: "1px solid #E7E5E4" }}>
+              <tr key={plato.slug} style={{ borderBottom: "1px solid var(--color-border)" }}>
                 <td style={{ padding: "0.75rem 1rem", fontWeight: 600 }}>
-                  <Link href={`/plato/${plato.slug}`} style={{ color: "#D97706", textDecoration: "none" }}>
+                  <Link href={`/plato/${plato.slug}`} style={{ color: "var(--color-primary)", textDecoration: "none" }}>
                     {plato.nombre}
                   </Link>
                 </td>
-                <td style={{ padding: "0.75rem 1rem", color: "#78716C" }}>{plato.provincia_slug}</td>
+                <td style={{ padding: "0.75rem 1rem", color: "var(--color-text-muted)" }}>{plato.provincia_slug}</td>
                 <td style={{ padding: "0.75rem 1rem", fontWeight: 600 }}>{plato.precio_referencial} Bs</td>
                 <td style={{ padding: "0.75rem 1rem", textAlign: "center" }}>
                   <button onClick={() => toggleDestacado(plato.slug)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem" }}>
@@ -177,13 +177,13 @@ export default function AdminPlatosPage() {
                 </td>
                 <td style={{ padding: "0.75rem 1rem", textAlign: "center" }}>
                   <button onClick={() => toggleActivo(plato.slug)} style={{ background: "none", border: "none", cursor: "pointer" }}>
-                    {plato.activo ? <Eye size={18} color="#059669" /> : <EyeOff size={18} color="#78716C" />}
+                    {plato.activo ? <Eye size={18} color="var(--color-secondary)" /> : <EyeOff size={18} color="var(--color-text-muted)" />}
                   </button>
                 </td>
                 <td style={{ padding: "0.75rem 1rem", textAlign: "center" }}>
                   <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", alignItems: "center" }}>
                     <button onClick={() => handleEditClick(plato)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }} title="Editar">
-                      <Edit size={16} color="#D97706" />
+                      <Edit size={16} color="var(--color-primary)" />
                     </button>
                     <button onClick={() => handleDelete(plato.slug)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }} title="Eliminar">
                       <Trash2 size={16} color="#EF4444" />
@@ -204,16 +204,16 @@ export default function AdminPlatosPage() {
           alignItems: "center", justifyContent: "center", padding: "1.5rem"
         }}>
           <div style={{
-            background: "#FFFBF5", borderRadius: 16, border: "1px solid rgba(220, 38, 38, 0.12)",
+            background: "var(--color-bg-card)", borderRadius: 16, border: "1px solid var(--color-border)",
             width: "100%", maxWidth: 500, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)",
             overflow: "hidden", display: "flex", flexDirection: "column"
           }}>
             {/* Modal Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 1.5rem", borderBottom: "1px solid #E7E5E4", background: "rgba(217, 119, 6, 0.04)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--color-border)", background: "color-mix(in srgb, var(--color-primary) 4%, transparent)" }}>
               <h3 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700, fontSize: "1.15rem", color: "var(--color-primary-dark)" }}>
                 ✏️ Editar Plato Gastronómico
               </h3>
-              <button onClick={() => setEditingPlato(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#78716C", padding: 4 }}>
+              <button onClick={() => setEditingPlato(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)", padding: 4 }}>
                 <X size={20} />
               </button>
             </div>
@@ -224,7 +224,7 @@ export default function AdminPlatosPage() {
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginBottom: "0.5rem" }}>
                 <div style={{
                   width: 90, height: 90, borderRadius: 12, overflow: "hidden",
-                  background: "#E7E5E4", display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "var(--color-border)", display: "flex", alignItems: "center", justifyContent: "center",
                   border: "2px dashed rgba(217, 119, 6, 0.3)"
                 }}>
                   {editingPlato.imagen_url ? (
@@ -243,34 +243,34 @@ export default function AdminPlatosPage() {
                     onChange={handleImageUpload}
                     style={{ fontSize: "0.75rem", alignSelf: "center", cursor: "pointer" }}
                   />
-                  <span style={{ fontSize: "0.7rem", color: "#78716C", textAlign: "center" }}>o pega un enlace de internet abajo:</span>
+                  <span style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", textAlign: "center" }}>o pega un enlace de internet abajo:</span>
                   <input
                     type="text"
                     placeholder="https://ejemplo.com/foto-plato.jpg"
                     value={editingPlato.imagen_url || ""}
                     onChange={(e) => setEditingPlato({ ...editingPlato, imagen_url: e.target.value })}
-                    style={{ padding: "0.45rem 0.65rem", borderRadius: 8, border: "1px solid #E7E5E4", outline: "none", fontSize: "0.8rem", width: "100%" }}
+                    style={{ padding: "0.45rem 0.65rem", borderRadius: 8, border: "1px solid var(--color-border)", outline: "none", fontSize: "0.8rem", width: "100%" }}
                   />
                 </div>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#78716C" }}>Nombre del Plato</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)" }}>Nombre del Plato</label>
                 <input
                   type="text"
                   required
                   value={editingPlato.nombre}
                   onChange={(e) => setEditingPlato({ ...editingPlato, nombre: e.target.value })}
-                  style={{ padding: "0.6rem 0.8rem", borderRadius: 10, border: "1px solid #E7E5E4", outline: "none", fontSize: "0.9rem" }}
+                  style={{ padding: "0.6rem 0.8rem", borderRadius: 10, border: "1px solid var(--color-border)", outline: "none", fontSize: "0.9rem" }}
                 />
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#78716C" }}>Provincia Origen</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)" }}>Provincia Origen</label>
                 <select
                   value={editingPlato.provincia_slug}
                   onChange={(e) => setEditingPlato({ ...editingPlato, provincia_slug: e.target.value })}
-                  style={{ padding: "0.6rem 0.8rem", borderRadius: 10, border: "1px solid #E7E5E4", background: "#white", outline: "none", fontSize: "0.9rem", cursor: "pointer" }}
+                  style={{ padding: "0.6rem 0.8rem", borderRadius: 10, border: "1px solid var(--color-border)", background: "var(--color-bg-card)", outline: "none", fontSize: "0.9rem", cursor: "pointer" }}
                 >
                   {PROVINCIAS.map((p) => (
                     <option key={p.slug} value={p.slug}>{p.nombre}</option>
@@ -279,14 +279,14 @@ export default function AdminPlatosPage() {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#78716C" }}>Precio Referencial (Bs)</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-muted)" }}>Precio Referencial (Bs)</label>
                 <input
                   type="number"
                   min={0}
                   required
                   value={editingPlato.precio_referencial}
                   onChange={(e) => setEditingPlato({ ...editingPlato, precio_referencial: Number(e.target.value) })}
-                  style={{ padding: "0.6rem 0.8rem", borderRadius: 10, border: "1px solid #E7E5E4", outline: "none", fontSize: "0.9rem" }}
+                  style={{ padding: "0.6rem 0.8rem", borderRadius: 10, border: "1px solid var(--color-border)", outline: "none", fontSize: "0.9rem" }}
                 />
               </div>
 

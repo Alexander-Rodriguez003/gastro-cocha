@@ -114,28 +114,28 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
         <ChevronLeft size={16} /> Inicio
       </Link>
 
-      {/* Dynamic AI Review Notification Toast (Neon gaming aesthetic) */}
+      {/* Dynamic AI Review Notification Toast */}
       {reviewAddedBanner && (
         <div
           style={{
-            background: "linear-gradient(135deg, rgba(6,182,212,0.1), rgba(16,185,129,0.1))",
-            border: "2px solid #10B981",
+            background: "var(--color-surface-warm)",
+            border: "1px solid rgba(217, 119, 6, 0.3)",
             borderRadius: "var(--radius-lg)",
             padding: "1.25rem",
             marginBottom: "2.0rem",
             display: "flex",
             alignItems: "center",
             gap: "1rem",
-            boxShadow: "0 0 20px rgba(16,185,129,0.25)",
+            boxShadow: "var(--shadow-md)",
             animation: "reviewPulseBanner 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
           }}
         >
-          <div style={{ background: "#10B981", color: "#020617", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Sparkles size={20} />
+          <div style={{ background: "var(--color-primary)", color: "#FFFFFF", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Sparkles size={18} />
           </div>
           <div>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1rem", color: "#047857" }}>
-              ✨ ¡Reseña Publicada por la IA!
+            <div style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1rem", color: "var(--color-primary-dark)" }}>
+              ¡Reseña Publicada por la IA!
             </div>
             <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginTop: 2 }}>
               El asistente GastroCocha ha procesado tu valoración en lenguaje natural y la ha guardado en el perfil.
@@ -179,7 +179,7 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
           {/* Header */}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" }}>
             <div>
-              <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "1.75rem" }}>{plato.nombre}</h1>
+              <h1 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "2rem", color: "var(--color-text)" }}>{plato.nombre}</h1>
               {plato.provincia && (
                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
                   <MapPin size={14} /> {plato.provincia.nombre}
@@ -194,7 +194,7 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
                 </div>
               )}
               {plato.precio_referencial && (
-                <div style={{ display: "flex", alignItems: "center", gap: 4, fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.25rem", color: "var(--color-primary-dark)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.3rem", color: "var(--color-primary-dark)" }}>
                   <DollarSign size={18} /> {plato.precio_referencial.toFixed(0)} Bs
                 </div>
               )}
@@ -207,16 +207,16 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
             {plato.historia && (
               <div className="card" style={{ padding: "1.25rem" }}>
-                <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "0.9rem", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: 6 }}>
-                  <Clock size={16} color="var(--color-primary)" /> Historia
+                <h3 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1rem", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: 6, color: "var(--color-primary-dark)" }}>
+                  <Clock size={16} /> Historia
                 </h3>
                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", lineHeight: 1.6 }}>{plato.historia}</p>
               </div>
             )}
             {plato.ingredientes && (
               <div className="card" style={{ padding: "1.25rem" }}>
-                <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "0.9rem", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: 6 }}>
-                  <Utensils size={16} color="var(--color-secondary)" /> Ingredientes
+                <h3 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1rem", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: 6, color: "var(--color-secondary-dark)" }}>
+                  <Utensils size={16} /> Ingredientes
                 </h3>
                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", lineHeight: 1.6 }}>{plato.ingredientes}</p>
               </div>
@@ -228,27 +228,27 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
       {/* Lugares donde se sirve */}
       {lugares.length > 0 && (
         <section style={{ marginTop: "1rem" }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.25rem", marginBottom: "1rem" }}>
-            📍 Dónde comerlo ({lugares.length} {lugares.length === 1 ? "lugar" : "lugares"})
+          <h2 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.4rem", marginBottom: "1rem", color: "var(--color-text)" }}>
+            Dónde comerlo ({lugares.length} {lugares.length === 1 ? "lugar" : "lugares"})
           </h2>
           <div style={{ display: "grid", gap: "0.75rem" }}>
             {lugares.map((lugar) => (
               <div key={lugar.id} className="card" style={{ padding: "1rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
                 <div>
                   <Link href={`/negocio/${lugar.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
-                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }} className="hover-neon-text">
+                    <div style={{ fontFamily: "Georgia, serif", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }} className="hover-gastro-text">
                       {lugar.nombre} <span style={{ fontSize: "0.85rem", opacity: 0.5 }}>➜</span>
                     </div>
                   </Link>
                   {lugar.direccion && <div style={{ color: "var(--color-text-muted)", fontSize: "0.8rem", marginTop: 2 }}>{lugar.direccion}</div>}
-                  {lugar.telefono && <div style={{ color: "var(--color-text-muted)", fontSize: "0.8rem" }}>📞 {lugar.telefono}</div>}
+                  {lugar.telefono && <div style={{ color: "var(--color-text-muted)", fontSize: "0.8rem" }}>Tel: {lugar.telefono}</div>}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
                   {lugar.pivot?.precio_aproximado && (
                     <span className="badge badge-primary">{lugar.pivot.precio_aproximado} Bs</span>
                   )}
                   {lugar.pivot?.especialidad && (
-                    <span className="badge badge-green">⭐ Especialidad</span>
+                    <span className="badge badge-green">Especialidad</span>
                   )}
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${lugar.lat},${lugar.lng}`}
@@ -264,11 +264,11 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
                       textDecoration: "none",
                       borderRadius: "8px",
                       color: "var(--color-primary-dark)",
-                      background: "rgba(220, 38, 38, 0.06)",
-                      border: "1px solid rgba(220, 38, 38, 0.12)",
+                      background: "rgba(217, 119, 6, 0.06)",
+                      border: "1px solid rgba(217, 119, 6, 0.12)",
                     }}
                   >
-                    🗺️ Cómo llegar
+                    Cómo llegar
                   </a>
                 </div>
               </div>
@@ -279,7 +279,7 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
 
       {/* Reseñas */}
       <section id="resenas-seccion" style={{ marginTop: "2.5rem" }}>
-        <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.25rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: 8 }}>
+        <h2 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.4rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: 8, color: "var(--color-text)" }}>
           <MessageSquare size={20} color="var(--color-primary)" />
           Reseñas ({localResenas.length})
         </h2>
@@ -292,13 +292,13 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
                 style={{ 
                   padding: "1rem 1.25rem",
                   animation: resena.user_id === 99 ? "newReviewFade 0.6s cubic-bezier(0.19, 1, 0.22, 1)" : "none",
-                  border: resena.user_id === 99 ? "1px solid #10B981" : "1px solid var(--color-border)",
-                  boxShadow: resena.user_id === 99 ? "0 0 10px rgba(16,185,129,0.15)" : "none"
+                  border: resena.user_id === 99 ? "1px solid var(--color-primary-light)" : "1px solid var(--color-border)",
+                  boxShadow: resena.user_id === 99 ? "0 0 10px rgba(217, 119, 6, 0.1)" : "none"
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                  <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{resena.titulo || "Sin título"}</div>
-                  <div className="stars" style={{ fontSize: "0.85rem", color: resena.user_id === 99 ? "#10B981" : "inherit" }}>
+                  <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--color-text)" }}>{resena.titulo || "Sin título"}</div>
+                  <div className="stars" style={{ fontSize: "0.85rem", color: "var(--color-primary)" }}>
                     {"★".repeat(resena.rating)}{"☆".repeat(5 - resena.rating)}
                   </div>
                 </div>
@@ -322,15 +322,14 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
           100% { transform: translateY(0) scale(1); opacity: 1; }
         }
         @keyframes newReviewFade {
-          0% { transform: scale(0.95); background: rgba(16, 185, 129, 0.1); opacity: 0.5; }
+          0% { transform: scale(0.95); background: rgba(217, 119, 6, 0.05); opacity: 0.5; }
           100% { transform: scale(1); background: transparent; opacity: 1; }
         }
-        .hover-neon-text {
+        .hover-gastro-text {
           transition: all 0.2s ease;
         }
-        .hover-neon-text:hover {
-          color: #10B981 !important;
-          text-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        .hover-gastro-text:hover {
+          color: var(--color-primary) !important;
           transform: translateX(4px);
         }
       `}</style>

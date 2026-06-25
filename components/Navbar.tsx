@@ -1,23 +1,23 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Menu, X, UtensilsCrossed, LogIn, LogOut, User } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User } from "lucide-react";
 
-interface UserInfo {
-  name: string;
-  email: string;
-  role: string;
-}
+interface UserInfo { name: string; email: string; role: string; }
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<UserInfo | null>(null);
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((d) => setUser(d.user))
-      .catch(() => {});
+    fetch("/api/auth/me").then(r => r.json()).then(d => setUser(d.user)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
   const handleLogout = async () => {
@@ -26,129 +26,96 @@ export function Navbar() {
     window.location.href = "/";
   };
 
+  const navStyle: React.CSSProperties = {
+    viewTransitionName: "site-header" as never,
+    position: "sticky",
+    top: 0,
+    zIndex: 50,
+    background: "rgba(247,244,238,0.97)",
+    backdropFilter: "blur(10px)",
+    borderBottom: `1px solid ${scrolled ? "var(--color-border)" : "transparent"}`,
+    transition: "border-color 0.3s",
+  };
+
   return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-        backdropFilter: "blur(12px)",
-        background: "rgba(255,251,245,0.85)",
-        borderBottom: "1px solid #E7E5E4",
-      }}
-    >
-      <nav
-        style={{
-          maxWidth: 1200,
-          margin: "0 auto",
-          padding: "0.75rem 1.5rem",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+    <header style={navStyle}>
+      <nav style={{ maxWidth: 1280, margin: "0 auto", padding: "0 2rem", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         {/* Logo */}
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none", color: "#1C1917" }}>
-          <UtensilsCrossed size={28} color="#D97706" />
-          <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: "1.25rem" }}>
-            Gastro<span style={{ color: "#D97706" }}>Cocha</span>
+        <Link href="/" style={{ display: "flex", alignItems: "baseline", gap: "0.1rem", textDecoration: "none" }}>
+          <span style={{ fontFamily: "var(--font-serif)", fontWeight: 800, fontSize: "1.35rem", color: "var(--color-ink)", letterSpacing: "-0.01em" }}>
+            Gastro
+          </span>
+          <span style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontStyle: "italic", fontSize: "1.35rem", color: "var(--color-amber)", letterSpacing: "-0.01em" }}>
+            Cocha
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }} className="hidden-mobile">
+        {/* Desktop */}
+        <div className="nav-desktop" style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
           <NavLink href="/provincias">Provincias</NavLink>
           <NavLink href="/ranking">Ranking</NavLink>
           <NavLink href="/negocios">Negocios</NavLink>
-          <NavLink href="/registrar-negocio">Registrar Negocio</NavLink>
-
+          <NavLink href="/registrar-negocio">Registrar</NavLink>
           {user ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
               {user.role === "admin" && (
-                <Link href="/admin" style={{
-                  padding: "0.4rem 0.8rem", borderRadius: 10, fontSize: "0.8rem",
-                  background: "linear-gradient(135deg, #D97706, #B45309)", color: "white",
-                  textDecoration: "none", fontWeight: 600, fontFamily: "'Outfit', sans-serif",
-                }}>
-                  Admin
-                </Link>
+                <Link href="/admin" style={{ fontSize: "0.8rem", fontWeight: 600, padding: "0.35rem 0.9rem", borderRadius: "var(--radius-pill)", background: "var(--color-ink)", color: "var(--color-cream)", textDecoration: "none" }}>Admin</Link>
               )}
-              <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", color: "#78716C", fontSize: "0.85rem" }}>
-                <User size={16} /> {user.name.split(" ")[0]}
-              </div>
-              <button onClick={handleLogout} style={{
-                background: "none", border: "1px solid #E7E5E4", borderRadius: 8,
-                padding: "0.35rem 0.65rem", cursor: "pointer", fontSize: "0.8rem",
-                color: "#78716C", display: "flex", alignItems: "center", gap: 4,
-              }}>
-                <LogOut size={14} /> Salir
+              {user.role === "owner" && (
+                <Link href="/owner" style={{ fontSize: "0.8rem", fontWeight: 600, padding: "0.35rem 0.9rem", borderRadius: "var(--radius-pill)", background: "var(--color-forest)", color: "var(--color-forest-text)", textDecoration: "none" }}>Mi Negocio</Link>
+              )}
+              <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.82rem", color: "var(--color-muted)", fontWeight: 500 }}>
+                <User size={13} />{user.name.split(" ")[0]}
+              </span>
+              <button onClick={handleLogout} style={{ background: "none", border: "1px solid var(--color-border)", borderRadius: "var(--radius-pill)", padding: "0.35rem 0.75rem", cursor: "pointer", fontSize: "0.78rem", color: "var(--color-muted)", display: "flex", alignItems: "center", gap: 4 }}>
+                <LogOut size={13} />
               </button>
             </div>
           ) : (
-            <Link href="/login" style={{
-              padding: "0.5rem 1rem", borderRadius: 10, fontSize: "0.85rem",
-              background: "linear-gradient(135deg, #D97706, #B45309)", color: "white",
-              textDecoration: "none", fontWeight: 600, fontFamily: "'Outfit', sans-serif",
-              display: "flex", alignItems: "center", gap: 6,
-            }}>
-              <LogIn size={16} /> Ingresar
+            <Link href="/login" style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.5rem 1.25rem", borderRadius: "var(--radius-pill)", background: "var(--color-ink)", color: "var(--color-cream)", textDecoration: "none", fontSize: "0.83rem", fontWeight: 500 }}>
+              <LogIn size={14} />Ingresar
             </Link>
           )}
         </div>
 
         {/* Mobile toggle */}
-        <button
-          onClick={() => setOpen(!open)}
-          style={{ background: "none", border: "none", cursor: "pointer", display: "none", color: "#1C1917" }}
-          className="show-mobile"
-          aria-label="Menu"
-        >
-          {open ? <X size={24} /> : <Menu size={24} />}
+        <button className="nav-mobile-toggle" onClick={() => setOpen(!open)} style={{ display: "none", background: "none", border: "none", cursor: "pointer", color: "var(--color-ink)" }} aria-label="Menú">
+          {open ? <X size={22} /> : <Menu size={22} />}
         </button>
       </nav>
 
-      {/* Mobile menu */}
       {open && (
-        <div style={{ padding: "1rem 1.5rem", display: "flex", flexDirection: "column", gap: "1rem", borderTop: "1px solid #E7E5E4" }}>
-          <NavLink href="/provincias" onClick={() => setOpen(false)}>Provincias</NavLink>
-          <NavLink href="/ranking" onClick={() => setOpen(false)}>Ranking</NavLink>
-          <NavLink href="/negocios" onClick={() => setOpen(false)}>Negocios</NavLink>
-          <NavLink href="/registrar-negocio" onClick={() => setOpen(false)}>Registrar Negocio</NavLink>
+        <div style={{ borderTop: "1px solid var(--color-border)", padding: "1.25rem 2rem", display: "flex", flexDirection: "column", gap: "1rem", background: "var(--color-cream)" }}>
+          {["Provincias:/provincias","Ranking:/ranking","Negocios:/negocios","Registrar:/registrar-negocio"].map(item => {
+            const [label, href] = item.split(":");
+            return <Link key={href} href={href} onClick={() => setOpen(false)} style={{ color: "var(--color-ink)", textDecoration: "none", fontWeight: 500, fontSize: "1rem", paddingBottom: "0.6rem", borderBottom: "1px solid var(--color-border-light)" }}>{label}</Link>;
+          })}
           {user ? (
             <>
-              <div style={{ fontSize: "0.85rem", color: "#78716C" }}>👤 {user.name} ({user.role})</div>
-              {user.role === "admin" && <NavLink href="/admin" onClick={() => setOpen(false)}>Panel Admin</NavLink>}
-              <button onClick={handleLogout} style={{ background: "none", border: "none", cursor: "pointer", textAlign: "left", color: "#EF4444", fontSize: "0.9rem", padding: 0 }}>
-                Cerrar sesión
-              </button>
+              {user.role === "admin" && <Link href="/admin" onClick={() => setOpen(false)} style={{ color: "var(--color-ink)", textDecoration: "none", fontWeight: 500 }}>Panel Admin</Link>}
+              {user.role === "owner" && <Link href="/owner" onClick={() => setOpen(false)} style={{ color: "var(--color-ink)", textDecoration: "none", fontWeight: 500 }}>Mi Negocio</Link>}
+              <button onClick={handleLogout} style={{ background: "none", border: "none", cursor: "pointer", textAlign: "left", color: "var(--color-muted)", fontSize: "0.9rem", padding: 0 }}>Cerrar sesión</button>
             </>
           ) : (
-            <Link href="/login" onClick={() => setOpen(false)} style={{
-              padding: "0.65rem", borderRadius: 10, textAlign: "center",
-              background: "linear-gradient(135deg, #D97706, #B45309)", color: "white",
-              textDecoration: "none", fontWeight: 600,
-            }}>
-              Ingresar
-            </Link>
+            <Link href="/login" onClick={() => setOpen(false)} style={{ padding: "0.7rem", borderRadius: "var(--radius-pill)", textAlign: "center", background: "var(--color-ink)", color: "var(--color-cream)", textDecoration: "none", fontWeight: 500 }}>Ingresar</Link>
           )}
         </div>
       )}
 
       <style>{`
-        @media (min-width: 768px) { .show-mobile { display: none !important; } }
-        @media (max-width: 767px) { .hidden-mobile { display: none !important; } .show-mobile { display: block !important; } }
+        @media (min-width: 768px) { .nav-mobile-toggle { display: none !important; } .nav-desktop { display: flex !important; } }
+        @media (max-width: 767px) { .nav-mobile-toggle { display: block !important; } .nav-desktop { display: none !important; } }
       `}</style>
     </header>
   );
 }
 
-function NavLink({ href, children, onClick }: { href: string; children: React.ReactNode; onClick?: () => void }) {
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} onClick={onClick} style={{ color: "#78716C", textDecoration: "none", fontWeight: 500, fontSize: "0.9rem", transition: "color 0.2s" }}
-      onMouseEnter={(e) => (e.currentTarget.style.color = "#D97706")}
-      onMouseLeave={(e) => (e.currentTarget.style.color = "#78716C")}
-    >
-      {children}
-    </Link>
+    <Link href={href}
+      style={{ color: "var(--color-muted)", textDecoration: "none", fontWeight: 500, fontSize: "0.875rem", transition: "color 0.2s" }}
+      onMouseEnter={e => (e.currentTarget.style.color = "var(--color-ink)")}
+      onMouseLeave={e => (e.currentTarget.style.color = "var(--color-muted)")}
+    >{children}</Link>
   );
 }
