@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     const data = lugares.map(l => ({
       id: l.id,
       nombre: l.nombre,
+      slug: l.slug,
       lat: l.lat,
       lng: l.lng,
       direccion: l.direccion,
