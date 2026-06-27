@@ -194,11 +194,12 @@ INSERT INTO platos (provincia_id, nombre, slug, descripcion, historia, ingredien
 
 -- Lugares
 INSERT INTO lugares (provincia_id, nombre, slug, direccion, telefono, lat, lng, aprobado, activo, email_propietario, nombre_propietario) VALUES
-  ((SELECT id FROM provincias WHERE slug='cercado'), 'Pensión Doña Rosa', 'pension-dona-rosa', 'Calle Esteban Arce #456, Cercado', '+591 4 4251234', -17.3935, -66.1570, true, true, 'juana@comedordonajuana.com', 'Juana Mamani'),
+  ((SELECT id FROM provincias WHERE slug='cercado'), 'Pensión Doña Rosa', 'pension-dona-rosa', 'Calle Esteban Arce #456, Cercado', '+591 4 4251234', -17.3935, -66.1570, true, true, NULL, NULL),
   ((SELECT id FROM provincias WHERE slug='cercado'), 'El Paladar Cochabambino', 'el-paladar-cochabambino', 'Av. Heroínas #789, Cercado', '+591 4 4259876', -17.3880, -66.1590, true, true, 'silpancho@elpalaciodelsilpancho.com', 'Palacio Owner'),
   ((SELECT id FROM provincias WHERE slug='cercado'), 'La Cancha Food Court', 'la-cancha-food', 'Mercado La Cancha, Puesto 42', '+591 71234567', -17.3950, -66.1540, true, true, NULL, NULL),
   ((SELECT id FROM provincias WHERE slug='quillacollo'), 'Picantería La Quillacolleña', 'picanteria-quillacollo', 'Calle Bolívar, Quillacollo', '+591 4 4361111', -17.3945, -66.2800, true, true, NULL, NULL),
   ((SELECT id FROM provincias WHERE slug='quillacollo'), 'Parador Km 8 - Doña Petrona', 'parador-km8', 'Carretera Cbba-Quillacollo Km 8', '+591 71555888', -17.3942, -66.2200, true, true, NULL, NULL),
+  ((SELECT id FROM provincias WHERE slug='quillacollo'), 'Comedor Doña Juana', 'comedor-dona-juana', 'Carretera Cbba-Oruro Km 15, al lado del puente', '+591 71222333', -17.41, -66.35, true, true, 'juana@comedordonajuana.com', 'Juana Mamani'),
   ((SELECT id FROM provincias WHERE slug='chapare'), 'Restaurante El Trópico', 'restaurante-el-tropico', 'Av. Principal, Villa Tunari', '+591 4 4136789', -16.9730, -65.4100, true, true, 'carlos@truchaselparaiso.com', 'Carlos Quispe'),
   ((SELECT id FROM provincias WHERE slug='german-jordan'), 'Feria del Pichón - Doña María', 'feria-pichon-cliza', 'Plaza Principal, Cliza', '+591 71888999', -17.5890, -65.9330, true, true, NULL, NULL),
   ((SELECT id FROM provincias WHERE slug='esteban-arce'), 'Choricería Don Julio', 'choriceria-don-julio', 'Calle Sucre, Tarata', '+591 71777666', -17.6100, -66.0240, true, true, NULL, NULL),
