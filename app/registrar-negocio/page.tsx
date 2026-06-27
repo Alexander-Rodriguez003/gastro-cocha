@@ -39,6 +39,17 @@ export default function RegistrarNegocioPage() {
 
   const handleSubmit = async () => {
     if (!nombre || !direccion) return;
+
+    const cleanEmail = emailPropietario.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (emailPropietario && cleanEmail !== emailPropietario.trim()) {
+      alert("El email contiene caracteres no válidos (como ñ, tildes, etc.).");
+      return;
+    }
+    if (emailPropietario && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      alert("El formato del email no es válido.");
+      return;
+    }
+
     setLoading(true);
     setSuccess(false);
 

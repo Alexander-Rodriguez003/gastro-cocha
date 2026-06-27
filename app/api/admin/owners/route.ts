@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin, getOwnersList, createOwnerAccount, resetUserPassword } from "@/lib/auth";
 import { getAllLugaresAdmin, updateLugarOwnerEmail } from "@/lib/data";
+import { sanitizeName, sanitizeEmail, isValidEmail, isValidPassword } from "@/lib/validation";
 
 export async function GET() {
   if (!(await isAdmin())) {
@@ -28,11 +29,22 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Faltan campos obligatorios" }, { status: 400 });
       }
 
-      // Create owner account
-      await createOwnerAccount(name, email, password);
+      const cleanName = sanitizeName(name);
+      if (cleanName.length < 2) {
+        return NextResponse.json({ error: "El nombre no es válido" }, { status: 400 });
+      }
 
-      // Link email to restaurant
-      await updateLugarOwnerEmail(Number(lugarId), email);
+      const cleanEmail = sanitizeEmail(email);
+      if (!isValidEmail(cleanEmail)) {
+        return NextResponse.json({ error: "El formato del email no es válido" }, { status: 400 });
+      }
+
+      if (!isValidPassword(password)) {
+        return NextResponse.json({ error: "La contraseña debe tener al menos 6 caracteres" }, { status: 400 });
+      }
+
+      await createOwnerAccount(cleanName, cleanEmail, password);
+      await updateLugarOwnerEmail(Number(lugarId), cleanEmail);
 
       return NextResponse.json({ success: true });
     }
@@ -43,7 +55,16 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Faltan campos obligatorios" }, { status: 400 });
       }
 
-      const ok = await resetUserPassword(email, password);
+      const cleanEmail = sanitizeEmail(email);
+      if (!isValidEmail(cleanEmail)) {
+        return NextResponse.json({ error: "El formato del email no es válido" }, { status: 400 });
+      }
+
+      if (!isValidPassword(password)) {
+        return NextResponse.json({ error: "La contraseña debe tener al menos 6 caracteres" }, { status: 400 });
+      }
+
+      const ok = await resetUserPassword(cleanEmail, password);
       if (!ok) {
         return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
       }
@@ -57,7 +78,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Faltan campos obligatorios" }, { status: 400 });
       }
 
-      await updateLugarOwnerEmail(Number(lugarId), email);
+      const cleanEmail = sanitizeEmail(email);
+      if (!isValidEmail(cleanEmail)) {
+        return NextResponse.json({ error: "El formato del email no es válido" }, { status: 400 });
+      }
+
+      await updateLugarOwnerEmail(Number(lugarId), cleanEmail);
       return NextResponse.json({ success: true });
     }
 

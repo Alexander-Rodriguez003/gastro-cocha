@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { login } from "@/lib/auth";
+import { sanitizeEmail, isValidEmail } from "@/lib/validation";
 
-// Map to keep track of failed attempts: IP -> { attempts: number, lockUntil: number }
 const loginAttempts = new Map<string, { attempts: number; lockUntil: number }>();
 
 export async function POST(request: NextRequest) {
@@ -10,7 +10,6 @@ export async function POST(request: NextRequest) {
     const now = Date.now();
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || (request as any).ip || "127.0.0.1";
 
-    // 1. Check if IP is currently locked out
     const attemptInfo = loginAttempts.get(ip);
     if (attemptInfo && now < attemptInfo.lockUntil) {
       const remainingMinutes = Math.ceil((attemptInfo.lockUntil - now) / (60 * 1000));
@@ -24,14 +23,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email y contraseña son requeridos" }, { status: 400 });
     }
 
-    const result = await login(email, password);
+    const cleanEmail = sanitizeEmail(email);
+    if (!isValidEmail(cleanEmail)) {
+      return NextResponse.json({ error: "El formato del email no es válido" }, { status: 400 });
+    }
+
+    const result = await login(cleanEmail, password);
     if (!result) {
-      // Increment failed attempts for this IP
       const current = loginAttempts.get(ip) || { attempts: 0, lockUntil: 0 };
       current.attempts += 1;
 
       if (current.attempts >= 5) {
-        // Lock for 15 minutes
         current.lockUntil = now + 15 * 60 * 1000;
         loginAttempts.set(ip, current);
         return NextResponse.json(
@@ -47,7 +49,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Reset attempts on successful login
     loginAttempts.delete(ip);
 
     const response = NextResponse.json({ user: result.user });
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
 

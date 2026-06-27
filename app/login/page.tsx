@@ -33,7 +33,12 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    // Client-side validations
+    const cleanEmail = form.email.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (cleanEmail !== form.email.trim()) {
+      setError("El email contiene caracteres no válidos (como ñ, tildes, etc.). Usa solo caracteres ASCII.");
+      return;
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
     if (tab === "register" && form.name.trim().length < 2) {
@@ -41,7 +46,7 @@ export default function LoginPage() {
       return;
     }
     
-    if (!emailRegex.test(form.email.trim())) {
+    if (!emailRegex.test(cleanEmail)) {
       setError("Por favor, ingresa un correo electrónico válido (ejemplo@dominio.com).");
       return;
     }
