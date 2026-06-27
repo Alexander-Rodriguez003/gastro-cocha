@@ -9,6 +9,7 @@ interface Solicitud {
   direccion: string;
   telefono: string;
   nombre_propietario: string;
+  email_propietario: string | null;
   provincia: string;
   lat: number;
   lng: number;
@@ -90,6 +91,7 @@ export default function AdminSolicitudesPage() {
                   <div style={{ color: "var(--color-text-muted)", fontSize: "0.82rem", marginTop: 4, display: "flex", flexDirection: "column", gap: 3 }}>
                     <span><MapPin size={13} style={{ display: "inline", verticalAlign: "middle" }} /> {sol.direccion} — {sol.provincia}</span>
                     <span><Phone size={13} style={{ display: "inline", verticalAlign: "middle" }} /> {sol.telefono} ({sol.nombre_propietario})</span>
+                    {sol.email_propietario && <span>✉️ {sol.email_propietario}</span>}
                     <span>🍽️ {sol.platos_que_sirve}</span>
                     <span>📅 Enviado: {sol.fecha}</span>
                   </div>

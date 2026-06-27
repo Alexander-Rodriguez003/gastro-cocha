@@ -61,11 +61,14 @@ export default function AdminPropietariosPage() {
     fetchData();
   }, []);
 
+  const normalizeEmail = (email: string) =>
+    email.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x00-\x7F]/g, "");
+
   const handleSelectLugar = (lugar: Lugar) => {
     setSelectedLugarId(lugar.id);
     setNewName(lugar.nombre_propietario || "");
-    setNewEmail(lugar.email_propietario || "");
-    setNewPassword(Math.random().toString(36).slice(-8)); // auto generate simple password
+    setNewEmail(lugar.email_propietario ? normalizeEmail(lugar.email_propietario) : "");
+    setNewPassword(Math.random().toString(36).slice(-8));
     setSuccessMsg("");
   };
 
@@ -293,10 +296,11 @@ export default function AdminPropietariosPage() {
                 <div>
                   <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.25rem" }}>Email del Dueño</label>
                   <input 
-                    type="email"
+                    type="text"
                     required
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="correo@ejemplo.com"
                     style={{ width: "100%", padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--color-border)", background: "var(--color-bg)", fontSize: "0.8rem" }}
                   />
                 </div>

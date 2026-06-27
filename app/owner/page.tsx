@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Store, Utensils, Sparkles, Image, Phone, MapPin, Tag, Plus, Trash2, Save, LayoutGrid, Check } from "lucide-react";
+import { Store, Utensils, Sparkles, Phone, MapPin, Tag, Plus, Trash2, Save, LayoutGrid, Check } from "lucide-react";
+import { ImageUpload } from "@/components/ImageUpload";
 
 interface Specialty {
   id: number;
@@ -328,17 +329,8 @@ export default function OwnerDashboard() {
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.35rem" }}>Imagen URL de Portada</label>
-              <div style={{ position: "relative" }}>
-                <Image size={16} color="var(--color-text-muted)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
-                <input
-                  type="text"
-                  value={imagenUrl}
-                  onChange={(e) => setImagenUrl(e.target.value)}
-                  placeholder="https://ejemplo.com/foto-portada.jpg"
-                  style={{ width: "100%", padding: "0.65rem 0.9rem 0.65rem 2.25rem", borderRadius: "var(--radius)", border: "1px solid var(--color-border)", background: "var(--color-bg)", fontSize: "0.85rem" }}
-                />
-              </div>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.35rem" }}>Imagen de Portada</label>
+              <ImageUpload currentUrl={imagenUrl} onUrlChange={setImagenUrl} />
             </div>
 
             {detailsSuccess && (
@@ -403,14 +395,8 @@ export default function OwnerDashboard() {
                       />
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.25rem" }}>URL de Foto de tu plato</label>
-                      <input
-                        type="text"
-                        value={plateImagen}
-                        onChange={(e) => setPlateImagen(e.target.value)}
-                        placeholder="https://ejemplo.com/tu-foto.jpg"
-                        style={{ width: "100%", padding: "0.45rem 0.65rem", borderRadius: "var(--radius)", border: "1px solid var(--color-border)", background: "var(--color-bg)", fontSize: "0.8rem" }}
-                      />
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.25rem" }}>Foto de tu plato</label>
+                      <ImageUpload currentUrl={plateImagen} onUrlChange={setPlateImagen} />
                     </div>
                     <div style={{ display: "flex", gap: "0.5rem", marginTop: 4 }}>
                       <button onClick={() => handleSavePlate(plato.id)} disabled={plateSaving} className="btn-primary" style={{ padding: "0.4rem 1rem", fontSize: "0.8rem" }}>
@@ -504,14 +490,8 @@ export default function OwnerDashboard() {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.25rem" }}>URL de Imagen</label>
-                <input
-                  type="text"
-                  value={newSpecImagen}
-                  onChange={(e) => setNewSpecImagen(e.target.value)}
-                  placeholder="https://ejemplo.com/foto-especialidad.jpg"
-                  style={{ width: "100%", padding: "0.45rem 0.65rem", borderRadius: "var(--radius)", border: "1px solid var(--color-border)", background: "var(--color-bg)", fontSize: "0.8rem" }}
-                />
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.25rem" }}>Imagen</label>
+                <ImageUpload currentUrl={newSpecImagen} onUrlChange={setNewSpecImagen} />
               </div>
 
               <button
