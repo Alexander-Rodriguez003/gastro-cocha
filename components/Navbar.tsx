@@ -92,6 +92,9 @@ export function Navbar() {
           })}
           {user ? (
             <>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.9rem", color: "var(--color-muted)", fontWeight: 500 }}>
+                <User size={14} />{user.name.split(" ")[0]}
+              </span>
               {user.role === "admin" && <Link href="/admin" onClick={() => setOpen(false)} style={{ color: "var(--color-ink)", textDecoration: "none", fontWeight: 500 }}>Panel Admin</Link>}
               {user.role === "owner" && <Link href="/owner" onClick={() => setOpen(false)} style={{ color: "var(--color-ink)", textDecoration: "none", fontWeight: 500 }}>Mi Negocio</Link>}
               <button onClick={handleLogout} style={{ background: "none", border: "none", cursor: "pointer", textAlign: "left", color: "var(--color-muted)", fontSize: "0.9rem", padding: 0 }}>Cerrar sesión</button>
