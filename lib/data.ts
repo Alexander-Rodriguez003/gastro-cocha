@@ -572,3 +572,271 @@ export async function getTrendingGlobal(): Promise<any[]> {
 
   return [...typicalRankings, ...specialtyRankings].sort((a: any, b: any) => b.hot_score - a.hot_score);
 }
+
+// =============================================
+// CRUD para el panel de administración
+// =============================================
+
+export interface AdminPlatoRow {
+  id: number;
+  nombre: string;
+  slug: string;
+  provincia_slug: string;
+  precio_referencial: number | null;
+  destacado: boolean;
+  activo: boolean;
+  imagen_url: string | null;
+}
+
+export interface AdminLugarRow {
+  id: number;
+  nombre: string;
+  slug: string;
+  provincia_slug: string;
+  direccion: string | null;
+  telefono: string | null;
+  lat: number;
+  lng: number;
+  activo: boolean;
+  aprobado: boolean;
+  imagen_url: string | null;
+}
+
+async function uniqueSlug(table: "platos" | "lugares", base: string, excludeId?: number): Promise<string> {
+  const root = base || "nuevo";
+  let candidate = root;
+  let i = 2;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    let q = db().from(table).select("id").eq("slug", candidate);
+    if (excludeId) q = q.neq("id", excludeId);
+    const { data } = await q.limit(1);
+    if (!data || data.length === 0) return candidate;
+    candidate = `${root}-${i++}`;
+  }
+}
+
+async function provinciaIdBySlug(slug: string): Promise<number | null> {
+  const { data } = await db().from("provincias").select("id").eq("slug", slug).single();
+  return data?.id ?? null;
+}
+
+export async function getPlatosAdmin(): Promise<AdminPlatoRow[]> {
+  const { data, error } = await db()
+    .from("platos")
+    .select("*, provincias(slug)")
+    .order("nombre");
+  if (error) throw error;
+  return (data || []).map((r: any) => ({
+    id: r.id,
+    nombre: r.nombre,
+    slug: r.slug,
+    provincia_slug: r.provincias?.slug ?? "",
+    precio_referencial: r.precio_referencial != null ? Number(r.precio_referencial) : null,
+    destacado: !!r.destacado,
+    activo: r.activo !== false,
+    imagen_url: r.imagen_url ?? null,
+  }));
+}
+
+export async function createPlatoAdmin(input: {
+  nombre: string;
+  provincia_slug: string;
+  precio_referencial?: number | null;
+  destacado?: boolean;
+  activo?: boolean;
+  imagen_url?: string | null;
+  descripcion?: string;
+}): Promise<AdminPlatoRow> {
+  const provinciaId = await provinciaIdBySlug(input.provincia_slug);
+  if (!provinciaId) throw new Error("Provincia no encontrada");
+
+  const baseSlug = input.nombre
+    .toLowerCase()
+    .replace(/[ñÑ]/g, "n")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  const slug = await uniqueSlug("platos", baseSlug);
+
+  const { data, error } = await db()
+    .from("platos")
+    .insert({
+      provincia_id: provinciaId,
+      nombre: input.nombre,
+      slug,
+      descripcion: input.descripcion ?? "",
+      precio_referencial: input.precio_referencial ?? null,
+      destacado: input.destacado ?? false,
+      activo: input.activo ?? true,
+      imagen_url: input.imagen_url ?? null,
+    })
+    .select("*, provincias(slug)")
+    .single();
+  if (error) throw error;
+
+  return {
+    id: data.id,
+    nombre: data.nombre,
+    slug: data.slug,
+    provincia_slug: data.provincias?.slug ?? "",
+    precio_referencial: data.precio_referencial != null ? Number(data.precio_referencial) : null,
+    destacado: !!data.destacado,
+    activo: data.activo !== false,
+    imagen_url: data.imagen_url ?? null,
+  };
+}
+
+export async function updatePlatoAdmin(
+  id: number,
+  patch: {
+    nombre?: string;
+    provincia_slug?: string;
+    precio_referencial?: number | null;
+    destacado?: boolean;
+    activo?: boolean;
+    imagen_url?: string | null;
+  }
+): Promise<boolean> {
+  const update: Record<string, unknown> = {};
+  if (patch.nombre !== undefined) update.nombre = patch.nombre;
+  if (patch.precio_referencial !== undefined) update.precio_referencial = patch.precio_referencial;
+  if (patch.destacado !== undefined) update.destacado = patch.destacado;
+  if (patch.activo !== undefined) update.activo = patch.activo;
+  if (patch.imagen_url !== undefined) update.imagen_url = patch.imagen_url;
+  if (patch.provincia_slug !== undefined) {
+    const provinciaId = await provinciaIdBySlug(patch.provincia_slug);
+    if (!provinciaId) throw new Error("Provincia no encontrada");
+    update.provincia_id = provinciaId;
+  }
+  if (Object.keys(update).length === 0) return true;
+
+  const { error } = await db().from("platos").update(update).eq("id", id);
+  if (error) throw error;
+  return true;
+}
+
+export async function deletePlatoAdmin(id: number): Promise<boolean> {
+  const { error } = await db().from("platos").delete().eq("id", id);
+  if (error) throw error;
+  return true;
+}
+
+export async function getLugaresAdminList(): Promise<AdminLugarRow[]> {
+  const { data, error } = await db()
+    .from("lugares")
+    .select("*, provincias(slug)")
+    .order("nombre");
+  if (error) throw error;
+  return (data || []).map((r: any) => ({
+    id: r.id,
+    nombre: r.nombre,
+    slug: r.slug,
+    provincia_slug: r.provincias?.slug ?? "",
+    direccion: r.direccion,
+    telefono: r.telefono,
+    lat: Number(r.lat),
+    lng: Number(r.lng),
+    activo: r.activo !== false,
+    aprobado: !!r.aprobado,
+    imagen_url: r.imagen_url ?? null,
+  }));
+}
+
+export async function createLugarAdmin(input: {
+  nombre: string;
+  provincia_slug: string;
+  direccion?: string | null;
+  telefono?: string | null;
+  lat: number;
+  lng: number;
+  activo?: boolean;
+  aprobado?: boolean;
+  imagen_url?: string | null;
+}): Promise<AdminLugarRow> {
+  const provinciaId = await provinciaIdBySlug(input.provincia_slug);
+  if (!provinciaId) throw new Error("Provincia no encontrada");
+
+  const baseSlug = input.nombre
+    .toLowerCase()
+    .replace(/[ñÑ]/g, "n")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  const slug = await uniqueSlug("lugares", baseSlug);
+
+  const { data, error } = await db()
+    .from("lugares")
+    .insert({
+      provincia_id: provinciaId,
+      nombre: input.nombre,
+      slug,
+      direccion: input.direccion ?? null,
+      telefono: input.telefono ?? null,
+      lat: input.lat,
+      lng: input.lng,
+      activo: input.activo ?? true,
+      aprobado: input.aprobado ?? true,
+      imagen_url: input.imagen_url ?? null,
+    })
+    .select("*, provincias(slug)")
+    .single();
+  if (error) throw error;
+
+  return {
+    id: data.id,
+    nombre: data.nombre,
+    slug: data.slug,
+    provincia_slug: data.provincias?.slug ?? "",
+    direccion: data.direccion,
+    telefono: data.telefono,
+    lat: Number(data.lat),
+    lng: Number(data.lng),
+    activo: data.activo !== false,
+    aprobado: !!data.aprobado,
+    imagen_url: data.imagen_url ?? null,
+  };
+}
+
+export async function updateLugarAdmin(
+  id: number,
+  patch: {
+    nombre?: string;
+    provincia_slug?: string;
+    direccion?: string | null;
+    telefono?: string | null;
+    lat?: number;
+    lng?: number;
+    activo?: boolean;
+    aprobado?: boolean;
+    imagen_url?: string | null;
+  }
+): Promise<boolean> {
+  const update: Record<string, unknown> = {};
+  if (patch.nombre !== undefined) update.nombre = patch.nombre;
+  if (patch.direccion !== undefined) update.direccion = patch.direccion;
+  if (patch.telefono !== undefined) update.telefono = patch.telefono;
+  if (patch.lat !== undefined) update.lat = patch.lat;
+  if (patch.lng !== undefined) update.lng = patch.lng;
+  if (patch.activo !== undefined) update.activo = patch.activo;
+  if (patch.aprobado !== undefined) update.aprobado = patch.aprobado;
+  if (patch.imagen_url !== undefined) update.imagen_url = patch.imagen_url;
+  if (patch.provincia_slug !== undefined) {
+    const provinciaId = await provinciaIdBySlug(patch.provincia_slug);
+    if (!provinciaId) throw new Error("Provincia no encontrada");
+    update.provincia_id = provinciaId;
+  }
+  if (Object.keys(update).length === 0) return true;
+
+  const { error } = await db().from("lugares").update(update).eq("id", id);
+  if (error) throw error;
+  return true;
+}
+
+export async function deleteLugarAdmin(id: number): Promise<boolean> {
+  const { error } = await db().from("lugares").delete().eq("id", id);
+  if (error) throw error;
+  return true;
+}

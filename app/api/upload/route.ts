@@ -1,21 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase";
+import { getSession } from "@/lib/auth";
+
+const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     if (!file) {
       return NextResponse.json({ error: "No se envió ningún archivo" }, { status: 400 });
     }
+    if (!ALLOWED.includes(file.type)) {
+      return NextResponse.json({ error: "Formato no permitido. Usa JPG, PNG, WEBP o GIF." }, { status: 400 });
+    }
+    if (file.size > MAX_BYTES) {
+      return NextResponse.json({ error: "La imagen supera los 5 MB." }, { status: 400 });
+    }
 
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const safeExt = ["jpg", "jpeg", "png", "webp", "gif"].includes(ext) ? ext : "jpg";
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${safeExt}`;
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const supabase = getServiceSupabase();
 
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from("gastro-images")
       .upload(fileName, buffer, {
         contentType: file.type,
