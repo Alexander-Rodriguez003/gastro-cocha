@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Star, MapPin, ChevronLeft, Clock, Utensils, Sparkles, MessageSquare, Navigation } from "lucide-react";
 import Link from "next/link";
 import type { Plato, LugarConPivot, Resena } from "@/lib/types";
+import { OptimizedImage } from "./OptimizedImage";
 
 interface PlatoDetailViewProps {
   initialPlato: Plato;
@@ -13,7 +14,6 @@ interface PlatoDetailViewProps {
 
 export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailViewProps) {
   const plato = initialPlato;
-  const [imgError, setImgError] = useState(false);
   const [localResenas, setLocalResenas] = useState<Resena[]>(resenas);
   const [reviewAddedBanner, setReviewAddedBanner] = useState<string | null>(null);
 
@@ -136,16 +136,14 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
             marginBottom: "1.75rem",
           }}
         >
-          {plato.imagen_url && !imgError ? (
-            <img
+          {plato.imagen_url ? (
+            <OptimizedImage
               src={plato.imagen_url}
               alt={plato.nombre}
-              onError={() => setImgError(true)}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
+              fill
+              priority
+              sizes="(max-width: 1120px) 100vw, 1120px"
+              style={{ objectFit: "cover" }}
             />
           ) : (
             <Utensils size={56} color="var(--color-primary)" style={{ opacity: 0.45 }} />

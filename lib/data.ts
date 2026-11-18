@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { getServiceSupabase } from './supabase';
 import type { Provincia, Plato, Lugar, Resena, LugarConPivot, PlatoConPivot, Especialidad } from './types';
 
@@ -86,12 +87,12 @@ export async function getAllProvincias(): Promise<Provincia[]> {
   return (data || []).map(mapProvincia);
 }
 
-export async function getProvinciaDetail(slug: string): Promise<{ provincia: Provincia; platos: Plato[] } | null> {
+export const getProvinciaDetail = cache(async (slug: string): Promise<{ provincia: Provincia; platos: Plato[] } | null> => {
   const { data: prov, error } = await db().from('provincias').select('*').eq('slug', slug).single();
   if (error || !prov) return null;
   const { data: platos } = await db().from('platos').select('*').eq('provincia_id', prov.id).eq('activo', true);
   return { provincia: mapProvincia(prov), platos: (platos || []).map(mapPlato) };
-}
+});
 
 export async function getPlatosDestacados(): Promise<Plato[]> {
   const { data, error } = await db().from('platos').select('*, provincias(*)').eq('destacado', true).eq('activo', true);
@@ -99,7 +100,7 @@ export async function getPlatosDestacados(): Promise<Plato[]> {
   return (data || []).map(mapPlato);
 }
 
-export async function getPlatoDetail(slug: string): Promise<{ plato: Plato; lugares: LugarConPivot[]; resenas: Resena[] } | null> {
+export const getPlatoDetail = cache(async (slug: string): Promise<{ plato: Plato; lugares: LugarConPivot[]; resenas: Resena[] } | null> => {
   const { data: plato, error } = await db().from('platos').select('*, provincias(*)').eq('slug', slug).single();
   if (error || !plato) return null;
 
@@ -127,9 +128,9 @@ export async function getPlatoDetail(slug: string): Promise<{ plato: Plato; luga
     .order('created_at', { ascending: false });
 
   return { plato: mapPlato(plato), lugares, resenas: (resenas || []).map(mapResena) };
-}
+});
 
-export async function getLugarDetail(slug: string): Promise<{ lugar: Lugar; platos: any[]; resenas: Resena[] } | null> {
+export const getLugarDetail = cache(async (slug: string): Promise<{ lugar: Lugar; platos: any[]; resenas: Resena[] } | null> => {
   const { data: lugar, error } = await db().from('lugares').select('*, provincias(*)').eq('slug', slug).single();
   if (error || !lugar || !lugar.aprobado) return null;
 
@@ -155,6 +156,27 @@ export async function getLugarDetail(slug: string): Promise<{ lugar: Lugar; plat
     .order('created_at', { ascending: false });
 
   return { lugar: mapLugar(lugar), platos, resenas: (resenas || []).map(mapResena) };
+});
+
+export async function getAllSlugsForSitemap(): Promise<{
+  provincias: string[];
+  platos: string[];
+  lugares: string[];
+}> {
+  try {
+    const [{ data: provs }, { data: plats }, { data: lugs }] = await Promise.all([
+      db().from('provincias').select('slug'),
+      db().from('platos').select('slug').eq('activo', true),
+      db().from('lugares').select('slug').eq('aprobado', true).eq('activo', true),
+    ]);
+    return {
+      provincias: (provs || []).map((r: { slug: string }) => r.slug),
+      platos: (plats || []).map((r: { slug: string }) => r.slug),
+      lugares: (lugs || []).map((r: { slug: string }) => r.slug),
+    };
+  } catch {
+    return { provincias: [], platos: [], lugares: [] };
+  }
 }
 
 export async function getRankingGlobal(): Promise<any[]> {

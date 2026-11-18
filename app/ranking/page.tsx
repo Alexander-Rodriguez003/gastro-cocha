@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { getRankingGlobal, getTrendingGlobal } from "@/lib/data";
 import { PlatoCard } from "@/components/PlatoCard";
 import { Trophy, Flame } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Ranking Gastronómico",
+  description: "Los platos típicos y especialidades mejor calificados y en tendencia de Cochabamba.",
+};
 
 interface Props {
   searchParams: Promise<{

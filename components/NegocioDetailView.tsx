@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Star, MapPin, ChevronLeft, Phone, Sparkles, MessageSquare, ArrowRight, Compass, Utensils, Navigation, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import type { Lugar, Resena, PlatoConPivot } from "@/lib/types";
+import { OptimizedImage } from "./OptimizedImage";
 
 interface NegocioDetailViewProps {
   initialLugar: Lugar;
@@ -130,13 +131,22 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
           justifyContent: "flex-end",
         }}
       >
+        <OptimizedImage
+          src={coverImage}
+          fallbackSrc="/hero-restaurant.jpg"
+          alt={lugar.nombre}
+          fill
+          priority
+          sizes="(max-width: 1120px) 100vw, 1120px"
+          style={{ objectFit: "cover", objectPosition: "center" }}
+        />
         <div
+          aria-hidden="true"
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: `linear-gradient(to top, rgba(17, 16, 16, 0.92) 0%, rgba(17, 16, 16, 0.56) 55%, rgba(17, 16, 16, 0.2) 100%), url(${coverImage})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            zIndex: 1,
+            background: "linear-gradient(to top, rgba(17, 16, 16, 0.92) 0%, rgba(17, 16, 16, 0.56) 55%, rgba(17, 16, 16, 0.2) 100%)",
           }}
         />
 
@@ -282,10 +292,11 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
                 >
                   <div>
                     <div style={{ display: "flex", gap: "1rem", marginBottom: "0.75rem", alignItems: "center" }}>
-                      <img
-                        src={plato.pivot?.imagen_url || plato.imagen_url || "/images/placeholder-plate.svg"}
+                      <OptimizedImage
+                        src={plato.pivot?.imagen_url || plato.imagen_url}
                         alt={plato.nombre}
-                        onError={(e) => { e.currentTarget.src = "/images/placeholder-plate.svg"; }}
+                        width={72}
+                        height={72}
                         style={{ width: 72, height: 72, borderRadius: "var(--radius-md)", objectFit: "cover", background: "var(--color-amber-light)", flexShrink: 0 }}
                       />
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -345,10 +356,11 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
                       alignItems: "center",
                     }}
                   >
-                    <img
-                      src={spec.imagen_url || "/images/placeholder-plate.svg"}
+                    <OptimizedImage
+                      src={spec.imagen_url}
                       alt={spec.nombre}
-                      onError={(e) => { e.currentTarget.src = "/images/placeholder-plate.svg"; }}
+                      width={70}
+                      height={70}
                       style={{ width: 70, height: 70, borderRadius: "var(--radius-md)", objectFit: "cover", background: "var(--color-amber-light)", flexShrink: 0 }}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>

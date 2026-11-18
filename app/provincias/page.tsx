@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { getAllProvincias } from "@/lib/data";
 import { ProvinciaGrid } from "@/components/ProvinciaGrid";
 import { MapPin } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Las 16 Provincias",
+  description: "Explora los platos típicos y tradiciones culinarias de las 16 provincias de Cochabamba.",
+};
 
 export default async function ProvinciasPage() {
   const provincias = await getAllProvincias();

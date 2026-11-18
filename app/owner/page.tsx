@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Store, Utensils, Sparkles, Phone, MapPin, Tag, Plus, Trash2, Save, LayoutGrid, Check } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface Specialty {
   id: number;
@@ -356,10 +357,11 @@ export default function OwnerDashboard() {
             {platos.map((plato) => (
               <div key={plato.id} className="card" style={{ padding: "1.25rem", display: "flex", gap: "1rem", flexDirection: "column" }}>
                 <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                  <img
-                    src={plato.pivot?.imagen_url || plato.imagen_url || "/images/placeholder-plate.svg"}
+                  <OptimizedImage
+                    src={plato.pivot?.imagen_url || plato.imagen_url}
                     alt={plato.nombre}
-                    onError={(e) => { e.currentTarget.src = "/images/placeholder-plate.svg"; }}
+                    width={68}
+                    height={68}
                     style={{ width: 68, height: 68, borderRadius: "var(--radius-md)", objectFit: "cover", background: "var(--color-amber-light)", flexShrink: 0 }}
                   />
                   <div>
@@ -435,10 +437,11 @@ export default function OwnerDashboard() {
                 {lugar.especialidades.map((spec) => (
                   <div key={spec.id} className="card" style={{ padding: "1.15rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
                     <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                      <img
-                        src={spec.imagen_url || "/images/placeholder-plate.svg"}
+                      <OptimizedImage
+                        src={spec.imagen_url}
                         alt={spec.nombre}
-                        onError={(e) => { e.currentTarget.src = "/images/placeholder-plate.svg"; }}
+                        width={60}
+                        height={60}
                         style={{ width: 60, height: 60, borderRadius: "var(--radius-md)", objectFit: "cover", background: "var(--color-amber-light)", flexShrink: 0 }}
                       />
                       <div>

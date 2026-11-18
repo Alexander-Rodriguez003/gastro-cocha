@@ -1,10 +1,29 @@
+import type { Metadata } from "next";
 import { getProvinciaDetail } from "@/lib/data";
 import { PlatoCard } from "@/components/PlatoCard";
 import { MapPin, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-export default async function ProvinciaPage({ params }: { params: Promise<{ slug: string }> }) {
+type Props = { params: Promise<{ slug: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const data = await getProvinciaDetail(slug);
+  if (!data) {
+    return { title: "Provincia no encontrada" };
+  }
+  const { provincia } = data;
+  const description =
+    provincia.descripcion ||
+    `Platos típicos y cultura gastronómica de la provincia ${provincia.nombre}, Cochabamba.`;
+  return {
+    title: `Gastronomía de ${provincia.nombre}`,
+    description,
+  };
+}
+
+export default async function ProvinciaPage({ params }: Props) {
   const { slug } = await params;
   const data = await getProvinciaDetail(slug);
   if (!data) notFound();

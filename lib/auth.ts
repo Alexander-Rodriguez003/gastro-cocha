@@ -14,13 +14,13 @@ export interface SessionUser {
 
 const JWT_SECRET = process.env.JWT_SECRET || randomBytes(32).toString("hex");
 
-function encode(data: SessionUser): string {
+export function encode(data: SessionUser): string {
   const payload = Buffer.from(JSON.stringify(data)).toString("base64");
   const signature = createHmac("sha256", JWT_SECRET).update(payload).digest("base64");
   return `${payload}.${signature}`;
 }
 
-function decode(token: string): SessionUser | null {
+export function decode(token: string): SessionUser | null {
   try {
     const parts = token.split(".");
     if (parts.length !== 2) return null;

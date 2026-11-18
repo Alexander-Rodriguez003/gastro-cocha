@@ -1,12 +1,10 @@
 "use client";
-import { useState } from "react";
 import Link from "next/link";
 import type { Plato } from "@/lib/types";
 import { Star, MapPin, Utensils } from "lucide-react";
+import { OptimizedImage } from "./OptimizedImage";
 
 export function PlatoCard({ plato }: { plato: Plato }) {
-  const [imgError, setImgError] = useState(false);
-
   const rating = plato.promedio_rating?.toFixed(1) ?? "—";
   const precio = plato.precio_referencial ? `${plato.precio_referencial.toFixed(0)} Bs` : "Consultar";
   const resenasLabel = plato.total_resenas === 1 ? "1 reseña" : `${plato.total_resenas} reseñas`;
@@ -31,16 +29,13 @@ export function PlatoCard({ plato }: { plato: Plato }) {
             justifyContent: "center",
           }}
         >
-          {plato.imagen_url && !imgError ? (
-            <img
+          {plato.imagen_url ? (
+            <OptimizedImage
               src={plato.imagen_url}
               alt={plato.nombre}
-              onError={() => setImgError(true)}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              style={{ objectFit: "cover" }}
             />
           ) : (
             <Utensils size={42} color="var(--color-primary)" style={{ opacity: 0.45 }} />
