@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, MapPin, Phone, ArrowRight, Building2, Compass, Sparkles } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Search, Phone, ArrowRight, Building2, Compass, Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { Lugar } from "@/lib/types";
 
@@ -9,262 +9,215 @@ interface NegociosGridProps {
   initialLugares: Lugar[];
 }
 
-export function NegociosGrid({ initialLugares }: { initialLugares: Lugar[] }) {
+export function NegociosGrid({ initialLugares }: NegociosGridProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProvince, setSelectedProvince] = useState("all");
-  const [filteredLugares, setFilteredLugares] = useState<Lugar[]>(initialLugares);
 
-  // Extract unique province names for filter pills
-  const provinces = ["all", ...Array.from(new Set(initialLugares.map(l => l.provincia?.nombre).filter((name): name is string => !!name)))];
+  const provinces = useMemo(
+    () => [
+      "all",
+      ...Array.from(
+        new Set(initialLugares.map((l) => l.provincia?.nombre).filter((name): name is string => !!name))
+      ),
+    ],
+    [initialLugares]
+  );
 
-  // Perform dynamic search filtering
-  useEffect(() => {
+  const filteredLugares = useMemo(() => {
     let list = initialLugares;
-
     if (searchTerm.trim() !== "") {
       const term = searchTerm.toLowerCase();
-      list = list.filter(l => 
-        l.nombre.toLowerCase().includes(term) ||
-        (l.direccion && l.direccion.toLowerCase().includes(term)) ||
-        (l.provincia?.nombre && l.provincia.nombre.toLowerCase().includes(term))
+      list = list.filter(
+        (l) =>
+          l.nombre.toLowerCase().includes(term) ||
+          (l.direccion && l.direccion.toLowerCase().includes(term)) ||
+          (l.provincia?.nombre && l.provincia.nombre.toLowerCase().includes(term))
       );
     }
-
     if (selectedProvince !== "all") {
-      list = list.filter(l => l.provincia?.nombre === selectedProvince);
+      list = list.filter((l) => l.provincia?.nombre === selectedProvince);
     }
-
-    setFilteredLugares(list);
+    return list;
   }, [searchTerm, selectedProvince, initialLugares]);
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
-      
-      {/* Page Header */}
-      <div style={{ marginBottom: "2.5rem", textAlign: "center" }}>
-        <h1 
-          style={{ 
-            fontFamily: "Georgia, serif", 
-            fontWeight: 700, 
-            fontSize: "2.25rem", 
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2.5rem 1.5rem 4rem" }}>
+      {/* Header */}
+      <div style={{ marginBottom: "2rem" }}>
+        <span className="badge badge-forest" style={{ marginBottom: "0.75rem" }}>
+          {initialLugares.length} locales verificados
+        </span>
+        <h1
+          style={{
+            fontFamily: "var(--font-serif)",
+            fontWeight: 800,
+            fontSize: "clamp(1.85rem, 4vw, 2.5rem)",
             letterSpacing: "-0.02em",
-            marginBottom: "0.5rem"
+            color: "var(--color-ink)",
+            marginBottom: "0.4rem",
           }}
         >
-          Negocios y Restaurantes Gastronómicos
+          Negocios y Restaurantes
         </h1>
-        <p style={{ color: "var(--color-text-muted)", fontSize: "1rem" }}>
-          Explora los rincones culinarios más famosos y tradicionales de Cochabamba
+        <p style={{ color: "var(--color-muted)", fontSize: "0.95rem", maxWidth: 580 }}>
+          Explora picanterías, comedores de carretera y restaurantes tradicionales de Cochabamba.
         </p>
       </div>
 
-      {/* SEARCH AND FILTER BAR (Premium cyber style) */}
-      <div 
-        style={{ 
-          background: "color-mix(in srgb, var(--color-bg-card) 70%, transparent)",
-          backdropFilter: "blur(12px)",
+      {/* Search & Filter Bar */}
+      <div
+        style={{
+          background: "var(--color-bg-card)",
           border: "1px solid var(--color-border)",
           padding: "1.25rem",
-          borderRadius: 20,
-          boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
-          marginBottom: "2.0rem",
+          borderRadius: "var(--radius-lg)",
+          boxShadow: "var(--shadow-sm)",
+          marginBottom: "2rem",
           display: "flex",
           flexDirection: "column",
           gap: "1rem",
         }}
       >
         <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-          <Search size={18} color="var(--color-text-muted)" style={{ position: "absolute", left: 16 }} />
-          <input 
-            type="text" 
-            placeholder="Buscar por nombre, dirección o especialidad..."
+          <label htmlFor="negocios-search" className="sr-only">
+            Buscar negocio por nombre, dirección o provincia
+          </label>
+          <Search size={17} color="var(--color-muted)" style={{ position: "absolute", left: 14, pointerEvents: "none" }} />
+          <input
+            id="negocios-search"
+            type="text"
+            placeholder="Buscar por nombre, dirección o provincia..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "0.85rem 1rem 0.85rem 2.75rem",
-              borderRadius: 14,
-              border: "1px solid var(--color-border)",
-              background: "var(--color-bg-card)",
-              fontSize: "0.95rem",
-              fontFamily: "inherit",
-              outline: "none",
-              transition: "all 0.2s ease",
-            }}
-            onFocus={(e) => e.target.style.borderColor = "var(--color-primary)"}
-            onBlur={(e) => e.target.style.borderColor = "var(--color-border)"}
+            className="input-editorial"
+            style={{ paddingLeft: "2.65rem", background: "var(--color-cream)" }}
           />
         </div>
 
         {/* Province Filter Pills */}
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
-          <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginRight: "0.25rem" }}>
-            Filtrar por Provincia:
+        <div style={{ display: "flex", gap: "0.45rem", flexWrap: "wrap", alignItems: "center" }}>
+          <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--color-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginRight: "0.3rem" }}>
+            Provincia:
           </span>
-          {provinces.map((prov) => (
-            <button
-              key={prov}
-              onClick={() => setSelectedProvince(prov)}
-              style={{
-                padding: "0.4rem 0.85rem",
-                borderRadius: 10,
-                fontSize: "0.8rem",
-                fontWeight: 600,
-                cursor: "pointer",
-                border: selectedProvince === prov ? "1px solid var(--color-primary)" : "1px solid var(--color-border)",
-                background: selectedProvince === prov ? "rgba(217, 119, 6, 0.08)" : "var(--color-bg-card)",
-                color: selectedProvince === prov ? "var(--color-primary)" : "var(--color-text-muted)",
-                transition: "all 0.2s ease",
-              }}
-            >
-              {prov === "all" ? "Todas" : prov}
-            </button>
-          ))}
+          {provinces.map((prov) => {
+            const active = selectedProvince === prov;
+            return (
+              <button
+                key={prov}
+                type="button"
+                onClick={() => setSelectedProvince(prov)}
+                style={{
+                  padding: "0.38rem 0.85rem",
+                  borderRadius: "var(--radius-pill)",
+                  fontSize: "0.78rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  border: active ? "1px solid var(--color-ink)" : "1px solid var(--color-border)",
+                  background: active ? "var(--color-ink)" : "var(--color-cream)",
+                  color: active ? "var(--color-cream)" : "var(--color-muted)",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                {prov === "all" ? "Todas" : prov}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* NEGOCIOS GRID */}
+      {/* Grid */}
       {filteredLugares.length > 0 ? (
-        <div 
-          style={{ 
-            display: "grid", 
-            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", 
-            gap: "1.5rem" 
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))",
+            gap: "1.25rem",
           }}
         >
-          {filteredLugares.map((lugar) => (
-            <div
-              key={lugar.id}
-              className="card"
-              style={{
-                borderRadius: 20,
-                border: "1px solid var(--color-border)",
-                padding: "1.5rem",
-                background: "var(--color-bg-card)",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.02)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                gap: "1.25rem",
-                position: "relative",
-                overflow: "hidden",
-                transition: "all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1)",
-                animation: "gridItemFadeIn 0.4s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.borderColor = "var(--color-primary)";
-                e.currentTarget.style.boxShadow = "var(--shadow-md)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.borderColor = "var(--color-border)";
-                e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.02)";
-              }}
-            >
-              <div>
-                
-                {/* Header row */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                  <h2 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.25rem", color: "var(--color-text)", lineHeight: 1.25 }}>
-                    {lugar.nombre}
-                  </h2>
-                  {lugar.provincia && (
-                    <span 
-                      style={{ 
-                        background: "var(--color-surface-green)", 
-                        border: "1px solid rgba(5, 150, 105, 0.15)",
-                        color: "var(--color-secondary-dark)",
-                        padding: "0.25rem 0.6rem",
-                        borderRadius: 8,
-                        fontSize: "0.7rem",
-                        fontWeight: 700,
-                        textTransform: "uppercase"
-                      }}
-                    >
-                      {lugar.provincia.nombre}
-                    </span>
-                  )}
-                </div>
-
-                {/* Details list */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "1rem", fontSize: "0.85rem", color: "var(--color-text-muted)" }}>
-                  {lugar.direccion && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <Compass size={14} color="#A8A29E" style={{ flexShrink: 0 }} />
-                      <span>{lugar.direccion}</span>
-                    </div>
-                  )}
-                  {lugar.telefono && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <Phone size={14} color="#A8A29E" style={{ flexShrink: 0 }} />
-                      <span>{lugar.telefono}</span>
-                    </div>
-                  )}
-                </div>
-
-              </div>
-
-              {/* Action Link button */}
-              <Link
-                href={`/negocio/${lugar.slug}`}
+          {filteredLugares.map((lugar) => {
+            const specCount = lugar.especialidades?.length ?? 0;
+            return (
+              <article
+                key={lugar.id}
+                className="card"
                 style={{
+                  padding: "1.4rem",
                   display: "flex",
-                  alignItems: "center",
+                  flexDirection: "column",
                   justifyContent: "space-between",
-                  background: "rgba(5, 150, 105, 0.05)",
-                  border: "1px solid rgba(5, 150, 105, 0.15)",
-                  color: "var(--color-secondary-dark)",
-                  padding: "0.6rem 1rem",
-                  borderRadius: 12,
-                  fontWeight: 700,
-                  fontSize: "0.85rem",
-                  textDecoration: "none",
-                  transition: "all 0.2s ease",
-                  textAlign: "center"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "var(--color-secondary)";
-                  e.currentTarget.style.color = "#FFFFFF";
-                  e.currentTarget.style.borderColor = "var(--color-secondary)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(5, 150, 105, 0.05)";
-                  e.currentTarget.style.color = "var(--color-secondary-dark)";
-                  e.currentTarget.style.borderColor = "rgba(5, 150, 105, 0.15)";
+                  gap: "1.15rem",
                 }}
               >
-                <span>Visitar Landing Page</span>
-                <ArrowRight size={16} />
-              </Link>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.75rem", marginBottom: "0.75rem" }}>
+                    <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.2rem", color: "var(--color-ink)", lineHeight: 1.25 }}>
+                      {lugar.nombre}
+                    </h2>
+                    {lugar.provincia && (
+                      <span
+                        className="badge badge-forest"
+                        style={{ whiteSpace: "nowrap", flexShrink: 0, fontSize: "0.66rem" }}
+                      >
+                        {lugar.provincia.nombre}
+                      </span>
+                    )}
+                  </div>
 
-            </div>
-          ))}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem", fontSize: "0.84rem", color: "var(--color-muted)" }}>
+                    {lugar.direccion && (
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
+                        <Compass size={14} style={{ flexShrink: 0, marginTop: 3 }} />
+                        <span>{lugar.direccion}</span>
+                      </div>
+                    )}
+                    {lugar.telefono && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                        <Phone size={14} style={{ flexShrink: 0 }} />
+                        <span>{lugar.telefono}</span>
+                      </div>
+                    )}
+                    {specCount > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 7, color: "var(--color-primary-dark)", fontWeight: 600 }}>
+                        <Sparkles size={14} style={{ flexShrink: 0 }} />
+                        <span>{specCount} {specCount === 1 ? "especialidad propia" : "especialidades propias"}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <Link
+                  href={`/negocio/${lugar.slug}`}
+                  className="btn-secondary"
+                  style={{
+                    width: "100%",
+                    justifyContent: "space-between",
+                    padding: "0.55rem 1rem",
+                    fontSize: "0.82rem",
+                  }}
+                >
+                  <span>Ver local y menú</span>
+                  <ArrowRight size={15} />
+                </Link>
+              </article>
+            );
+          })}
         </div>
       ) : (
-        <div 
-          style={{ 
-            textAlign: "center", 
-            padding: "4rem 1rem", 
-            background: "rgba(28, 25, 23, 0.02)",
-            border: "1px dashed rgba(28, 25, 23, 0.12)",
-            borderRadius: 20,
-            color: "var(--color-text-muted)"
+        <div
+          style={{
+            textAlign: "center",
+            padding: "3.5rem 1.5rem",
+            background: "var(--color-bg-card)",
+            border: "1px dashed var(--color-border)",
+            borderRadius: "var(--radius-lg)",
+            color: "var(--color-muted)",
           }}
         >
-          <Building2 size={36} style={{ marginBottom: "0.75rem", opacity: 0.4 }} />
-          <div>No se encontraron negocios con los filtros actuales.</div>
+          <Building2 size={34} style={{ margin: "0 auto 0.75rem", opacity: 0.45 }} />
+          <p>No se encontraron negocios con los filtros actuales.</p>
         </div>
       )}
-
-      {/* Animation keyframes */}
-      <style>{`
-        @keyframes gridItemFadeIn {
-          from { transform: translateY(15px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-      `}</style>
-
     </div>
   );
 }

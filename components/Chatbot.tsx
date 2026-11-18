@@ -124,37 +124,39 @@ export function Chatbot() {
           setOpen(!open);
           if (!userLocation) requestLocation();
         }}
-        aria-label="Abrir chat"
+        aria-label={open ? "Cerrar asistente gastronómico" : "Abrir asistente gastronómico"}
+        aria-expanded={open}
         className="gastro-chat-trigger"
         style={{
           position: "fixed",
           bottom: "1.5rem",
           right: "1.5rem",
-          width: 60,
-          height: 60,
+          width: 56,
+          height: 56,
           borderRadius: "50%",
-          background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))",
+          background: open ? "var(--color-ink)" : "var(--color-amber)",
           color: "#FFFFFF",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           cursor: "pointer",
-          boxShadow: "var(--shadow-lg), 0 4px 20px rgba(217, 119, 6, 0.25)",
-          transition: "all 0.3s ease",
+          boxShadow: "var(--shadow-lg)",
+          transition: "transform 0.25s ease, background 0.25s ease",
           zIndex: 9999,
-          border: "none",
-          outline: "none",
+          border: "2px solid rgba(255,255,255,0.22)",
         }}
       >
-        {open ? <X size={24} /> : <MessageCircle size={24} />}
+        {open ? <X size={22} /> : <MessageCircle size={22} />}
       </button>
 
-      {/* ===== Warm Gastronomic Chat Panel ===== */}
+      {/* ===== Editorial Gastronomic Chat Panel ===== */}
       {open && (
         <div
+          role="dialog"
+          aria-label="Asistente gastronómico GastroCocha"
           style={{
             position: "fixed",
-            bottom: "6rem",
+            bottom: "5.75rem",
             right: "1.5rem",
             width: 380,
             maxWidth: "calc(100vw - 2rem)",
@@ -162,54 +164,78 @@ export function Chatbot() {
             maxHeight: "calc(100vh - 8rem)",
             background: "var(--color-bg-card)",
             border: "1px solid var(--color-border)",
-            borderRadius: "var(--radius-xl)",
-            boxShadow: "var(--shadow-lg), 0 10px 40px rgba(28, 25, 23, 0.12)",
+            borderRadius: "var(--radius-lg)",
+            boxShadow: "var(--shadow-lg)",
             zIndex: 9998,
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
-            animation: "chatPanelSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+            animation: "chatPanelSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
           }}
         >
           {/* Header */}
           <div
             style={{
-              padding: "1.25rem",
-              background: "var(--color-surface-warm)",
+              padding: "1.1rem 1.25rem",
+              background: "var(--color-cream)",
               borderBottom: "1px solid var(--color-border)",
-              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "0.5rem",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", justifyItems: "center", gap: "0.5rem" }}>
-              <span
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.45rem" }}>
+                <span
+                  style={{
+                    fontFamily: "var(--font-serif)",
+                    fontWeight: 700,
+                    fontSize: "1.08rem",
+                    color: "var(--color-ink)",
+                  }}
+                >
+                  GastroCocha AI
+                </span>
+                <Sparkles size={14} color="var(--color-amber)" />
+              </div>
+              <div
                 style={{
-                  fontFamily: "Georgia, serif",
-                  fontWeight: 700,
-                  fontSize: "1.1rem",
-                  color: "var(--color-primary-dark)",
+                  fontSize: "0.75rem",
+                  color: "var(--color-muted)",
+                  marginTop: "0.2rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.3rem",
                 }}
               >
-                GastroCocha AI
-              </span>
-              <Sparkles size={14} color="var(--color-primary)" />
+                <Navigation size={11} color="var(--color-forest)" />
+                {userLocation ? (
+                  <span style={{ color: "var(--color-forest)", fontWeight: 600 }}>Ubicación activada</span>
+                ) : (
+                  <span>Recomendaciones en Cochabamba</span>
+                )}
+              </div>
             </div>
-            <div
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Cerrar chat"
               style={{
-                fontSize: "0.75rem",
-                color: "var(--color-text-muted)",
-                marginTop: "0.25rem",
+                background: "none",
+                border: "1px solid var(--color-border)",
+                borderRadius: "50%",
+                width: 30,
+                height: 30,
                 display: "flex",
                 alignItems: "center",
-                gap: "0.25rem",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "var(--color-muted)",
               }}
             >
-              <Navigation size={12} color="var(--color-secondary)" />
-              {userLocation ? (
-                <span style={{ color: "var(--color-secondary-dark)", fontWeight: 600 }}>Ubicación activada</span>
-              ) : (
-                <span>Recomendaciones globales</span>
-              )}
-            </div>
+              <X size={15} />
+            </button>
           </div>
 
           {/* Action Pop-up Notification */}
@@ -258,10 +284,10 @@ export function Chatbot() {
                       : "16px 16px 16px 4px",
                   background:
                     msg.role === "user"
-                      ? "var(--color-primary)"
+                      ? "var(--color-ink)"
                       : "var(--color-bg-card)",
                   border: "1px solid var(--color-border)",
-                  color: msg.role === "user" ? "#FFFFFF" : "var(--color-text)",
+                  color: msg.role === "user" ? "var(--color-cream)" : "var(--color-ink)",
                   fontSize: "0.85rem",
                   lineHeight: 1.6,
                   boxShadow: "var(--shadow-sm)",
@@ -313,48 +339,28 @@ export function Chatbot() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               placeholder="¿Dónde puedo comer silpancho?"
-              style={{
-                flex: 1,
-                padding: "0.75rem 1rem",
-                borderRadius: 12,
-                border: "1px solid var(--color-border)",
-                background: "var(--color-bg)",
-                color: "var(--color-text)",
-                fontSize: "0.85rem",
-                outline: "none",
-                transition: "all 0.2s ease",
-              }}
-              onFocus={(e) => {
-                e.target.style.border = "1px solid var(--color-primary)";
-                e.target.style.background = "#FFFFFF";
-              }}
-              onBlur={(e) => {
-                e.target.style.border = "1px solid var(--color-border)";
-                e.target.style.background = "var(--color-bg)";
-              }}
+              aria-label="Escribe tu consulta gastronómica"
+              className="input-editorial"
+              style={{ flex: 1, fontSize: "0.85rem", background: "var(--color-cream)" }}
             />
             <button
               onClick={sendMessage}
               disabled={loading}
+              aria-label="Enviar mensaje"
               style={{
-                padding: "0.75rem",
-                borderRadius: 12,
-                background: "var(--color-primary)",
+                padding: "0.7rem 0.85rem",
+                borderRadius: "var(--radius-md)",
+                background: "var(--color-ink)",
                 border: "none",
-                cursor: "pointer",
+                cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.6 : 1,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--color-primary-dark)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "var(--color-primary)";
+                transition: "background 0.2s ease",
               }}
             >
-              <Send size={18} color="#FFFFFF" />
+              <Send size={17} color="#FFFFFF" />
             </button>
           </div>
         </div>

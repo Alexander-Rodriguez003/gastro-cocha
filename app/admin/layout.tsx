@@ -11,11 +11,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
+    <div className="admin-shell" style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
       <AdminSidebar userName={session.name} />
-      <div style={{ flex: 1, overflow: "auto" }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
         {children}
       </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .admin-shell {
+            flex-direction: column !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

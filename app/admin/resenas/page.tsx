@@ -67,16 +67,16 @@ export default function AdminResenasPage() {
         <ChevronLeft size={16} /> Panel Admin
       </Link>
 
-      <h1 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: "1.75rem", marginBottom: "0.5rem" }}>
-        💬 Moderar Reseñas
+      <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 800, fontSize: "1.75rem", marginBottom: "0.5rem", color: "var(--color-ink)" }}>
+        Moderar Reseñas
       </h1>
       <p style={{ color: "var(--color-text-muted)", marginBottom: "2rem", fontSize: "0.9rem" }}>
         Aprueba o rechaza reseñas antes de que sean visibles al público.
       </p>
 
       {/* Pendientes */}
-      <h2 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, fontSize: "1.1rem", marginBottom: "1rem", color: "var(--color-primary)" }}>
-        ⏳ Pendientes ({pendientes.length})
+      <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.15rem", marginBottom: "1rem", color: "var(--color-primary-dark)" }}>
+        Pendientes ({pendientes.length})
       </h2>
       {pendientes.length === 0 ? (
         <p style={{ color: "var(--color-text-muted)", fontStyle: "italic", marginBottom: "2rem" }}>Todas las reseñas están moderadas 🎉</p>

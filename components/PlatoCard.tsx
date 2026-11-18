@@ -1,59 +1,41 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import type { Plato } from "@/lib/types";
 import { Star, MapPin, Utensils } from "lucide-react";
 
 export function PlatoCard({ plato }: { plato: Plato }) {
-  const [localPlato, setLocalPlato] = useState(plato);
+  const [imgError, setImgError] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("gastro_platos");
-    if (saved) {
-      try {
-        const list = JSON.parse(saved);
-        const match = list.find((p: any) => p.slug === plato.slug);
-        if (match) {
-          setLocalPlato({
-            ...plato,
-            nombre: match.nombre,
-            precio_referencial: match.precio_referencial,
-            destacado: match.destacado,
-            imagen_url: match.imagen_url || plato.imagen_url,
-          });
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }, [plato]);
+  const rating = plato.promedio_rating?.toFixed(1) ?? "—";
+  const precio = plato.precio_referencial ? `${plato.precio_referencial.toFixed(0)} Bs` : "Consultar";
+  const resenasLabel = plato.total_resenas === 1 ? "1 reseña" : `${plato.total_resenas} reseñas`;
 
-  const rating = localPlato.promedio_rating?.toFixed(1) ?? "—";
-  const precio = localPlato.precio_referencial ? `${localPlato.precio_referencial.toFixed(0)} Bs` : "Consultar";
+  const isEspecialidad = Boolean((plato as Plato & { es_especialidad?: boolean }).es_especialidad);
+  const lugarSlug = (plato as Plato & { lugar_slug?: string | null }).lugar_slug;
 
-  const linkHref = (localPlato as any).es_especialidad && (localPlato as any).lugar_slug
-    ? `/negocio/${(localPlato as any).lugar_slug}`
-    : `/plato/${localPlato.slug}`;
+  const linkHref = isEspecialidad && lugarSlug ? `/negocio/${lugarSlug}` : `/plato/${plato.slug}`;
 
   return (
-    <Link href={linkHref} style={{ textDecoration: "none", color: "inherit" }}>
-      <div className="card" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <Link href={linkHref} style={{ textDecoration: "none", color: "inherit", display: "block", height: "100%" }}>
+      <article className="card" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
         {/* Image */}
         <div
+          className="card-img-wrap"
           style={{
-            height: 180,
+            height: 185,
             position: "relative",
-            overflow: "hidden",
-            background: `linear-gradient(135deg, hsl(${(localPlato.id * 37) % 360}, 60%, 85%), hsl(${(localPlato.id * 73) % 360}, 50%, 75%))`,
+            background: "var(--color-amber-light)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          {localPlato.imagen_url ? (
+          {plato.imagen_url && !imgError ? (
             <img
-              src={localPlato.imagen_url}
-              alt={localPlato.nombre}
+              src={plato.imagen_url}
+              alt={plato.nombre}
+              onError={() => setImgError(true)}
               style={{
                 width: "100%",
                 height: "100%",
@@ -61,36 +43,28 @@ export function PlatoCard({ plato }: { plato: Plato }) {
               }}
             />
           ) : (
-            <Utensils size={48} color="var(--color-primary-light)" style={{ opacity: 0.5 }} />
+            <Utensils size={42} color="var(--color-primary)" style={{ opacity: 0.45 }} />
           )}
-          {(localPlato as any).es_especialidad ? (
+
+          {isEspecialidad ? (
             <span
-              className="badge"
+              className="badge badge-forest"
               style={{
                 position: "absolute",
                 top: 12,
                 right: 12,
-                fontSize: "0.7rem",
                 zIndex: 2,
-                background: "var(--color-secondary)",
-                color: "white",
-                padding: "0.25rem 0.5rem",
-                borderRadius: "6px",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                fontFamily: "var(--font-display)"
               }}
             >
               Especialidad
             </span>
-          ) : localPlato.destacado ? (
+          ) : plato.destacado ? (
             <span
-              className="badge badge-primary"
+              className="badge badge-ink"
               style={{
                 position: "absolute",
                 top: 12,
                 right: 12,
-                fontSize: "0.7rem",
                 zIndex: 2,
               }}
             >
@@ -100,45 +74,73 @@ export function PlatoCard({ plato }: { plato: Plato }) {
         </div>
 
         {/* Content */}
-        <div style={{ padding: "1rem", flex: 1, display: "flex", flexDirection: "column" }}>
-          <h3 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.1rem", marginBottom: "0.35rem", color: "var(--color-text)" }}>
-            {localPlato.nombre}
+        <div style={{ padding: "1.15rem", flex: 1, display: "flex", flexDirection: "column" }}>
+          <h3
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontWeight: 700,
+              fontSize: "1.125rem",
+              marginBottom: "0.4rem",
+              color: "var(--color-ink)",
+              lineHeight: 1.25,
+            }}
+          >
+            {plato.nombre}
           </h3>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem", fontSize: "0.8rem" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 3, color: "var(--color-primary)" }}>
-              <Star size={14} fill="var(--color-primary)" /> {rating}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.55rem", fontSize: "0.8rem" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--color-primary-dark)", fontWeight: 600 }}>
+              <Star size={13} fill="var(--color-amber)" color="var(--color-amber)" /> {rating}
             </span>
-            <span style={{ color: "var(--color-text-muted)" }}>
-              {localPlato.total_resenas} reseñas
-            </span>
+            <span style={{ color: "var(--color-muted)" }}>{resenasLabel}</span>
           </div>
 
-          <p style={{ color: "var(--color-text-muted)", fontSize: "0.82rem", lineHeight: 1.5, flex: 1, marginBottom: "0.75rem" }}>
-            {localPlato.descripcion && localPlato.descripcion.length > 100 
-              ? localPlato.descripcion.slice(0, 100) + "..." 
-              : localPlato.descripcion || "Plato típico tradicional."}
+          <p style={{ color: "var(--color-muted)", fontSize: "0.84rem", lineHeight: 1.55, flex: 1, marginBottom: "0.9rem" }}>
+            {plato.descripcion && plato.descripcion.length > 105
+              ? `${plato.descripcion.slice(0, 102)}...`
+              : plato.descripcion || "Plato típico tradicional de Cochabamba."}
           </p>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "0.5rem",
+              paddingTop: "0.75rem",
+              borderTop: "1px solid var(--color-border-light)",
+            }}
+          >
             <span
               style={{
-                fontFamily: "var(--font-display)",
+                fontFamily: "var(--font-serif)",
                 fontWeight: 700,
                 color: "var(--color-primary-dark)",
-                fontSize: "1rem",
+                fontSize: "1.02rem",
+                whiteSpace: "nowrap",
               }}
             >
               {precio}
             </span>
-            {localPlato.provincia && (
-              <span style={{ display: "flex", alignItems: "center", gap: 3, color: "var(--color-text-muted)", fontSize: "0.75rem" }}>
-                <MapPin size={12} /> {localPlato.provincia.nombre}
+            {plato.provincia && (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  color: "var(--color-muted)",
+                  fontSize: "0.76rem",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                <MapPin size={12} style={{ flexShrink: 0 }} /> {plato.provincia.nombre}
               </span>
             )}
           </div>
         </div>
-      </div>
+      </article>
     </Link>
   );
 }

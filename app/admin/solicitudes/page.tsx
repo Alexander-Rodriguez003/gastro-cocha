@@ -68,16 +68,16 @@ export default function AdminSolicitudesPage() {
         <ChevronLeft size={16} /> Panel Admin
       </Link>
 
-      <h1 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: "1.75rem", marginBottom: "0.5rem" }}>
-        📋 Solicitudes de Registro
+      <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 800, fontSize: "1.75rem", marginBottom: "0.5rem", color: "var(--color-ink)" }}>
+        Solicitudes de Registro
       </h1>
       <p style={{ color: "var(--color-text-muted)", marginBottom: "2rem", fontSize: "0.9rem" }}>
         Revisa y aprueba los negocios que quieren aparecer en la guía.
       </p>
 
       {/* Pendientes */}
-      <h2 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, fontSize: "1.1rem", marginBottom: "1rem", color: "var(--color-primary)" }}>
-        ⏳ Pendientes ({pendientes.length})
+      <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.15rem", marginBottom: "1rem", color: "var(--color-primary-dark)" }}>
+        Pendientes ({pendientes.length})
       </h2>
       {pendientes.length === 0 ? (
         <p style={{ color: "var(--color-text-muted)", fontStyle: "italic", marginBottom: "2rem" }}>No hay solicitudes pendientes 🎉</p>
@@ -87,7 +87,7 @@ export default function AdminSolicitudesPage() {
             <div key={sol.id} className="card" style={{ padding: "1.25rem", borderLeft: "4px solid var(--color-primary)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
                 <div>
-                  <h3 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700, fontSize: "1.05rem" }}>{sol.nombre}</h3>
+                  <h3 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.1rem" }}>{sol.nombre}</h3>
                   <div style={{ color: "var(--color-text-muted)", fontSize: "0.82rem", marginTop: 4, display: "flex", flexDirection: "column", gap: 3 }}>
                     <span><MapPin size={13} style={{ display: "inline", verticalAlign: "middle" }} /> {sol.direccion} — {sol.provincia}</span>
                     <span><Phone size={13} style={{ display: "inline", verticalAlign: "middle" }} /> {sol.telefono} ({sol.nombre_propietario})</span>
@@ -127,8 +127,8 @@ export default function AdminSolicitudesPage() {
       {/* Procesadas */}
       {procesadas.length > 0 && (
         <>
-          <h2 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, fontSize: "1.1rem", marginBottom: "1rem" }}>
-            ✅ Procesadas ({procesadas.length})
+          <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.15rem", marginBottom: "1rem" }}>
+            Procesadas ({procesadas.length})
           </h2>
           <div style={{ display: "grid", gap: "0.75rem" }}>
             {procesadas.map((sol) => (

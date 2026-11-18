@@ -36,6 +36,7 @@ export function InteractiveMap() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
+  const focusMarkerRef = useRef<L.Marker | null>(null);
   
   const [provincias, setProvincias] = useState<ProvinciaOption[]>([]);
   const [selectedSlug, setSelectedSlug] = useState<string>("");
@@ -62,10 +63,10 @@ export function InteractiveMap() {
       // Center in Cochabamba (Cercado)
       const map = L.map(mapContainerRef.current).setView([-17.3895, -66.1568], 11);
       
-      // Beautiful, minimalist CartoDB light/cream map style
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      // OpenStreetMap standard tiles (warm-tinted via CSS in globals.css)
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
-        attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> &copy; <a href="https://carto.com/">CartoDB</a>',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
 
       const markersGroup = L.layerGroup().addTo(map);
@@ -132,7 +133,11 @@ export function InteractiveMap() {
             iconAnchor: [8, 8],
           });
 
+          if (focusMarkerRef.current) {
+            focusMarkerRef.current.remove();
+          }
           const activeMarker = L.marker([lat, lng], { icon: pulseIcon }).addTo(mapRef.current);
+          focusMarkerRef.current = activeMarker;
           activeMarker.bindPopup(`
             <div style="font-family: var(--font-body); padding: 4px; color: var(--color-ink); min-width: 160px;">
               <strong style="color: var(--color-primary); font-size: 13px; display: flex; align-items: center; gap: 4px;">${label}</strong>
@@ -240,7 +245,7 @@ export function InteractiveMap() {
 
       // Filter Map Markers
       await loadPlacesMarkers(slug);
-      setStatusMsg("Listo ✅");
+      setStatusMsg("Listo");
       setTimeout(() => setStatusMsg(""), 1500);
     } catch (err: any) {
       setErrorMsg(err.message || "Error al cargar los datos.");
@@ -407,10 +412,11 @@ export function InteractiveMap() {
       >
         {/* Province Selector */}
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-muted)" }}>
+          <label htmlFor="map-provincia-select" style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-muted)" }}>
             Filtrar por Provincia
           </label>
           <select
+            id="map-provincia-select"
             value={selectedSlug}
             onChange={(e) => handleProvinceChange(e.target.value)}
             style={{
@@ -596,18 +602,44 @@ export function InteractiveMap() {
           ) : (
             <div
               style={{
-                padding: "4rem 2rem",
-                textAlign: "center",
+                padding: "1.5rem",
                 background: "var(--color-cream)",
-                border: "1px dashed var(--color-border)",
-                borderRadius: 16,
-                color: "var(--color-muted)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "var(--radius-lg)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
               }}
             >
-              <Navigation size={28} style={{ margin: "0 auto 1rem", opacity: 0.4 }} />
-              <p style={{ margin: 0, fontFamily: "var(--font-body)", fontSize: "0.9rem" }}>
-                Ninguna provincia seleccionada. Elige una del selector o del mapa para ver sus platos típicos.
+              <p style={{ margin: 0, fontFamily: "var(--font-body)", fontSize: "0.9rem", color: "var(--color-muted)" }}>
+                Elige una provincia rápida para explorar sus platos típicos en esta vista:
               </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                {(provincias.length > 0 ? provincias.slice(0, 8) : [
+                  { slug: "cercado", nombre: "Cercado" },
+                  { slug: "quillacollo", nombre: "Quillacollo" },
+                  { slug: "punata", nombre: "Punata" },
+                  { slug: "chapare", nombre: "Chapare" },
+                  { slug: "esteban-arce", nombre: "Esteban Arce (Tarata)" },
+                  { slug: "german-jordan", nombre: "Germán Jordán (Cliza)" },
+                ]).map((p) => (
+                  <button
+                    key={p.slug}
+                    type="button"
+                    onClick={() => handleProvinceChange(p.slug)}
+                    className="btn-ghost"
+                    style={{
+                      background: "var(--color-bg-card)",
+                      color: "var(--color-ink)",
+                      fontSize: "0.8rem",
+                      padding: "0.45rem 0.9rem",
+                    }}
+                  >
+                    <MapPin size={12} />
+                    {p.nombre}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>

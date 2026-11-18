@@ -1,10 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { LogIn, UserPlus, Eye, EyeOff, UtensilsCrossed } from "lucide-react";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [tab, setTab] = useState<"login" | "register">("login");
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
@@ -92,42 +90,72 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem 1rem" }}>
-      <div style={{ width: "100%", maxWidth: 420 }}>
+    <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "2.5rem 1.25rem" }}>
+      <div
+        className="card"
+        style={{
+          width: "100%",
+          maxWidth: 440,
+          padding: "2.25rem 2rem",
+          boxShadow: "var(--shadow-md)",
+        }}
+      >
         {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <UtensilsCrossed size={40} color="var(--color-primary)" style={{ margin: "0 auto 0.5rem" }} />
-          <h1 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: "1.75rem" }}>
-            Gastro<span style={{ color: "var(--color-primary)" }}>Cocha</span>
+        <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
+          <UtensilsCrossed size={34} color="var(--color-amber)" style={{ margin: "0 auto 0.6rem" }} />
+          <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 800, fontSize: "1.85rem", color: "var(--color-ink)" }}>
+            Gastro<span style={{ fontStyle: "italic", color: "var(--color-amber)" }}>Cocha</span>
           </h1>
-          <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem" }}>Inicia sesión para acceder a tu cuenta</p>
+          <p style={{ color: "var(--color-muted)", fontSize: "0.88rem", marginTop: "0.25rem" }}>
+            {tab === "login" ? "Inicia sesión para acceder a tu cuenta" : "Crea tu cuenta para participar en la guía"}
+          </p>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", marginBottom: "1.5rem", borderRadius: 12, overflow: "hidden", border: "1px solid var(--color-border)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem", marginBottom: "1.5rem", padding: "0.25rem", borderRadius: "var(--radius-pill)", background: "var(--color-cream)", border: "1px solid var(--color-border)" }}>
           <button
+            type="button"
             onClick={() => { setTab("login"); setError(""); }}
             style={{
-              flex: 1, padding: "0.65rem", border: "none", cursor: "pointer", fontWeight: 600,
-              fontFamily: "'Outfit', sans-serif", fontSize: "0.9rem",
-              background: tab === "login" ? "var(--color-primary)" : "var(--color-bg)",
-              color: tab === "login" ? "white" : "var(--color-text-muted)",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              padding: "0.55rem",
+              borderRadius: "var(--radius-pill)",
+              border: "none",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontFamily: "var(--font-body)",
+              fontSize: "0.85rem",
+              background: tab === "login" ? "var(--color-ink)" : "transparent",
+              color: tab === "login" ? "var(--color-cream)" : "var(--color-muted)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "all 0.2s ease",
             }}
           >
-            <LogIn size={16} /> Ingresar
+            <LogIn size={15} /> Ingresar
           </button>
           <button
+            type="button"
             onClick={() => { setTab("register"); setError(""); }}
             style={{
-              flex: 1, padding: "0.65rem", border: "none", cursor: "pointer", fontWeight: 600,
-              fontFamily: "'Outfit', sans-serif", fontSize: "0.9rem",
-              background: tab === "register" ? "var(--color-primary)" : "var(--color-bg)",
-              color: tab === "register" ? "white" : "var(--color-text-muted)",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              padding: "0.55rem",
+              borderRadius: "var(--radius-pill)",
+              border: "none",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontFamily: "var(--font-body)",
+              fontSize: "0.85rem",
+              background: tab === "register" ? "var(--color-ink)" : "transparent",
+              color: tab === "register" ? "var(--color-cream)" : "var(--color-muted)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "all 0.2s ease",
             }}
           >
-            <UserPlus size={16} /> Registrarse
+            <UserPlus size={15} /> Registrarse
           </button>
         </div>
 
@@ -135,69 +163,77 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {tab === "register" && (
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: 4 }}>Nombre</label>
+              <label htmlFor="login-name" style={{ display: "block", fontSize: "0.84rem", fontWeight: 600, marginBottom: 5, color: "var(--color-ink-soft)" }}>Nombre</label>
               <input
+                id="login-name"
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="Tu nombre completo"
                 required={tab === "register"}
-                style={{ width: "100%", padding: "0.65rem 0.9rem", borderRadius: 12, border: "1px solid var(--color-border)", background: "var(--color-bg-card)", fontSize: "0.9rem", outline: "none", boxSizing: "border-box" }}
+                className="input-editorial"
               />
             </div>
           )}
 
           <div>
-            <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: 4 }}>Email</label>
+            <label htmlFor="login-email" style={{ display: "block", fontSize: "0.84rem", fontWeight: 600, marginBottom: 5, color: "var(--color-ink-soft)" }}>Correo electrónico</label>
             <input
+              id="login-email"
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="tu@email.com"
               required
-              style={{ width: "100%", padding: "0.65rem 0.9rem", borderRadius: 12, border: "1px solid var(--color-border)", background: "var(--color-bg)", fontSize: "0.9rem", outline: "none", boxSizing: "border-box" }}
+              className="input-editorial"
             />
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: 4 }}>Contraseña</label>
+            <label htmlFor="login-password" style={{ display: "block", fontSize: "0.84rem", fontWeight: 600, marginBottom: 5, color: "var(--color-ink-soft)" }}>Contraseña</label>
             <div style={{ position: "relative" }}>
               <input
+                id="login-password"
                 type={showPass ? "text" : "password"}
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 placeholder="••••••"
                 required
                 minLength={6}
-                style={{ width: "100%", padding: "0.65rem 2.5rem 0.65rem 0.9rem", borderRadius: 12, border: "1px solid var(--color-border)", background: "var(--color-bg-card)", fontSize: "0.9rem", outline: "none", boxSizing: "border-box" }}
+                className="input-editorial"
+                style={{ paddingRight: "2.5rem" }}
               />
               <button
                 type="button"
                 onClick={() => setShowPass(!showPass)}
-                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)" }}
+                aria-label={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
+                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--color-muted)", padding: 4 }}
               >
-                {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPass ? <EyeOff size={17} /> : <Eye size={17} />}
               </button>
             </div>
           </div>
 
           {error && (
-            <div style={{ background: "color-mix(in srgb, var(--color-accent) 15%, transparent)", color: "var(--color-accent)", padding: "0.6rem 0.9rem", borderRadius: 10, fontSize: "0.85rem" }}>
-              ❌ {error}
+            <div role="alert" style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)", padding: "0.65rem 0.9rem", borderRadius: "var(--radius-md)", fontSize: "0.84rem", fontWeight: 500 }}>
+              {error}
             </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
+            className="btn-primary"
             style={{
-              width: "100%", padding: "0.75rem", borderRadius: 12, border: "none", cursor: "pointer",
-              background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))", color: "white",
-              fontWeight: 700, fontFamily: "'Outfit', sans-serif", fontSize: "1rem",
+              width: "100%",
+              justifyContent: "center",
+              padding: "0.8rem 1.5rem",
+              fontSize: "0.95rem",
+              marginTop: "0.25rem",
               opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? "Procesando..." : tab === "login" ? "Ingresar" : "Crear Cuenta"}
+            {loading ? "Procesando..." : tab === "login" ? "Ingresar" : "Crear cuenta"}
           </button>
         </form>
       </div>

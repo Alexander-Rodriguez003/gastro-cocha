@@ -45,18 +45,19 @@ export default async function Home() {
               "linear-gradient(to bottom, rgba(26,23,20,0) 50%, rgba(247,244,238,0.15) 100%)",
           }}
         />
-        {/* Top-right reservation CTA — like Beddia's "Make a Reservation" */}
         <div
           style={{
             position: "absolute",
             bottom: "1.5rem",
             left: "50%",
             transform: "translateX(-50%)",
+            whiteSpace: "nowrap",
           }}
         >
           <Link
             href="#mapa-gastronomico"
             className="hero-cta-pill"
+            style={{ whiteSpace: "nowrap" }}
           >
             <Navigation size={13} />
             Explorar el mapa
@@ -66,7 +67,6 @@ export default async function Home() {
 
       {/* ═══════════════════════════════════════════
           INTRO — Headline + badge + description
-          (mirrors: "Pizza, Wine, and Everything Fine.")
           ═══════════════════════════════════════════ */}
       <section
         style={{
@@ -80,43 +80,28 @@ export default async function Home() {
         }}
         className="intro-grid"
       >
-        {/* Left: headline + badge */}
+        {/* Left: eyebrow + headline */}
         <div>
+          <span
+            className="badge badge-forest"
+            style={{ marginBottom: "1rem" }}
+          >
+            16 provincias de Cochabamba
+          </span>
           <h1
             style={{
               fontFamily: "var(--font-serif)",
               fontWeight: 800,
-              fontSize: "clamp(2rem, 4.5vw, 3.25rem)",
+              fontSize: "clamp(2rem, 4.4vw, 3.25rem)",
               lineHeight: 1.08,
               color: "var(--color-ink)",
               letterSpacing: "-0.02em",
-              marginBottom: "1.25rem",
             }}
           >
             Silpancho, Chicha{" "}
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                verticalAlign: "middle",
-                background: "var(--color-forest)",
-                color: "var(--color-forest-text)",
-                padding: "0.2rem 0.7rem",
-                borderRadius: "var(--radius-pill)",
-                fontSize: "0.55em",
-                fontWeight: 700,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                fontFamily: "var(--font-body)",
-                marginLeft: "0.3em",
-                position: "relative",
-                top: "-0.1em",
-              }}
-            >
-              16 provincias
+            <span style={{ fontStyle: "italic", color: "var(--color-amber)" }}>
+              y Todo lo Bueno.
             </span>
-            <br />
-            y Todo lo Bueno.
           </h1>
         </div>
 
@@ -181,6 +166,7 @@ export default async function Home() {
 
         {/* Right: text content */}
         <div
+          className="split-section-body"
           style={{
             display: "flex",
             flexDirection: "column",
@@ -285,10 +271,9 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* Card 2 — Para Grupos */}
+        {/* Card 2 — Registra tu Negocio */}
         <div>
           <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", overflow: "hidden", background: "var(--color-amber-light)" }}>
-            {/* Decorative card (no image) — editorial collage style */}
             <div
               style={{
                 position: "absolute",
@@ -296,22 +281,43 @@ export default async function Home() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                flexDirection: "column",
-                gap: "0.5rem",
-                background: "linear-gradient(135deg, #F3E8D8 0%, #EDD9BE 100%)",
+                padding: "2rem",
+                background: "linear-gradient(135deg, #F3E8D8 0%, #EAD5B7 100%)",
               }}
             >
-              <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                <circle cx="40" cy="40" r="39" stroke="#C8702A" strokeWidth="1.5" strokeDasharray="4 4"/>
-                <path d="M26 40 C26 32.268 32.268 26 40 26 C47.732 26 54 32.268 54 40" stroke="#1A1714" strokeWidth="1.5" strokeLinecap="round"/>
-                <circle cx="30" cy="38" r="3" fill="#C8702A"/>
-                <circle cx="40" cy="34" r="3" fill="#2A5C3F"/>
-                <circle cx="50" cy="38" r="3" fill="#C8702A"/>
-                <path d="M24 52 C28 46 36 42 40 42 C44 42 52 46 56 52" stroke="#1A1714" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-              <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 700, color: "var(--color-ink)", textAlign: "center", maxWidth: 180, lineHeight: 1.2 }}>
-                Gastronomía en<br />comunidad
-              </p>
+              <div
+                style={{
+                  width: "100%",
+                  maxWidth: 360,
+                  background: "rgba(255, 255, 255, 0.9)",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "var(--radius-lg)",
+                  padding: "1.5rem",
+                  boxShadow: "var(--shadow-md)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                  <span className="badge badge-forest">Red GastroCocha</span>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-primary-dark)" }}>Gratis</span>
+                </div>
+                <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.25rem", fontWeight: 700, color: "var(--color-ink)", lineHeight: 1.2, marginBottom: "1rem" }}>
+                  Gastronomía en comunidad
+                </p>
+                <ul style={{ listStyle: "none", display: "grid", gap: "0.55rem", fontSize: "0.82rem", color: "var(--color-ink-soft)" }}>
+                  <li style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--color-forest)", flexShrink: 0 }} />
+                    Ubicación visible en el mapa GPS
+                  </li>
+                  <li style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--color-amber)", flexShrink: 0 }} />
+                    Menú, precios y especialidades propias
+                  </li>
+                  <li style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--color-ink)", flexShrink: 0 }} />
+                    Recomendado por el asistente
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
           {/* Text */}
@@ -493,6 +499,9 @@ export default async function Home() {
           }
           .split-section {
             grid-template-columns: 1fr !important;
+          }
+          .split-section-body {
+            padding: 2.5rem 1.5rem !important;
           }
           .cards-grid {
             grid-template-columns: 1fr !important;

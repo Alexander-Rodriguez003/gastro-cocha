@@ -12,7 +12,7 @@
   --color-cream:        #F7F4EE;   /* page background */
   --color-ink:          #1A1714;   /* primary text / buttons */
   --color-ink-soft:     #3D3830;   /* headings */
-  --color-muted:        #8A8178;   /* secondary text */
+  --color-muted:        #665E57;   /* secondary text (AA contrast on cream/white) */
   --color-border:       #E0DDD6;   /* dividers */
   --color-border-light: #EAE7E0;   /* subtle borders */
 
@@ -38,7 +38,7 @@
   --color-accent:       #7C2D3E;
   --color-accent-light: #C44B61;
   --color-text:         #1A1714;
-  --color-text-muted:   #8A8178;
+  --color-text-muted:   #665E57;
   --color-surface-warm: #F3E8D8;
   --color-surface-green: #D8EFE2;
   --color-danger:       #DC2626;
@@ -408,8 +408,84 @@ a {
 }
 
 /* ============================================================
+   ACCESSIBILITY FOCUS & EDITORIAL HELPERS
+   ============================================================ */
+:focus-visible {
+  outline: 2px solid var(--color-amber);
+  outline-offset: 2px;
+}
+
+.input-editorial {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.input-editorial:focus {
+  outline: none;
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 3px rgba(26, 23, 20, 0.08);
+}
+
+.tab-bar {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+}
+
+.tab-btn {
+  padding: 0.75rem 1.15rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  text-decoration: none;
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+
+.tab-btn:hover {
+  color: var(--color-ink);
+}
+
+.tab-btn-active {
+  color: var(--color-ink);
+  border-bottom-color: var(--color-amber);
+}
+
+/* Warm editorial tint for OpenStreetMap tiles */
+.leaflet-container {
+  font-family: var(--font-body);
+  background: var(--color-cream);
+}
+
+.leaflet-tile-pane {
+  filter: sepia(10%) saturate(88%) contrast(98%);
+}
+
+/* ============================================================
    RESPONSIVE UTILITIES
    ============================================================ */
+@media (max-width: 768px) {
+  .responsive-2col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 @media (max-width: 480px) {
   .chatbot-panel {
     width: calc(100vw - 2rem);

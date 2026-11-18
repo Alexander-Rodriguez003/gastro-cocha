@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Star, MapPin, ChevronLeft, DollarSign, Clock, Utensils, Sparkles, MessageSquare } from "lucide-react";
+import { Star, MapPin, ChevronLeft, Clock, Utensils, Sparkles, MessageSquare, Navigation } from "lucide-react";
 import Link from "next/link";
 import type { Plato, LugarConPivot, Resena } from "@/lib/types";
 
@@ -12,36 +12,12 @@ interface PlatoDetailViewProps {
 }
 
 export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailViewProps) {
-  const [plato, setPlato] = useState<Plato>(initialPlato);
+  const plato = initialPlato;
+  const [imgError, setImgError] = useState(false);
   const [localResenas, setLocalResenas] = useState<Resena[]>(resenas);
   const [reviewAddedBanner, setReviewAddedBanner] = useState<string | null>(null);
 
-  // 1. Load local plate overrides
-  useEffect(() => {
-    const saved = localStorage.getItem("gastro_platos");
-    if (saved) {
-      try {
-        const list = JSON.parse(saved);
-        const match = list.find((p: any) => p.slug === initialPlato.slug);
-        if (match) {
-          setPlato({
-            ...initialPlato,
-            nombre: match.nombre,
-            descripcion: match.descripcion || initialPlato.descripcion,
-            precio_referencial: match.precio_referencial,
-            destacado: match.destacado,
-            imagen_url: match.imagen_url || initialPlato.imagen_url,
-            historia: match.historia || initialPlato.historia,
-            ingredientes: match.ingredientes || initialPlato.ingredientes,
-          });
-        }
-      } catch (e) {
-        console.error("Error loading local overridden plates:", e);
-      }
-    }
-  }, [initialPlato]);
-
-  // 2. Load custom persistent user/AI reviews from localStorage
+  // Load custom persistent AI reviews from localStorage
   useEffect(() => {
     const savedReviews = localStorage.getItem(`gastro_reviews_${initialPlato.slug}`);
     if (savedReviews) {
@@ -109,166 +85,167 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
   }, [initialPlato]);
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
-      <Link href="/" style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--color-text-muted)", textDecoration: "none", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
-        <ChevronLeft size={16} /> Inicio
+    <div style={{ maxWidth: 1120, margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
+      <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--color-muted)", textDecoration: "none", fontSize: "0.85rem", marginBottom: "1.5rem", fontWeight: 500 }}>
+        <ChevronLeft size={16} /> Volver al inicio
       </Link>
 
       {/* Dynamic AI Review Notification Toast */}
       {reviewAddedBanner && (
         <div
           style={{
-            background: "var(--color-surface-warm)",
-            border: "1px solid rgba(217, 119, 6, 0.3)",
+            background: "var(--color-amber-light)",
+            border: "1px solid var(--color-amber)",
             borderRadius: "var(--radius-lg)",
-            padding: "1.25rem",
-            marginBottom: "2.0rem",
+            padding: "1.1rem 1.25rem",
+            marginBottom: "1.75rem",
             display: "flex",
             alignItems: "center",
             gap: "1rem",
-            boxShadow: "var(--shadow-md)",
+            boxShadow: "var(--shadow-sm)",
             animation: "reviewPulseBanner 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
           }}
         >
-          <div style={{ background: "var(--color-primary)", color: "#FFFFFF", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Sparkles size={18} />
+          <div style={{ background: "var(--color-ink)", color: "var(--color-cream)", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Sparkles size={17} />
           </div>
           <div>
-            <div style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1rem", color: "var(--color-primary-dark)" }}>
-              ¡Reseña Publicada por la IA!
+            <div style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1rem", color: "var(--color-ink)" }}>
+              Reseña publicada por el asistente
             </div>
-            <div style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginTop: 2 }}>
-              El asistente GastroCocha ha procesado tu valoración en lenguaje natural y la ha guardado en el perfil.
+            <div style={{ fontSize: "0.85rem", color: "var(--color-muted)", marginTop: 2 }}>
+              {reviewAddedBanner}
             </div>
           </div>
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "2rem" }}>
-        {/* Main info */}
-        <div>
-          {/* Image */}
-          <div
-            style={{
-              height: 320,
-              borderRadius: "var(--radius-lg)",
-              overflow: "hidden",
-              position: "relative",
-              background: `linear-gradient(135deg, hsl(${(plato.id * 37) % 360}, 60%, 80%), hsl(${(plato.id * 73) % 360}, 50%, 70%))`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: "1.5rem",
-            }}
-          >
-            {plato.imagen_url ? (
-              <img
-                src={plato.imagen_url}
-                alt={plato.nombre}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
-              />
-            ) : (
-              <span style={{ fontSize: "5rem" }}>🍽️</span>
+      <div>
+        {/* Image */}
+        <div
+          style={{
+            height: "clamp(240px, 42vw, 380px)",
+            borderRadius: "var(--radius-lg)",
+            overflow: "hidden",
+            position: "relative",
+            background: "var(--color-amber-light)",
+            border: "1px solid var(--color-border)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "1.75rem",
+          }}
+        >
+          {plato.imagen_url && !imgError ? (
+            <img
+              src={plato.imagen_url}
+              alt={plato.nombre}
+              onError={() => setImgError(true)}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+          ) : (
+            <Utensils size={56} color="var(--color-primary)" style={{ opacity: 0.45 }} />
+          )}
+        </div>
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" }}>
+          <div>
+            {plato.provincia && (
+              <Link
+                href={`/provincia/${plato.provincia.slug}`}
+                className="badge badge-forest"
+                style={{ marginBottom: "0.65rem", textDecoration: "none" }}
+              >
+                <MapPin size={11} /> {plato.provincia.nombre}
+              </Link>
             )}
+            <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 800, fontSize: "clamp(1.85rem, 4vw, 2.5rem)", color: "var(--color-ink)", letterSpacing: "-0.02em" }}>
+              {plato.nombre}
+            </h1>
           </div>
-
-          {/* Header */}
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" }}>
-            <div>
-              <h1 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "2rem", color: "var(--color-text)" }}>{plato.nombre}</h1>
-              {plato.provincia && (
-                <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-                  <MapPin size={14} /> {plato.provincia.nombre}
-                </p>
-              )}
-            </div>
-            <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-              {plato.promedio_rating && (
-                <div style={{ display: "flex", alignItems: "center", gap: 4, background: "var(--color-surface-warm)", padding: "0.4rem 0.8rem", borderRadius: "var(--radius)" }}>
-                  <Star size={16} fill="var(--color-primary)" color="var(--color-primary)" />
-                  <span style={{ fontWeight: 700 }}>{plato.promedio_rating.toFixed(1)}</span>
-                </div>
-              )}
-              {plato.precio_referencial && (
-                <div style={{ display: "flex", alignItems: "center", gap: 4, fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.3rem", color: "var(--color-primary-dark)" }}>
-                  <DollarSign size={18} /> {plato.precio_referencial.toFixed(0)} Bs
-                </div>
-              )}
-            </div>
-          </div>
-
-          <p style={{ fontSize: "1rem", lineHeight: 1.7, color: "var(--color-text)", marginBottom: "1.5rem" }}>{plato.descripcion}</p>
-
-          {/* Details cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
-            {plato.historia && (
-              <div className="card" style={{ padding: "1.25rem" }}>
-                <h3 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1rem", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: 6, color: "var(--color-primary-dark)" }}>
-                  <Clock size={16} /> Historia
-                </h3>
-                <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", lineHeight: 1.6 }}>{plato.historia}</p>
+          <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
+            {plato.promedio_rating && (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--color-amber-light)", padding: "0.45rem 0.9rem", borderRadius: "var(--radius-pill)", border: "1px solid var(--color-border)" }}>
+                <Star size={15} fill="var(--color-amber)" color="var(--color-amber)" />
+                <span style={{ fontWeight: 700, color: "var(--color-ink)" }}>{plato.promedio_rating.toFixed(1)}</span>
               </div>
             )}
-            {plato.ingredientes && (
-              <div className="card" style={{ padding: "1.25rem" }}>
-                <h3 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1rem", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: 6, color: "var(--color-secondary-dark)" }}>
-                  <Utensils size={16} /> Ingredientes
-                </h3>
-                <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", lineHeight: 1.6 }}>{plato.ingredientes}</p>
+            {plato.precio_referencial && (
+              <div style={{ display: "inline-flex", alignItems: "baseline", gap: 6, background: "var(--color-bg-card)", border: "1px solid var(--color-border)", padding: "0.4rem 1rem", borderRadius: "var(--radius-pill)" }}>
+                <span style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--color-muted)", fontWeight: 600 }}>Ref.</span>
+                <span style={{ fontFamily: "var(--font-serif)", fontWeight: 800, fontSize: "1.2rem", color: "var(--color-primary-dark)", whiteSpace: "nowrap" }}>
+                  {plato.precio_referencial.toFixed(0)} Bs
+                </span>
               </div>
             )}
           </div>
         </div>
+
+        <p style={{ fontSize: "1.02rem", lineHeight: 1.75, color: "var(--color-ink-soft)", marginBottom: "2rem", maxWidth: 780 }}>
+          {plato.descripcion}
+        </p>
+
+        {/* Details cards */}
+        {(plato.historia || plato.ingredientes) && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem", marginBottom: "2.5rem" }}>
+            {plato.historia && (
+              <div className="card" style={{ padding: "1.35rem" }}>
+                <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.08rem", marginBottom: "0.55rem", display: "flex", alignItems: "center", gap: 7, color: "var(--color-primary-dark)" }}>
+                  <Clock size={16} /> Historia y tradición
+                </h2>
+                <p style={{ color: "var(--color-muted)", fontSize: "0.88rem", lineHeight: 1.65 }}>{plato.historia}</p>
+              </div>
+            )}
+            {plato.ingredientes && (
+              <div className="card" style={{ padding: "1.35rem" }}>
+                <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.08rem", marginBottom: "0.55rem", display: "flex", alignItems: "center", gap: 7, color: "var(--color-forest)" }}>
+                  <Utensils size={16} /> Ingredientes principales
+                </h2>
+                <p style={{ color: "var(--color-muted)", fontSize: "0.88rem", lineHeight: 1.65 }}>{plato.ingredientes}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Lugares donde se sirve */}
       {lugares.length > 0 && (
-        <section style={{ marginTop: "1rem" }}>
-          <h2 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.4rem", marginBottom: "1rem", color: "var(--color-text)" }}>
+        <section style={{ marginTop: "1rem", marginBottom: "2.5rem" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.5rem", marginBottom: "1rem", color: "var(--color-ink)" }}>
             Dónde comerlo ({lugares.length} {lugares.length === 1 ? "lugar" : "lugares"})
           </h2>
-          <div style={{ display: "grid", gap: "0.75rem" }}>
+          <div style={{ display: "grid", gap: "0.85rem" }}>
             {lugares.map((lugar) => (
-              <div key={lugar.id} className="card" style={{ padding: "1rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
+              <div key={lugar.id} className="card" style={{ padding: "1.15rem 1.35rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
                 <div>
                   <Link href={`/negocio/${lugar.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
-                    <div style={{ fontFamily: "Georgia, serif", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }} className="hover-gastro-text">
-                      {lugar.nombre} <span style={{ fontSize: "0.85rem", opacity: 0.5 }}>➜</span>
+                    <div style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.08rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, color: "var(--color-ink)" }} className="hover-gastro-text">
+                      {lugar.nombre} <span style={{ fontSize: "0.85rem", opacity: 0.55 }}>→</span>
                     </div>
                   </Link>
-                  {lugar.direccion && <div style={{ color: "var(--color-text-muted)", fontSize: "0.8rem", marginTop: 2 }}>{lugar.direccion}</div>}
-                  {lugar.telefono && <div style={{ color: "var(--color-text-muted)", fontSize: "0.8rem" }}>Tel: {lugar.telefono}</div>}
+                  {lugar.direccion && <div style={{ color: "var(--color-muted)", fontSize: "0.82rem", marginTop: 3 }}>{lugar.direccion}</div>}
+                  {lugar.telefono && <div style={{ color: "var(--color-muted)", fontSize: "0.82rem" }}>Tel: {lugar.telefono}</div>}
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", flexWrap: "wrap" }}>
                   {lugar.pivot?.precio_aproximado && (
-                    <span className="badge badge-primary">{lugar.pivot.precio_aproximado} Bs</span>
+                    <span className="badge badge-primary" style={{ whiteSpace: "nowrap" }}>{lugar.pivot.precio_aproximado} Bs</span>
                   )}
                   {lugar.pivot?.especialidad && (
-                    <span className="badge badge-green">Especialidad</span>
+                    <span className="badge badge-forest">Especialidad</span>
                   )}
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${lugar.lat},${lugar.lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-secondary"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 6,
-                      fontSize: "0.8rem",
-                      padding: "0.4rem 0.8rem",
-                      textDecoration: "none",
-                      borderRadius: "8px",
-                      color: "var(--color-primary-dark)",
-                      background: "rgba(217, 119, 6, 0.06)",
-                      border: "1px solid rgba(217, 119, 6, 0.12)",
-                    }}
+                    style={{ padding: "0.45rem 1rem", fontSize: "0.8rem" }}
                   >
-                    Cómo llegar
+                    <Navigation size={13} /> Cómo llegar
                   </a>
                 </div>
               </div>
@@ -278,33 +255,32 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
       )}
 
       {/* Reseñas */}
-      <section id="resenas-seccion" style={{ marginTop: "2.5rem" }}>
-        <h2 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.4rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: 8, color: "var(--color-text)" }}>
-          <MessageSquare size={20} color="var(--color-primary)" />
+      <section id="resenas-seccion">
+        <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.5rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: 8, color: "var(--color-ink)" }}>
+          <MessageSquare size={20} color="var(--color-amber)" />
           Reseñas ({localResenas.length})
         </h2>
         {localResenas.length > 0 ? (
-          <div style={{ display: "grid", gap: "0.75rem" }}>
+          <div style={{ display: "grid", gap: "0.85rem" }}>
             {localResenas.map((resena) => (
-              <div 
-                key={resena.id} 
-                className="card" 
-                style={{ 
-                  padding: "1rem 1.25rem",
+              <div
+                key={resena.id}
+                className="card"
+                style={{
+                  padding: "1.15rem 1.35rem",
                   animation: resena.user_id === 99 ? "newReviewFade 0.6s cubic-bezier(0.19, 1, 0.22, 1)" : "none",
-                  border: resena.user_id === 99 ? "1px solid var(--color-primary-light)" : "1px solid var(--color-border)",
-                  boxShadow: resena.user_id === 99 ? "0 0 10px rgba(217, 119, 6, 0.1)" : "none"
+                  borderColor: resena.user_id === 99 ? "var(--color-amber)" : "var(--color-border)",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                  <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--color-text)" }}>{resena.titulo || "Sin título"}</div>
-                  <div className="stars" style={{ fontSize: "0.85rem", color: "var(--color-primary)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", marginBottom: "0.45rem" }}>
+                  <div style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "0.98rem", color: "var(--color-ink)" }}>{resena.titulo || "Opinión"}</div>
+                  <div className="stars" style={{ fontSize: "0.85rem", color: "var(--color-amber)", whiteSpace: "nowrap" }}>
                     {"★".repeat(resena.rating)}{"☆".repeat(5 - resena.rating)}
                   </div>
                 </div>
-                <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", lineHeight: 1.6 }}>{resena.comentario}</p>
+                <p style={{ color: "var(--color-muted)", fontSize: "0.88rem", lineHeight: 1.6 }}>{resena.comentario}</p>
                 {resena.user && (
-                  <div style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                  <div style={{ marginTop: "0.6rem", fontSize: "0.76rem", color: "var(--color-muted)", fontWeight: 600 }}>
                     — {resena.user.name}
                   </div>
                 )}
@@ -312,7 +288,9 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
             ))}
           </div>
         ) : (
-          <p style={{ color: "var(--color-text-muted)", fontStyle: "italic" }}>Aún no hay reseñas. ¡Sé el primero en opinar!</p>
+          <div style={{ padding: "2rem 1.5rem", textAlign: "center", border: "1px dashed var(--color-border)", borderRadius: "var(--radius-lg)", color: "var(--color-muted)", fontSize: "0.9rem" }}>
+            Aún no hay reseñas aprobadas para este plato.
+          </div>
         )}
       </section>
 
@@ -322,15 +300,15 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
           100% { transform: translateY(0) scale(1); opacity: 1; }
         }
         @keyframes newReviewFade {
-          0% { transform: scale(0.95); background: rgba(217, 119, 6, 0.05); opacity: 0.5; }
-          100% { transform: scale(1); background: transparent; opacity: 1; }
+          0% { transform: scale(0.95); background: rgba(200, 112, 42, 0.06); opacity: 0.5; }
+          100% { transform: scale(1); background: var(--color-bg-card); opacity: 1; }
         }
         .hover-gastro-text {
-          transition: all 0.2s ease;
+          transition: color 0.2s ease, transform 0.2s ease;
         }
         .hover-gastro-text:hover {
-          color: var(--color-primary) !important;
-          transform: translateX(4px);
+          color: var(--color-primary-dark) !important;
+          transform: translateX(3px);
         }
       `}</style>
     </div>

@@ -20,14 +20,14 @@ export default async function RankingPage({ searchParams }: Props) {
     : await getRankingGlobal();
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2.5rem 1.5rem 4rem" }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "1.75rem" }}>
         <div>
-          <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "2rem", display: "flex", alignItems: "center", gap: 8 }}>
-            <Trophy size={28} color="var(--color-primary)" /> Ranking Gastronómico
+          <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 800, fontSize: "clamp(1.85rem, 4vw, 2.5rem)", display: "flex", alignItems: "center", gap: 10, color: "var(--color-ink)" }}>
+            <Trophy size={28} color="var(--color-amber)" /> Ranking Gastronómico
           </h1>
-          <p style={{ color: "var(--color-text-muted)", marginTop: "0.25rem" }}>
+          <p style={{ color: "var(--color-muted)", marginTop: "0.35rem", fontSize: "0.95rem" }}>
             {activeTab === "trending"
               ? "Platos y especialidades con mayor movimiento y recomendados recientemente"
               : "Los platos mejor calificados de todo Cochabamba de manera histórica"}
@@ -36,36 +36,23 @@ export default async function RankingPage({ searchParams }: Props) {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "0.5rem", borderBottom: "1px solid var(--color-border)", marginBottom: "2rem" }}>
+      <div className="tab-bar" style={{ marginBottom: "2rem" }}>
         <Link
           href="/ranking?tab=general"
-          style={{
-            padding: "0.75rem 1.25rem", textDecoration: "none",
-            fontWeight: 600, fontSize: "0.9rem",
-            color: activeTab === "general" ? "var(--color-primary)" : "var(--color-text-muted)",
-            borderBottom: activeTab === "general" ? "2px solid var(--color-primary)" : "none",
-            transition: "all 0.2s"
-          }}
+          className={`tab-btn ${activeTab === "general" ? "tab-btn-active" : ""}`}
         >
-          🏆 Historial de Oro
+          <Trophy size={15} /> Historial de Oro
         </Link>
         <Link
           href="/ranking?tab=trending"
-          style={{
-            padding: "0.75rem 1.25rem", textDecoration: "none",
-            fontWeight: 600, fontSize: "0.9rem",
-            color: activeTab === "trending" ? "var(--color-primary)" : "var(--color-text-muted)",
-            borderBottom: activeTab === "trending" ? "2px solid var(--color-primary)" : "none",
-            transition: "all 0.2s",
-            display: "flex", alignItems: "center", gap: 4
-          }}
+          className={`tab-btn ${activeTab === "trending" ? "tab-btn-active" : ""}`}
         >
-          <Flame size={16} fill={activeTab === "trending" ? "var(--color-primary)" : "none"} /> En Tendencia
+          <Flame size={15} fill={activeTab === "trending" ? "var(--color-amber)" : "none"} /> En Tendencia
         </Link>
       </div>
 
       {platos.length === 0 ? (
-        <div style={{ padding: "4rem 2rem", textAlign: "center", border: "1px dashed var(--color-border)", borderRadius: "var(--radius-lg)", color: "var(--color-text-muted)" }}>
+        <div style={{ padding: "4rem 2rem", textAlign: "center", border: "1px dashed var(--color-border)", borderRadius: "var(--radius-lg)", color: "var(--color-muted)" }}>
           No hay platos que cumplan esta condición en este momento.
         </div>
       ) : (
@@ -75,11 +62,12 @@ export default async function RankingPage({ searchParams }: Props) {
               {/* Rank badges only in historic view */}
               {activeTab === "general" && i < 3 && (
                 <div style={{
-                  position: "absolute", top: -8, left: -8, zIndex: 2,
-                  width: 32, height: 32, borderRadius: "50%",
-                  background: i === 0 ? "#FFD700" : i === 1 ? "#C0C0C0" : "#CD7F32",
+                  position: "absolute", top: 12, left: 12, zIndex: 3,
+                  width: 30, height: 30, borderRadius: "50%",
+                  background: i === 0 ? "#B78103" : i === 1 ? "#6B7280" : "#9A4D1E",
+                  border: "2px solid #FFFFFF",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontWeight: 800, fontSize: "0.85rem", color: "#fff",
+                  fontWeight: 800, fontSize: "0.8rem", color: "#FFFFFF",
                   boxShadow: "var(--shadow-md)",
                 }}>
                   {i + 1}
@@ -88,12 +76,12 @@ export default async function RankingPage({ searchParams }: Props) {
               {/* Hot score flame badge in trending view */}
               {activeTab === "trending" && (
                 <div style={{
-                  position: "absolute", top: 12, left: 12, zIndex: 2,
-                  background: "rgba(239, 68, 68, 0.9)", backdropFilter: "blur(4px)",
-                  color: "white", padding: "0.25rem 0.5rem", borderRadius: "6px",
-                  fontSize: "0.7rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 3
+                  position: "absolute", top: 12, left: 12, zIndex: 3,
+                  background: "rgba(26, 23, 20, 0.85)", backdropFilter: "blur(4px)",
+                  color: "#FFFFFF", padding: "0.25rem 0.6rem", borderRadius: "var(--radius-pill)",
+                  fontSize: "0.7rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 4
                 }}>
-                  <Flame size={12} fill="white" /> {plato.hot_score > 0 ? `${plato.hot_score.toFixed(0)} pts` : "Nuevo"}
+                  <Flame size={12} fill="var(--color-amber)" color="var(--color-amber)" /> {plato.hot_score > 0 ? `${plato.hot_score.toFixed(0)} pts` : "Nuevo"}
                 </div>
               )}
               <PlatoCard plato={plato} />

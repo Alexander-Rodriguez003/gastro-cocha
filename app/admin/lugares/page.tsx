@@ -175,8 +175,8 @@ export default function AdminLugaresPage() {
       </Link>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
-        <h1 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: "1.75rem" }}>
-          📍 Gestionar Lugares ({filtered.length})
+        <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 800, fontSize: "1.75rem", color: "var(--color-ink)" }}>
+          Gestionar Lugares ({filtered.length})
         </h1>
         <button onClick={handleCreateLugar} className="btn-primary" style={{ fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: 6 }}>
           <Plus size={16} /> Nuevo Local
@@ -206,7 +206,7 @@ export default function AdminLugaresPage() {
           {filtered.map((lugar) => (
             <div key={lugar.id} className="card" style={{ padding: "1rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.75rem" }}>
               <div style={{ flex: 1, minWidth: 200 }}>
-                <div style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ fontFamily: "var(--font-serif)", fontWeight: 700, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                   {lugar.nombre}
                   {lugar.aprobado && (
                     <span style={{ background: "var(--color-surface-green)", color: "var(--color-secondary-dark)", padding: "2px 8px", borderRadius: 999, fontSize: "0.7rem", fontWeight: 600 }}>
@@ -264,7 +264,7 @@ export default function AdminLugaresPage() {
             overflow: "hidden", display: "flex", flexDirection: "column"
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--color-border)", background: "color-mix(in srgb, var(--color-primary) 4%, transparent)" }}>
-              <h3 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700, fontSize: "1.15rem", color: "var(--color-primary-dark)" }}>
+              <h3 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.15rem", color: "var(--color-primary-dark)" }}>
                 {isNew ? "➕ Nuevo Local" : "✏️ Editar Información de Local"}
               </h3>
               <button onClick={() => setEditingLugar(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)", padding: 4 }}>

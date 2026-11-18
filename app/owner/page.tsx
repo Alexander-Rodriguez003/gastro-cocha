@@ -230,53 +230,41 @@ export default function OwnerDashboard() {
   return (
     <div style={{ maxWidth: 1000, margin: "0 auto", padding: "2rem 1.5rem" }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "1.75rem" }}>
         <div>
-          <span style={{ fontSize: "0.8rem", color: "var(--color-secondary)", fontWeight: 600, textTransform: "uppercase" }}>Panel del Propietario</span>
-          <h1 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "2.25rem", color: "var(--color-text)", marginTop: 4 }}>
+          <span className="badge badge-forest" style={{ marginBottom: "0.5rem" }}>Panel del Propietario</span>
+          <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 800, fontSize: "clamp(1.75rem, 4vw, 2.25rem)", color: "var(--color-ink)", marginTop: 4 }}>
             {lugar?.nombre}
           </h1>
-          <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", marginTop: 4 }}>
-            Administra la información, platos tradicionales y especialidades que se muestran al público y al chatbot.
+          <p style={{ color: "var(--color-muted)", fontSize: "0.9rem", marginTop: 4 }}>
+            Administra la información, platos tradicionales y especialidades de tu local.
           </p>
         </div>
-        <a href={`/negocio/${lugar?.slug}`} className="btn-secondary" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.85rem", padding: "0.5rem 1rem" }}>
-          Ver en el sitio <LayoutGrid size={16} />
+        <a href={`/negocio/${lugar?.slug}`} className="btn-secondary" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.85rem", padding: "0.5rem 1.1rem" }}>
+          Ver en el sitio <LayoutGrid size={15} />
         </a>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", borderBottom: "1px solid var(--color-border)", marginBottom: "2rem" }}>
+      <div className="tab-bar" style={{ marginBottom: "2rem" }}>
         <button
+          type="button"
           onClick={() => setActiveTab("details")}
-          style={{
-            padding: "0.75rem 1.25rem", background: "none", border: "none", cursor: "pointer",
-            fontWeight: 600, fontSize: "0.9rem", color: activeTab === "details" ? "var(--color-primary)" : "var(--color-text-muted)",
-            borderBottom: activeTab === "details" ? "2px solid var(--color-primary)" : "none",
-            transition: "all 0.2s"
-          }}
+          className={`tab-btn ${activeTab === "details" ? "tab-btn-active" : ""}`}
         >
           Información Básica
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab("platos")}
-          style={{
-            padding: "0.75rem 1.25rem", background: "none", border: "none", cursor: "pointer",
-            fontWeight: 600, fontSize: "0.9rem", color: activeTab === "platos" ? "var(--color-primary)" : "var(--color-text-muted)",
-            borderBottom: activeTab === "platos" ? "2px solid var(--color-primary)" : "none",
-            transition: "all 0.2s"
-          }}
+          className={`tab-btn ${activeTab === "platos" ? "tab-btn-active" : ""}`}
         >
           Menú Típico
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab("specialties")}
-          style={{
-            padding: "0.75rem 1.25rem", background: "none", border: "none", cursor: "pointer",
-            fontWeight: 600, fontSize: "0.9rem", color: activeTab === "specialties" ? "var(--color-primary)" : "var(--color-text-muted)",
-            borderBottom: activeTab === "specialties" ? "2px solid var(--color-primary)" : "none",
-            transition: "all 0.2s"
-          }}
+          className={`tab-btn ${activeTab === "specialties" ? "tab-btn-active" : ""}`}
         >
           Especialidades Propias
         </button>
@@ -284,64 +272,70 @@ export default function OwnerDashboard() {
 
       {/* Details Tab */}
       {activeTab === "details" && (
-        <div className="card" style={{ padding: "2rem" }}>
-          <h2 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.25rem", marginBottom: "1.5rem" }}>
+        <div className="card" style={{ padding: "1.75rem" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.25rem", marginBottom: "1.35rem", color: "var(--color-ink)" }}>
             Editar Perfil del Local
           </h2>
           
           <div style={{ display: "grid", gap: "1.25rem" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <div className="responsive-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.35rem" }}>Teléfono Público</label>
+                <label htmlFor="owner-tel" style={{ display: "block", fontSize: "0.84rem", fontWeight: 600, marginBottom: "0.35rem" }}>Teléfono Público</label>
                 <div style={{ position: "relative" }}>
-                  <Phone size={16} color="var(--color-text-muted)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
+                  <Phone size={15} color="var(--color-muted)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
                   <input
+                    id="owner-tel"
                     type="text"
                     value={telefono}
                     onChange={(e) => setTelefono(e.target.value)}
-                    style={{ width: "100%", padding: "0.65rem 0.9rem 0.65rem 2.25rem", borderRadius: "var(--radius)", border: "1px solid var(--color-border)", background: "var(--color-bg)", fontSize: "0.85rem" }}
+                    className="input-editorial"
+                    style={{ paddingLeft: "2.25rem" }}
                   />
                 </div>
               </div>
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.35rem" }}>Dirección Física</label>
+                <label htmlFor="owner-dir" style={{ display: "block", fontSize: "0.84rem", fontWeight: 600, marginBottom: "0.35rem" }}>Dirección Física</label>
                 <div style={{ position: "relative" }}>
-                  <MapPin size={16} color="var(--color-text-muted)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
+                  <MapPin size={15} color="var(--color-muted)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
                   <input
+                    id="owner-dir"
                     type="text"
                     value={direccion}
                     onChange={(e) => setDireccion(e.target.value)}
-                    style={{ width: "100%", padding: "0.65rem 0.9rem 0.65rem 2.25rem", borderRadius: "var(--radius)", border: "1px solid var(--color-border)", background: "var(--color-bg)", fontSize: "0.85rem" }}
+                    className="input-editorial"
+                    style={{ paddingLeft: "2.25rem" }}
                   />
                 </div>
               </div>
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.35rem" }}>Descripción del Local</label>
+              <label htmlFor="owner-desc" style={{ display: "block", fontSize: "0.84rem", fontWeight: 600, marginBottom: "0.35rem" }}>Descripción del Local</label>
               <textarea
+                id="owner-desc"
                 value={descripcion}
                 onChange={(e) => setDescripcion(e.target.value)}
                 placeholder="Cuéntale a tus comensales sobre tu historia, ambiente o platillos estrella."
                 rows={4}
-                style={{ width: "100%", padding: "0.65rem 0.9rem", borderRadius: "var(--radius)", border: "1px solid var(--color-border)", background: "var(--color-bg)", fontSize: "0.85rem", resize: "vertical" }}
+                className="input-editorial"
+                style={{ resize: "vertical" }}
               />
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.35rem" }}>Imagen de Portada</label>
+              <label style={{ display: "block", fontSize: "0.84rem", fontWeight: 600, marginBottom: "0.35rem" }}>Imagen de Portada</label>
               <ImageUpload currentUrl={imagenUrl} onUrlChange={setImagenUrl} />
             </div>
 
             {detailsSuccess && (
-              <div style={{ background: "var(--color-surface-green)", color: "var(--color-secondary-dark)", padding: "0.75rem", borderRadius: "var(--radius)", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: 6 }}>
-                <Check size={16} /> ¡Perfil actualizado exitosamente!
+              <div role="status" style={{ background: "var(--color-surface-green)", color: "var(--color-secondary-dark)", padding: "0.75rem", borderRadius: "var(--radius-md)", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: 6 }}>
+                <Check size={16} /> Perfil actualizado exitosamente.
               </div>
             )}
 
             <div>
-              <button onClick={handleUpdateDetails} disabled={detailsSaving} className="btn-primary" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.85rem", padding: "0.65rem 1.5rem" }}>
-                <Save size={16} /> {detailsSaving ? "Guardando..." : "Guardar Cambios"}
+              <button onClick={handleUpdateDetails} disabled={detailsSaving} className="btn-primary">
+                <Save size={15} /> {detailsSaving ? "Guardando..." : "Guardar Cambios"}
               </button>
             </div>
           </div>
@@ -351,31 +345,32 @@ export default function OwnerDashboard() {
       {/* Platos Tab */}
       {activeTab === "platos" && (
         <div>
-          <h2 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.25rem", marginBottom: "1.25rem" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.3rem", marginBottom: "0.4rem", color: "var(--color-ink)" }}>
             Personaliza tus Platos Típicos
           </h2>
-          <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
-            Establece los precios reales de los platos tradicionales que sirves en tu local y sube tus propias fotos. Si no subes una foto, se usará la foto genérica en tu landing.
+          <p style={{ color: "var(--color-muted)", fontSize: "0.86rem", marginBottom: "1.5rem" }}>
+            Establece los precios reales de los platos tradicionales que sirves en tu local y sube tus propias fotos.
           </p>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
             {platos.map((plato) => (
               <div key={plato.id} className="card" style={{ padding: "1.25rem", display: "flex", gap: "1rem", flexDirection: "column" }}>
                 <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
                   <img
-                    src={plato.pivot?.imagen_url || plato.imagen_url || "/images/placeholder-plate.jpg"}
+                    src={plato.pivot?.imagen_url || plato.imagen_url || "/images/placeholder-plate.svg"}
                     alt={plato.nombre}
-                    style={{ width: 70, height: 70, borderRadius: "var(--radius)", objectFit: "cover", background: "var(--color-border)" }}
+                    onError={(e) => { e.currentTarget.src = "/images/placeholder-plate.svg"; }}
+                    style={{ width: 68, height: 68, borderRadius: "var(--radius-md)", objectFit: "cover", background: "var(--color-amber-light)", flexShrink: 0 }}
                   />
                   <div>
-                    <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.05rem" }}>{plato.nombre}</h3>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-                      <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                    <h3 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.05rem", color: "var(--color-ink)" }}>{plato.nombre}</h3>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "0.8rem", color: "var(--color-muted)" }}>
                         Precio: <strong>{plato.pivot?.precio_aproximado ? `${plato.pivot.precio_aproximado} Bs` : "No definido"}</strong>
                       </span>
                       {plato.pivot?.imagen_url && (
-                        <span style={{ background: "var(--color-surface-green)", color: "var(--color-secondary)", fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: 4, fontWeight: 700, textTransform: "uppercase" }}>
-                          Foto Propia
+                        <span className="badge badge-forest" style={{ fontSize: "0.6rem", padding: "0.15rem 0.45rem" }}>
+                          Foto propia
                         </span>
                       )}
                     </div>
@@ -391,7 +386,8 @@ export default function OwnerDashboard() {
                         value={platePrecio}
                         onChange={(e) => setPlatePrecio(e.target.value)}
                         placeholder="Ej: 20"
-                        style={{ width: "100%", padding: "0.45rem 0.65rem", borderRadius: "var(--radius)", border: "1px solid var(--color-border)", background: "var(--color-bg)", fontSize: "0.8rem" }}
+                        className="input-editorial"
+                        style={{ padding: "0.45rem 0.65rem", fontSize: "0.82rem" }}
                       />
                     </div>
                     <div>
@@ -399,16 +395,16 @@ export default function OwnerDashboard() {
                       <ImageUpload currentUrl={plateImagen} onUrlChange={setPlateImagen} />
                     </div>
                     <div style={{ display: "flex", gap: "0.5rem", marginTop: 4 }}>
-                      <button onClick={() => handleSavePlate(plato.id)} disabled={plateSaving} className="btn-primary" style={{ padding: "0.4rem 1rem", fontSize: "0.8rem" }}>
+                      <button onClick={() => handleSavePlate(plato.id)} disabled={plateSaving} className="btn-primary" style={{ padding: "0.45rem 1rem", fontSize: "0.8rem" }}>
                         {plateSaving ? "Guardando..." : "Guardar"}
                       </button>
-                      <button onClick={() => setEditingPlateId(null)} className="btn-secondary" style={{ padding: "0.4rem 1rem", fontSize: "0.8rem" }}>
+                      <button onClick={() => setEditingPlateId(null)} className="btn-secondary" style={{ padding: "0.45rem 1rem", fontSize: "0.8rem" }}>
                         Cancelar
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <button onClick={() => handleStartEditPlate(plato)} className="btn-secondary" style={{ width: "100%", padding: "0.45rem", fontSize: "0.8rem", textAlign: "center" }}>
+                  <button onClick={() => handleStartEditPlate(plato)} className="btn-secondary" style={{ width: "100%", padding: "0.45rem", fontSize: "0.8rem", justifyContent: "center" }}>
                     Editar Precio / Foto
                   </button>
                 )}
@@ -420,38 +416,39 @@ export default function OwnerDashboard() {
 
       {/* Specialties Tab */}
       {activeTab === "specialties" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "2rem", alignItems: "start" }}>
+        <div className="responsive-2col" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "2rem", alignItems: "start" }}>
           
           {/* List */}
           <div>
-            <h2 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.25rem", marginBottom: "1.25rem" }}>
+            <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.25rem", marginBottom: "1.25rem", color: "var(--color-ink)" }}>
               Tus Especialidades Propias
             </h2>
             {(!lugar?.especialidades || lugar.especialidades.length === 0) ? (
               <div className="card" style={{ padding: "2rem", textAlign: "center" }}>
-                <Sparkles size={32} color="var(--color-primary)" style={{ margin: "0 auto 0.75rem" }} />
-                <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem" }}>
-                  Aún no has registrado ninguna especialidad única para tu local. ¡Crea una en el panel de la derecha!
+                <Sparkles size={30} color="var(--color-amber)" style={{ margin: "0 auto 0.75rem" }} />
+                <p style={{ color: "var(--color-muted)", fontSize: "0.9rem" }}>
+                  Aún no has registrado ninguna especialidad única para tu local.
                 </p>
               </div>
             ) : (
               <div style={{ display: "grid", gap: "1rem" }}>
                 {lugar.especialidades.map((spec) => (
-                  <div key={spec.id} className="card" style={{ padding: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div key={spec.id} className="card" style={{ padding: "1.15rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
                     <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
                       <img
-                        src={spec.imagen_url || "/images/placeholder-plate.jpg"}
+                        src={spec.imagen_url || "/images/placeholder-plate.svg"}
                         alt={spec.nombre}
-                        style={{ width: 60, height: 60, borderRadius: "var(--radius)", objectFit: "cover", background: "var(--color-border)" }}
+                        onError={(e) => { e.currentTarget.src = "/images/placeholder-plate.svg"; }}
+                        style={{ width: 60, height: 60, borderRadius: "var(--radius-md)", objectFit: "cover", background: "var(--color-amber-light)", flexShrink: 0 }}
                       />
                       <div>
-                        <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.05rem" }}>{spec.nombre}</h3>
-                        <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                          Precio: <strong style={{ color: "var(--color-secondary)" }}>{spec.precio} Bs</strong>
+                        <h3 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.05rem", color: "var(--color-ink)" }}>{spec.nombre}</h3>
+                        <span style={{ fontSize: "0.82rem", color: "var(--color-muted)" }}>
+                          Precio: <strong style={{ color: "var(--color-forest)" }}>{spec.precio} Bs</strong>
                         </span>
                       </div>
                     </div>
-                    <button onClick={() => handleDeleteSpecialty(spec.id)} style={{ background: "none", border: "none", color: "var(--color-accent-light)", cursor: "pointer", padding: "0.5rem" }} title="Eliminar especialidad">
+                    <button onClick={() => handleDeleteSpecialty(spec.id)} aria-label={`Eliminar ${spec.nombre}`} style={{ background: "none", border: "none", color: "var(--color-danger)", cursor: "pointer", padding: "0.5rem" }} title="Eliminar especialidad">
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -462,35 +459,39 @@ export default function OwnerDashboard() {
 
           {/* Add Form */}
           <div className="card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: "1.1rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: 6 }}>
-              <Plus size={18} color="var(--color-primary)" /> Nueva Especialidad
+            <h3 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.12rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: 6, color: "var(--color-ink)" }}>
+              <Plus size={18} color="var(--color-amber)" /> Nueva Especialidad
             </h3>
 
             <div style={{ display: "grid", gap: "1rem" }}>
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.25rem" }}>Nombre del plato</label>
+                <label htmlFor="spec-nombre" style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, marginBottom: "0.25rem" }}>Nombre del plato</label>
                 <input
+                  id="spec-nombre"
                   type="text"
                   value={newSpecName}
                   onChange={(e) => setNewSpecName(e.target.value)}
                   placeholder="Ej: Trucha al Ajo del Chef"
-                  style={{ width: "100%", padding: "0.45rem 0.65rem", borderRadius: "var(--radius)", border: "1px solid var(--color-border)", background: "var(--color-bg)", fontSize: "0.8rem" }}
+                  className="input-editorial"
+                  style={{ padding: "0.5rem 0.7rem", fontSize: "0.84rem" }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.25rem" }}>Precio (Bs)</label>
+                <label htmlFor="spec-precio" style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, marginBottom: "0.25rem" }}>Precio (Bs)</label>
                 <input
+                  id="spec-precio"
                   type="number"
                   value={newSpecPrecio}
                   onChange={(e) => setNewSpecPrecio(e.target.value)}
                   placeholder="Ej: 35"
-                  style={{ width: "100%", padding: "0.45rem 0.65rem", borderRadius: "var(--radius)", border: "1px solid var(--color-border)", background: "var(--color-bg)", fontSize: "0.8rem" }}
+                  className="input-editorial"
+                  style={{ padding: "0.5rem 0.7rem", fontSize: "0.84rem" }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.25rem" }}>Imagen</label>
+                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, marginBottom: "0.25rem" }}>Imagen</label>
                 <ImageUpload currentUrl={newSpecImagen} onUrlChange={setNewSpecImagen} />
               </div>
 
@@ -498,7 +499,7 @@ export default function OwnerDashboard() {
                 onClick={handleAddSpecialty}
                 disabled={!newSpecName || !newSpecPrecio || specSaving}
                 className="btn-primary"
-                style={{ width: "100%", padding: "0.55rem", fontSize: "0.8rem", marginTop: 4 }}
+                style={{ width: "100%", justifyContent: "center", padding: "0.6rem 1rem", fontSize: "0.84rem", marginTop: 4 }}
               >
                 {specSaving ? "Guardando..." : "Agregar Especialidad"}
               </button>

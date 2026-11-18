@@ -158,7 +158,7 @@ export async function getLugarDetail(slug: string): Promise<{ lugar: Lugar; plat
 }
 
 export async function getRankingGlobal(): Promise<any[]> {
-  const { data: platos } = await db().from('platos').select('*').eq('activo', true);
+  const { data: platos } = await db().from('platos').select('*, provincias(*)').eq('activo', true);
   if (!platos) return [];
 
   const { data: allResenas } = await db().from('resenas').select('*').eq('is_approved', true);
@@ -169,6 +169,9 @@ export async function getRankingGlobal(): Promise<any[]> {
     const avg = count > 0 ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / count : (p.promedio_rating ? Number(p.promedio_rating) : 4.0);
     return {
       id: p.id, nombre: p.nombre, slug: p.slug, descripcion: p.descripcion,
+      precio_referencial: p.precio_referencial ? Number(p.precio_referencial) : null,
+      destacado: !!p.destacado,
+      provincia: p.provincias ? mapProvincia(p.provincias) : undefined,
       promedio_rating: avg, total_resenas: count, imagen_url: p.imagen_url, es_especialidad: false,
     };
   });
@@ -183,7 +186,7 @@ export async function getRankingGlobal(): Promise<any[]> {
     if (r.lugar_id && !item.lugaresIds.includes(r.lugar_id)) item.lugaresIds.push(r.lugar_id);
   });
 
-  const { data: lugares } = await db().from('lugares').select('*');
+  const { data: lugares } = await db().from('lugares').select('*, provincias(*)');
   (lugares || []).forEach((l: any) => {
     const espList: Especialidad[] = l.especialidades || [];
     espList.forEach((esp: Especialidad) => {
@@ -200,20 +203,28 @@ export async function getRankingGlobal(): Promise<any[]> {
     let bestLugar: any = null;
     let maxRating = -1;
     let customImage: string | null = null;
+    let bestPrecio: number | null = null;
     sp.lugaresIds.forEach((lId: number) => {
       const lugar = (lugares || []).find((l: any) => l.id === lId);
       if (lugar) {
         const lReviews = (allResenas || []).filter((r: any) => r.lugar_id === lugar.id);
         const lAvg = lReviews.length > 0 ? lReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / lReviews.length : 4.0;
         const espObj = (lugar.especialidades || []).find((e: Especialidad) => e.nombre.toLowerCase() === sp.nombre.toLowerCase());
-        if (lAvg > maxRating) { maxRating = lAvg; bestLugar = lugar; customImage = espObj?.imagen_url || lugar.imagen_url; }
+        if (lAvg > maxRating) {
+          maxRating = lAvg;
+          bestLugar = lugar;
+          customImage = espObj?.imagen_url || lugar.imagen_url;
+          bestPrecio = espObj?.precio ? Number(espObj.precio) : null;
+        }
       }
     });
     return {
       id: 10000 + idx, nombre: sp.nombre,
       slug: sp.nombre.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       descripcion: `Especialidad de la casa, destacada en: ${bestLugar ? bestLugar.nombre : "Varios locales"}.`,
-      promedio_rating: avg, total_resenas: count, imagen_url: customImage || "/images/placeholder-plate.jpg",
+      precio_referencial: bestPrecio,
+      provincia: bestLugar?.provincias ? mapProvincia(bestLugar.provincias) : undefined,
+      promedio_rating: avg, total_resenas: count, imagen_url: customImage || "/images/placeholder-plate.svg",
       es_especialidad: true, lugar_slug: bestLugar ? bestLugar.slug : null,
     };
   });
@@ -492,7 +503,7 @@ export async function deleteSpecialty(lugarId: number, specialtyId: number): Pro
 }
 
 export async function getTrendingGlobal(): Promise<any[]> {
-  const { data: platos } = await db().from('platos').select('*').eq('activo', true);
+  const { data: platos } = await db().from('platos').select('*, provincias(*)').eq('activo', true);
   if (!platos) return [];
 
   const { data: allResenas } = await db().from('resenas').select('*').eq('is_approved', true);
@@ -518,6 +529,9 @@ export async function getTrendingGlobal(): Promise<any[]> {
     const hotScore = calculateHotScore(reviews);
     return {
       id: p.id, nombre: p.nombre, slug: p.slug, descripcion: p.descripcion,
+      precio_referencial: p.precio_referencial ? Number(p.precio_referencial) : null,
+      destacado: !!p.destacado,
+      provincia: p.provincias ? mapProvincia(p.provincias) : undefined,
       promedio_rating: avg, total_resenas: count, imagen_url: p.imagen_url,
       es_especialidad: false, hot_score: hotScore,
     };
@@ -533,7 +547,7 @@ export async function getTrendingGlobal(): Promise<any[]> {
     if (r.lugar_id && !item.lugaresIds.includes(r.lugar_id)) item.lugaresIds.push(r.lugar_id);
   });
 
-  const { data: lugares } = await db().from('lugares').select('*');
+  const { data: lugares } = await db().from('lugares').select('*, provincias(*)');
   (lugares || []).forEach((l: any) => {
     (l.especialidades || []).forEach((esp: Especialidad) => {
       const key = esp.nombre.toLowerCase();
@@ -550,21 +564,29 @@ export async function getTrendingGlobal(): Promise<any[]> {
     let bestLugar: any = null;
     let maxRating = -1;
     let customImage: string | null = null;
+    let bestPrecio: number | null = null;
     sp.lugaresIds.forEach((lId: number) => {
       const lugar = (lugares || []).find((l: any) => l.id === lId);
       if (lugar) {
         const lReviews = (allResenas || []).filter((r: any) => r.lugar_id === lugar.id);
         const lAvg = lReviews.length > 0 ? lReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / lReviews.length : 4.0;
         const espObj = (lugar.especialidades || []).find((e: Especialidad) => e.nombre.toLowerCase() === sp.nombre.toLowerCase());
-        if (lAvg > maxRating) { maxRating = lAvg; bestLugar = lugar; customImage = espObj?.imagen_url || lugar.imagen_url; }
+        if (lAvg > maxRating) {
+          maxRating = lAvg;
+          bestLugar = lugar;
+          customImage = espObj?.imagen_url || lugar.imagen_url;
+          bestPrecio = espObj?.precio ? Number(espObj.precio) : null;
+        }
       }
     });
     return {
       id: 10000 + idx, nombre: sp.nombre,
       slug: sp.nombre.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       descripcion: `Especialidad de la casa, destacada en: ${bestLugar ? bestLugar.nombre : "Varios locales"}.`,
+      precio_referencial: bestPrecio,
+      provincia: bestLugar?.provincias ? mapProvincia(bestLugar.provincias) : undefined,
       promedio_rating: avg, total_resenas: count,
-      imagen_url: customImage || "/images/placeholder-plate.jpg",
+      imagen_url: customImage || "/images/placeholder-plate.svg",
       es_especialidad: true, lugar_slug: bestLugar ? bestLugar.slug : null,
       hot_score: hotScore,
     };

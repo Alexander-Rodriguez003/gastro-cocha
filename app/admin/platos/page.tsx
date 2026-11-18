@@ -175,8 +175,8 @@ export default function AdminPlatosPage() {
       </Link>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
-        <h1 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: "1.75rem" }}>
-          🍽️ Gestionar Platos ({filtered.length})
+        <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 800, fontSize: "1.75rem", color: "var(--color-ink)" }}>
+          Gestionar Platos ({filtered.length})
         </h1>
         <button onClick={handleCreatePlato} className="btn-primary" style={{ fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: 6 }}>
           <Plus size={16} /> Nuevo Plato
@@ -209,7 +209,7 @@ export default function AdminPlatosPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
             <thead>
               <tr style={{ borderBottom: "2px solid var(--color-border)", textAlign: "left" }}>
-                <th style={{ padding: "0.75rem 1rem", fontFamily: "'Outfit', sans-serif", fontWeight: 600 }}>Plato</th>
+                <th style={{ padding: "0.75rem 1rem", fontFamily: "var(--font-body)", fontWeight: 600 }}>Plato</th>
                 <th style={{ padding: "0.75rem 1rem" }}>Provincia</th>
                 <th style={{ padding: "0.75rem 1rem" }}>Precio</th>
                 <th style={{ padding: "0.75rem 1rem", textAlign: "center" }}>Destacado</th>
@@ -266,7 +266,7 @@ export default function AdminPlatosPage() {
             overflow: "hidden", display: "flex", flexDirection: "column"
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--color-border)", background: "color-mix(in srgb, var(--color-primary) 4%, transparent)" }}>
-              <h3 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700, fontSize: "1.15rem", color: "var(--color-primary-dark)" }}>
+              <h3 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.15rem", color: "var(--color-primary-dark)" }}>
                 {isNew ? "➕ Nuevo Plato Gastronómico" : "✏️ Editar Plato Gastronómico"}
               </h3>
               <button onClick={() => setEditingPlato(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)", padding: 4 }}>
