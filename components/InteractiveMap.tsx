@@ -37,6 +37,7 @@ export function InteractiveMap() {
   const mapRef = useRef<L.Map | null>(null);
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
   const focusMarkerRef = useRef<L.Marker | null>(null);
+  const userMarkerRef = useRef<L.Marker | null>(null);
   
   const [provincias, setProvincias] = useState<ProvinciaOption[]>([]);
   const [selectedSlug, setSelectedSlug] = useState<string>("");
@@ -86,12 +87,16 @@ export function InteractiveMap() {
     };
   }, []);
 
-  // 1.1 Listen for AI Chatbot Agent Events (Dynamic map focusing/navigation)
+  // 1.1 Listen for AI Chatbot Agent Events (Dynamic map focusing/province selection)
   useEffect(() => {
-    const handleAiAction = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const data = customEvent.detail;
+    const processMapAction = (data: any) => {
       if (!data) return;
+
+      if (data.action === "select_map_province" && typeof data.slug === "string") {
+        document.getElementById("mapa-gastronomico")?.scrollIntoView({ behavior: "smooth" });
+        handleProvinceChange(data.slug);
+        return;
+      }
 
       if (data.action === "focus_map") {
         const lat = Number(data.lat);
@@ -99,13 +104,9 @@ export function InteractiveMap() {
         const label = data.label || "Ubicación recomendada";
 
         if (mapRef.current && !isNaN(lat) && !isNaN(lng)) {
-          // Scroll dynamically to map viewport smoothly
           document.getElementById("mapa-gastronomico")?.scrollIntoView({ behavior: "smooth" });
-
-          // Smoothly pan camera to coordinates
           mapRef.current.setView([lat, lng], 16);
 
-          // Add a beautiful special pulse marker for the AI action
           const pulseIcon = L.divIcon({
             className: "gastro-map-pulse-marker",
             html: `<div style="
@@ -147,6 +148,21 @@ export function InteractiveMap() {
           `).openPopup();
         }
       }
+    };
+
+    try {
+      const pending = sessionStorage.getItem("gastro_pending_action");
+      if (pending) {
+        const parsed = JSON.parse(pending);
+        if (parsed?.action === "focus_map" || parsed?.action === "select_map_province") {
+          sessionStorage.removeItem("gastro_pending_action");
+          setTimeout(() => processMapAction(parsed), 300);
+        }
+      }
+    } catch {}
+
+    const handleAiAction = (e: Event) => {
+      processMapAction((e as CustomEvent).detail);
     };
 
     window.addEventListener("gastro_action", handleAiAction);
@@ -286,7 +302,9 @@ export function InteractiveMap() {
           const lng = pos.coords.longitude;
           setUserCoords({ lat, lng });
 
-          // Add user circle marker
+          const accuracyMeters = Math.round(pos.coords.accuracy || 0);
+
+          // Add or replace user circle marker
           if (mapRef.current) {
             const youIcon = L.divIcon({
               className: "gastro-user-location-marker",
@@ -315,7 +333,10 @@ export function InteractiveMap() {
               iconAnchor: [9, 9],
             });
 
-            L.marker([lat, lng], { icon: youIcon })
+            if (userMarkerRef.current) {
+              userMarkerRef.current.remove();
+            }
+            userMarkerRef.current = L.marker([lat, lng], { icon: youIcon })
               .bindPopup(`<strong style="color:#3B82F6; font-family: var(--font-body);">Estás aquí</strong>`)
               .addTo(mapRef.current);
           }
@@ -324,8 +345,6 @@ export function InteractiveMap() {
           if (!isCoordsInCochabamba(lat, lng)) {
             setStatusMsg("");
             setErrorMsg("Ubicación fuera del departamento de Cochabamba. Centrando en la capital como referencia.");
-            
-            // Fallback: load Capital (Cercado)
             await handleProvinceChange("cercado");
             return;
           }
@@ -333,7 +352,7 @@ export function InteractiveMap() {
           // Detect nearest province
           setStatusMsg("Detectando provincia...");
           const detectRes = await fetch(`/api/map/provincia-por-coordenadas?lat=${lat}&lng=${lng}`);
-          
+
           if (detectRes.status === 204) {
             setStatusMsg("");
             setErrorMsg("Ubicación fuera de rango de provincias de Cochabamba. Centrando en la capital.");
@@ -344,11 +363,14 @@ export function InteractiveMap() {
           if (!detectRes.ok) throw new Error();
           const detected = await detectRes.json();
 
-          // Select detected province & load details
+          // Load province dishes/markers, then keep map centered on user's actual GPS position
           await handleProvinceChange(detected.slug);
+          if (mapRef.current) {
+            mapRef.current.setView([lat, lng], 14);
+          }
 
-          // Get restaurants of this province to find closest ones
-          const lugRes = await fetch(`/api/map/lugares?provincia=${detected.slug}`);
+          // Get closest restaurants overall (not restricted to border of a single province)
+          const lugRes = await fetch(`/api/map/lugares`);
           const places = lugRes.ok ? await lugRes.json() : [];
 
           const nearest = places
@@ -361,15 +383,19 @@ export function InteractiveMap() {
 
           if (nearest.length > 0 && mapRef.current) {
             const listHtml = nearest
-              .map((c: any) => `<li style="margin-bottom: 6px;"><strong>${c.nombre}</strong> (${c.km.toFixed(2)} km) <a href="https://www.google.com/maps/search/?api=1&query=${c.lat},${c.lng}" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); font-weight: 600; text-decoration: underline; font-size: 11px; margin-left: 4px;">Navegar</a></li>`)
+              .map((c: any) => `<li style="margin-bottom: 6px;"><a href="/negocio/${c.slug}" style="color: var(--color-ink); font-weight: 700; text-decoration: underline;">${c.nombre}</a> (${c.km.toFixed(2)} km) · <a href="https://www.google.com/maps/search/?api=1&query=${c.lat},${c.lng}" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); font-weight: 600; text-decoration: none; font-size: 11px;">Navegar</a></li>`)
               .join("");
-            
+
+            const accuracyHint = accuracyMeters > 2000
+              ? `<div style="color:var(--color-muted); font-size:10px; margin-top:4px;">Ubicación aproximada por red (±${Math.round(accuracyMeters / 1000)} km)</div>`
+              : "";
+
             L.popup()
               .setLatLng([lat, lng])
               .setContent(`
-                <div style="font-family: var(--font-body); font-size: 12px; min-width: 200px;">
+                <div style="font-family: var(--font-body); font-size: 12px; min-width: 210px;">
                   <strong style="color:#3B82F6; font-size: 13px;">Ubicación detectada</strong><br/>
-                  <span style="color:var(--color-muted); font-size: 11px;">Provincia: ${detected.nombre}</span><br/><br/>
+                  <span style="color:var(--color-muted); font-size: 11px;">Zona: ${detected.nombre}</span>${accuracyHint}<br/><br/>
                   <strong style="display: block; margin-bottom: 4px;">Locales más cercanos:</strong>
                   <ul style="margin: 0; padding-left: 14px; list-style-type: disc;">
                     ${listHtml}
@@ -379,8 +405,12 @@ export function InteractiveMap() {
               .openOn(mapRef.current);
           }
 
-          setStatusMsg(`Provincia detectada: ${detected.nombre} ✅`);
-          setTimeout(() => setStatusMsg(""), 2500);
+          setStatusMsg(
+            accuracyMeters > 2000
+              ? `Zona estimada por red: ${detected.nombre} (±${Math.round(accuracyMeters / 1000)} km). Si estás en otro municipio, puedes elegir tu provincia manualmente.`
+              : `Zona detectada: ${detected.nombre}`
+          );
+          setTimeout(() => setStatusMsg(""), 4000);
         } catch (err) {
           setErrorMsg("No se pudo detectar la provincia por ubicación.");
           setStatusMsg("");

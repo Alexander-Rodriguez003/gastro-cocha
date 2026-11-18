@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Star, MapPin, ChevronLeft, Clock, Utensils, Sparkles, MessageSquare, Navigation } from "lucide-react";
+import { useState } from "react";
+import { Star, MapPin, ChevronLeft, Clock, Utensils, MessageSquare, Navigation } from "lucide-react";
 import Link from "next/link";
 import type { Plato, LugarConPivot, Resena } from "@/lib/types";
 import { OptimizedImage } from "./OptimizedImage";
+import { ReviewForm } from "./ReviewForm";
 
 interface PlatoDetailViewProps {
   initialPlato: Plato;
@@ -15,110 +16,12 @@ interface PlatoDetailViewProps {
 export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailViewProps) {
   const plato = initialPlato;
   const [localResenas, setLocalResenas] = useState<Resena[]>(resenas);
-  const [reviewAddedBanner, setReviewAddedBanner] = useState<string | null>(null);
-
-  // Load custom persistent AI reviews from localStorage
-  useEffect(() => {
-    const savedReviews = localStorage.getItem(`gastro_reviews_${initialPlato.slug}`);
-    if (savedReviews) {
-      try {
-        const customList = JSON.parse(savedReviews) as Resena[];
-        setLocalResenas([...resenas, ...customList]);
-      } catch (e) {
-        console.error("Error loading custom local reviews:", e);
-      }
-    }
-  }, [initialPlato.slug, resenas]);
-
-  // 3. Listen for dynamic AI reviews submission
-  useEffect(() => {
-    const handleAiAction = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const data = customEvent.detail;
-      if (!data) return;
-
-      if (data.action === "add_review" && data.plato_slug === initialPlato.slug) {
-        const newReview: Resena = {
-          id: Date.now(),
-          user_id: 99,
-          plato_id: initialPlato.id,
-          lugar_id: null,
-          rating: Number(data.rating || 5),
-          titulo: "Reseña cargada por el Asistente AI",
-          comentario: data.comentario || "¡Excelente recomendación gastronómica tradicional!",
-          fecha_visita: null,
-          is_approved: true,
-          user: { id: 99, name: "Tú (vía Chatbot AI)" },
-        };
-
-        // Update active state
-        setLocalResenas((prev) => {
-          const updated = [...prev, newReview];
-          
-          // Save in localStorage for offline persistence
-          const savedReviews = localStorage.getItem(`gastro_reviews_${initialPlato.slug}`);
-          let customList: Resena[] = [];
-          if (savedReviews) {
-            try {
-              customList = JSON.parse(savedReviews);
-            } catch {}
-          }
-          customList.push(newReview);
-          localStorage.setItem(`gastro_reviews_${initialPlato.slug}`, JSON.stringify(customList));
-          
-          return updated;
-        });
-
-        // Trigger dynamic glow toast
-        setReviewAddedBanner(`⭐ ¡Reseña de ${newReview.rating} estrellas agregada con éxito!`);
-        setTimeout(() => setReviewAddedBanner(null), 7000);
-
-        // Smooth scroll to reviews section
-        document.getElementById("resenas-seccion")?.scrollIntoView({ behavior: "smooth" });
-      }
-    };
-
-    window.addEventListener("gastro_action", handleAiAction);
-    return () => {
-      window.removeEventListener("gastro_action", handleAiAction);
-    };
-  }, [initialPlato]);
 
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
       <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--color-muted)", textDecoration: "none", fontSize: "0.85rem", marginBottom: "1.5rem", fontWeight: 500 }}>
         <ChevronLeft size={16} /> Volver al inicio
       </Link>
-
-      {/* Dynamic AI Review Notification Toast */}
-      {reviewAddedBanner && (
-        <div
-          style={{
-            background: "var(--color-amber-light)",
-            border: "1px solid var(--color-amber)",
-            borderRadius: "var(--radius-lg)",
-            padding: "1.1rem 1.25rem",
-            marginBottom: "1.75rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "1rem",
-            boxShadow: "var(--shadow-sm)",
-            animation: "reviewPulseBanner 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-          }}
-        >
-          <div style={{ background: "var(--color-ink)", color: "var(--color-cream)", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <Sparkles size={17} />
-          </div>
-          <div>
-            <div style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1rem", color: "var(--color-ink)" }}>
-              Reseña publicada por el asistente
-            </div>
-            <div style={{ fontSize: "0.85rem", color: "var(--color-muted)", marginTop: 2 }}>
-              {reviewAddedBanner}
-            </div>
-          </div>
-        </div>
-      )}
 
       <div>
         {/* Image */}
@@ -258,6 +161,13 @@ export function PlatoDetailView({ initialPlato, lugares, resenas }: PlatoDetailV
           <MessageSquare size={20} color="var(--color-amber)" />
           Reseñas ({localResenas.length})
         </h2>
+
+        <ReviewForm
+          platoSlug={plato.slug}
+          targetLabel={plato.nombre}
+          onReviewAdded={(newResena) => setLocalResenas((prev) => [newResena, ...prev])}
+        />
+
         {localResenas.length > 0 ? (
           <div style={{ display: "grid", gap: "0.85rem" }}>
             {localResenas.map((resena) => (

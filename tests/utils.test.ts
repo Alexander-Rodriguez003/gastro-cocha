@@ -6,6 +6,7 @@ import {
   formatDistance,
   renderStars,
   isWithinCochabamba,
+  resolveNearestProvinciaSlug,
 } from "@/lib/utils";
 
 describe("lib/utils", () => {
@@ -30,8 +31,14 @@ describe("lib/utils", () => {
     expect(generateSlug("Germán Jordán")).toBe("german-jordan");
   });
 
-  it("detecta si unas coordenadas pertenecen al rango de Cochabamba", () => {
+  it("detecta si unas coordenadas pertenecen al rango de Cochabamba y resuelve municipios", () => {
     expect(isWithinCochabamba(-17.3895, -66.1568)).toBe(true);
     expect(isWithinCochabamba(40.4168, -3.7038)).toBe(false);
+    // Sacaba pertenece a Chapare, no a Cercado
+    expect(resolveNearestProvinciaSlug(-17.4042, -66.0408)).toBe("chapare");
+    // Tiquipaya pertenece a Quillacollo
+    expect(resolveNearestProvinciaSlug(-17.338, -66.216)).toBe("quillacollo");
+    // Plaza 14 de Septiembre pertenece a Cercado
+    expect(resolveNearestProvinciaSlug(-17.3937, -66.157)).toBe("cercado");
   });
 });

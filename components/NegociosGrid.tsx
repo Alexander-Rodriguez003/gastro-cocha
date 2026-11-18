@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search, Phone, ArrowRight, Building2, Compass, Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { Lugar } from "@/lib/types";
@@ -10,8 +11,20 @@ interface NegociosGridProps {
 }
 
 export function NegociosGrid({ initialLugares }: NegociosGridProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProvince, setSelectedProvince] = useState("all");
+  const searchParams = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get("q") || "");
+  const [selectedProvince, setSelectedProvince] = useState(() => searchParams.get("provincia") || "all");
+
+  useEffect(() => {
+    const handleAiAction = (e: Event) => {
+      const data = (e as CustomEvent).detail;
+      if (!data || data.action !== "filter_negocios") return;
+      if (typeof data.query === "string") setSearchTerm(data.query);
+      if (typeof data.provincia === "string") setSelectedProvince(data.provincia || "all");
+    };
+    window.addEventListener("gastro_action", handleAiAction);
+    return () => window.removeEventListener("gastro_action", handleAiAction);
+  }, []);
 
   const provinces = useMemo(
     () => [

@@ -94,42 +94,52 @@ export default function RegistrarNegocioPage() {
     }
   };
 
-  // Listen to AI Agent dynamic form filling action
+  // Listen to AI Agent dynamic form filling action (live or via pending navigation)
   useEffect(() => {
-    const handleAiAction = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const data = customEvent.detail;
-      if (!data) return;
-
-      if (data.action === "fill_form") {
-        if (data.nombre) setNombre(data.nombre);
-        if (data.direccion) setDireccion(data.direccion);
-        if (data.telefono) setTelefono(data.telefono);
-        if (data.provincia) {
-          const match = PROVINCIAS.find(p => p.toLowerCase() === data.provincia.toLowerCase());
-          if (match) setProvincia(match);
-        }
-        if (data.nombre_propietario) setNombrePropietario(data.nombre_propietario);
-        if (data.email_propietario) setEmailPropietario(data.email_propietario);
-        if (data.platos) {
-          const list = data.platos.split(",").map((p: string) => p.trim());
-          const typicals = list.filter((p: string) => 
-            PLATOS_TIPICOS.some(pt => pt.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(pt.toLowerCase()))
-          ).map((p: string) => 
-            PLATOS_TIPICOS.find(pt => pt.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(pt.toLowerCase()))!
-          ).filter(Boolean);
-
-          const customs = list.filter((p: string) => 
-            !PLATOS_TIPICOS.some(pt => pt.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(pt.toLowerCase()))
-          );
-
-          setPlatosSeleccionados(typicals);
-          if (customs.length > 0) setEspecialidades(customs.join(", "));
-        }
-        
-        setAutoFilled(true);
-        setTimeout(() => setAutoFilled(false), 8000);
+    const applyFill = (data: any) => {
+      if (!data || data.action !== "fill_form") return;
+      if (data.nombre) setNombre(data.nombre);
+      if (data.direccion) setDireccion(data.direccion);
+      if (data.telefono) setTelefono(data.telefono);
+      if (data.provincia) {
+        const match = PROVINCIAS.find(p => p.toLowerCase() === data.provincia.toLowerCase());
+        if (match) setProvincia(match);
       }
+      if (data.nombre_propietario) setNombrePropietario(data.nombre_propietario);
+      if (data.email_propietario) setEmailPropietario(data.email_propietario);
+      if (data.platos) {
+        const list = data.platos.split(",").map((p: string) => p.trim());
+        const typicals = list.filter((p: string) =>
+          PLATOS_TIPICOS.some(pt => pt.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(pt.toLowerCase()))
+        ).map((p: string) =>
+          PLATOS_TIPICOS.find(pt => pt.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(pt.toLowerCase()))!
+        ).filter(Boolean);
+
+        const customs = list.filter((p: string) =>
+          !PLATOS_TIPICOS.some(pt => pt.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(pt.toLowerCase()))
+        );
+
+        setPlatosSeleccionados(typicals);
+        if (customs.length > 0) setEspecialidades(customs.join(", "));
+      }
+
+      setAutoFilled(true);
+      setTimeout(() => setAutoFilled(false), 8000);
+    };
+
+    try {
+      const pending = sessionStorage.getItem("gastro_pending_action");
+      if (pending) {
+        const parsed = JSON.parse(pending);
+        if (parsed?.action === "fill_form") {
+          sessionStorage.removeItem("gastro_pending_action");
+          applyFill(parsed);
+        }
+      }
+    } catch {}
+
+    const handleAiAction = (e: Event) => {
+      applyFill((e as CustomEvent).detail);
     };
 
     window.addEventListener("gastro_action", handleAiAction);

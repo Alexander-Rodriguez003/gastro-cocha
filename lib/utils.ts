@@ -73,3 +73,49 @@ export async function simpleHash(password: string): Promise<string> {
 export function isWithinCochabamba(lat: number, lng: number): boolean {
   return lat >= -18.5 && lat <= -15.5 && lng >= -67.5 && lng <= -64.5;
 }
+
+const PROVINCE_ANCHORS: Array<{ slug: string; lat: number; lng: number }> = [
+  { slug: "cercado", lat: -17.3895, lng: -66.1568 },
+  { slug: "chapare", lat: -17.4042, lng: -66.0408 }, // Sacaba
+  { slug: "chapare", lat: -17.3447, lng: -65.8711 }, // Colomi
+  { slug: "chapare", lat: -16.9742, lng: -65.4202 }, // Villa Tunari
+  { slug: "quillacollo", lat: -17.394, lng: -66.277 },
+  { slug: "quillacollo", lat: -17.338, lng: -66.216 }, // Tiquipaya
+  { slug: "quillacollo", lat: -17.392, lng: -66.238 }, // Colcapirhua
+  { slug: "quillacollo", lat: -17.396, lng: -66.314 }, // Vinto
+  { slug: "quillacollo", lat: -17.454, lng: -66.357 }, // Sipe Sipe
+  { slug: "punata", lat: -17.5442, lng: -65.8356 },
+  { slug: "punata", lat: -17.526, lng: -65.899 }, // San Benito
+  { slug: "german-jordan", lat: -17.5886, lng: -65.9328 }, // Cliza
+  { slug: "german-jordan", lat: -17.530, lng: -65.963 }, // Tolata
+  { slug: "esteban-arce", lat: -17.6094, lng: -66.0233 }, // Tarata
+  { slug: "esteban-arce", lat: -17.562, lng: -66.054 }, // Arbieto
+  { slug: "arani", lat: -17.5672, lng: -65.77 },
+  { slug: "tiraque", lat: -17.4167, lng: -65.7167 },
+  { slug: "carrasco", lat: -17.7833, lng: -65.1667 }, // Totora
+  { slug: "carrasco", lat: -16.994, lng: -65.150 }, // Chimoré
+  { slug: "mizque", lat: -17.9372, lng: -65.3394 },
+  { slug: "capinota", lat: -17.7167, lng: -66.25 },
+  { slug: "capinota", lat: -17.554, lng: -66.229 }, // Santiváñez
+  { slug: "campero", lat: -18.2028, lng: -65.175 },
+  { slug: "ayopaya", lat: -17.0833, lng: -66.8167 },
+  { slug: "ayopaya", lat: -17.241, lng: -66.529 }, // Morochata
+  { slug: "arque", lat: -17.85, lng: -66.3167 },
+  { slug: "tapacari", lat: -17.5167, lng: -66.5667 },
+  { slug: "bolivar", lat: -17.9833, lng: -66.0667 },
+];
+
+/** Resuelve el slug de provincia más probable por distancia Haversine a cabeceras y municipios. */
+export function resolveNearestProvinciaSlug(lat: number, lng: number): string | null {
+  if (!isWithinCochabamba(lat, lng)) return null;
+  let bestSlug: string | null = null;
+  let minKm = Infinity;
+  for (const anchor of PROVINCE_ANCHORS) {
+    const d = haversine(lat, lng, anchor.lat, anchor.lng);
+    if (d < minKm) {
+      minKm = d;
+      bestSlug = anchor.slug;
+    }
+  }
+  return bestSlug;
+}

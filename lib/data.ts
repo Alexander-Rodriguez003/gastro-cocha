@@ -398,17 +398,41 @@ export async function updateReviewStatus(id: number, approve: boolean): Promise<
   return true;
 }
 
+async function recalculatePlatoRating(platoId: number): Promise<void> {
+  const { data: rows } = await db()
+    .from('resenas')
+    .select('rating')
+    .eq('plato_id', platoId)
+    .eq('is_approved', true);
+  const count = (rows || []).length;
+  const avg = count > 0
+    ? Number(((rows || []).reduce((sum: number, r: any) => sum + Number(r.rating), 0) / count).toFixed(2))
+    : null;
+  await db().from('platos').update({ promedio_rating: avg, total_resenas: count }).eq('id', platoId);
+}
+
+export async function deleteReviewAdmin(id: number): Promise<boolean> {
+  const { data: existing } = await db().from('resenas').select('id, plato_id').eq('id', id).single();
+  if (!existing) return false;
+  const { error } = await db().from('resenas').delete().eq('id', id);
+  if (error) throw error;
+  if (existing.plato_id) {
+    await recalculatePlatoRating(existing.plato_id);
+  }
+  return true;
+}
+
 export async function getAdminStats() {
   const { count: totalPlatos } = await db().from('platos').select('*', { count: 'exact', head: true }).eq('activo', true);
   const { count: totalLugares } = await db().from('lugares').select('*', { count: 'exact', head: true }).eq('aprobado', true);
   const { count: solicitudesPendientes } = await db().from('solicitudes').select('*', { count: 'exact', head: true }).eq('status', 'pendiente');
-  const { count: resenasPendientes } = await db().from('resenas').select('*', { count: 'exact', head: true }).eq('is_approved', false).eq('reviewed', false);
+  const { count: totalResenas } = await db().from('resenas').select('*', { count: 'exact', head: true }).eq('is_approved', true);
   const { count: totalProvincias } = await db().from('provincias').select('*', { count: 'exact', head: true });
 
   return {
     totalPlatos: totalPlatos || 0, totalLugares: totalLugares || 0,
     solicitudesPendientes: solicitudesPendientes || 0,
-    resenasPendientes: resenasPendientes || 0, totalProvincias: totalProvincias || 0,
+    totalResenas: totalResenas || 0, totalProvincias: totalProvincias || 0,
   };
 }
 
@@ -430,19 +454,23 @@ export async function getAllLugaresAdmin(): Promise<Lugar[]> {
 }
 
 export async function getProvinciaPorCoordenadas(lat: number, lng: number): Promise<Provincia | null> {
-  const { isWithinCochabamba } = await import("./utils");
+  const { isWithinCochabamba, resolveNearestProvinciaSlug, haversine } = await import("./utils");
   if (!isWithinCochabamba(lat, lng)) return null;
 
   const { data: provincias } = await db().from('provincias').select('*');
   if (!provincias || provincias.length === 0) return null;
 
+  const anchorSlug = resolveNearestProvinciaSlug(lat, lng);
+  if (anchorSlug) {
+    const matched = provincias.find((p: any) => p.slug === anchorSlug);
+    if (matched) return mapProvincia(matched);
+  }
+
   let nearestProv: any = null;
   let minDist = Infinity;
   provincias.forEach((p: any) => {
     if (p.centro_lat === null || p.centro_lng === null) return;
-    const dx = lat - Number(p.centro_lat);
-    const dy = lng - Number(p.centro_lng);
-    const dist = dx * dx + dy * dy;
+    const dist = haversine(lat, lng, Number(p.centro_lat), Number(p.centro_lng));
     if (dist < minDist) { minDist = dist; nearestProv = p; }
   });
   return nearestProv ? mapProvincia(nearestProv) : null;
@@ -883,4 +911,290 @@ export async function deleteLugarAdmin(id: number): Promise<boolean> {
   const { error } = await db().from("lugares").delete().eq("id", id);
   if (error) throw error;
   return true;
+}
+
+async function getOrCreateGuestUserId(): Promise<number> {
+  const guestEmail = "visitante@gastrococha.local";
+  const { data: existing } = await db().from("users").select("id").eq("email", guestEmail).single();
+  if (existing?.id) return existing.id;
+
+  const { data: created, error } = await db()
+    .from("users")
+    .insert({
+      name: "Visitante",
+      email: guestEmail,
+      password_hash: "guest-no-login",
+      role: "user",
+    })
+    .select("id")
+    .single();
+  if (error || !created) throw error || new Error("No se pudo crear usuario visitante");
+  return created.id;
+}
+
+export async function createResenaBySlug(input: {
+  userId?: number | null;
+  guestName?: string | null;
+  platoSlug?: string;
+  lugarSlug?: string;
+  rating: number;
+  titulo: string | null;
+  comentario: string;
+}): Promise<{ id: number; authorName: string } | null> {
+  let platoId: number | null = null;
+  let lugarId: number | null = null;
+
+  if (input.platoSlug) {
+    const { data: plato } = await db()
+      .from("platos")
+      .select("id")
+      .eq("slug", input.platoSlug)
+      .eq("activo", true)
+      .single();
+    if (plato) platoId = plato.id;
+  }
+
+  if (input.lugarSlug) {
+    const { data: lugar } = await db()
+      .from("lugares")
+      .select("id")
+      .eq("slug", input.lugarSlug)
+      .eq("aprobado", true)
+      .eq("activo", true)
+      .single();
+    if (lugar) lugarId = lugar.id;
+  }
+
+  if (!platoId && !lugarId) return null;
+
+  const resolvedUserId = input.userId ?? (await getOrCreateGuestUserId());
+  const cleanGuest = input.guestName?.trim();
+  const effectiveTitle = !input.userId && cleanGuest
+    ? (input.titulo ? `${cleanGuest} — ${input.titulo}` : cleanGuest)
+    : input.titulo;
+
+  const { data, error } = await db()
+    .from("resenas")
+    .insert({
+      user_id: resolvedUserId,
+      plato_id: platoId,
+      lugar_id: lugarId,
+      rating: input.rating,
+      titulo: effectiveTitle,
+      comentario: input.comentario,
+      fecha_visita: new Date().toISOString().split("T")[0],
+      is_approved: true,
+      reviewed: true,
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) throw error || new Error("No se pudo guardar la reseña");
+
+  if (platoId) {
+    await recalculatePlatoRating(platoId);
+  }
+
+  return { id: data.id, authorName: cleanGuest || "Visitante" };
+}
+
+export interface FullChatbotContextResult {
+  contextText: string;
+  topDish: { nombre: string; slug: string; rating: number; total_resenas: number; es_especialidad: boolean; lugar_slug?: string | null } | null;
+  nearestPlace: { nombre: string; slug: string; direccion: string | null; lat: number; lng: number; km: number } | null;
+  currentPageInfo: { type: "plato" | "negocio" | "provincia" | "other"; slug?: string; nombre?: string } | null;
+}
+
+export async function getFullChatbotContext(options: {
+  lat?: number;
+  lng?: number;
+  budget?: number;
+  role: "guest" | "user" | "owner" | "admin";
+  userEmail?: string;
+  pathname?: string;
+}): Promise<FullChatbotContextResult> {
+  const [{ data: provincias }, { data: platos }, { data: lugares }, { data: pivots }, ranking] =
+    await Promise.all([
+      db().from("provincias").select("id, nombre, slug").order("nombre"),
+      db().from("platos").select("id, nombre, slug, precio_referencial, promedio_rating, total_resenas, provincias(nombre, slug)").eq("activo", true).order("nombre"),
+      db().from("lugares").select("id, nombre, slug, direccion, telefono, lat, lng, especialidades, provincias(nombre, slug)").eq("aprobado", true).eq("activo", true).order("nombre"),
+      db().from("plato_lugar").select("plato_id, lugar_id, precio_aproximado, especialidad"),
+      getRankingGlobal(),
+    ]);
+
+  const hasCoords = typeof options.lat === "number" && typeof options.lng === "number" && !Number.isNaN(options.lat) && !Number.isNaN(options.lng);
+  const { haversine } = hasCoords ? await import("./utils") : { haversine: null as any };
+
+  const lugaresEnriched = (lugares || []).map((l: any) => {
+    const lat = Number(l.lat);
+    const lng = Number(l.lng);
+    const km = hasCoords ? haversine(options.lat!, options.lng!, lat, lng) : null;
+    const myPivots = (pivots || []).filter((pv: any) => pv.lugar_id === l.id);
+    const dishEntries = myPivots
+      .map((pv: any) => {
+        const pl = (platos || []).find((p: any) => p.id === pv.plato_id);
+        if (!pl) return null;
+        const price = pv.precio_aproximado ? Number(pv.precio_aproximado) : pl.precio_referencial ? Number(pl.precio_referencial) : null;
+        return `${pl.nombre}${price ? ` (${price} Bs)` : ""}`;
+      })
+      .filter(Boolean);
+    const specs = (l.especialidades || []).map((e: any) => `${e.nombre}${e.precio ? ` (${e.precio} Bs)` : ""}`);
+    return {
+      id: l.id,
+      nombre: l.nombre,
+      slug: l.slug,
+      provincia: l.provincias?.nombre || "",
+      provinciaSlug: l.provincias?.slug || "",
+      direccion: l.direccion,
+      lat,
+      lng,
+      km,
+      menu: [...dishEntries, ...specs],
+    };
+  });
+
+  if (hasCoords) {
+    lugaresEnriched.sort((a: any, b: any) => (a.km ?? 9999) - (b.km ?? 9999));
+  }
+
+  const sections: string[] = [];
+
+  // 1. Current page context
+  let currentPageInfo: FullChatbotContextResult["currentPageInfo"] = { type: "other" };
+  const path = (options.pathname || "/").split("?")[0];
+  if (path.startsWith("/plato/")) {
+    const slug = path.replace("/plato/", "").split("/")[0];
+    const match = (platos || []).find((p: any) => p.slug === slug);
+    if (match) {
+      currentPageInfo = { type: "plato", slug: match.slug, nombre: match.nombre };
+      const servingPlaces = (pivots || [])
+        .filter((pv: any) => pv.plato_id === match.id)
+        .map((pv: any) => lugaresEnriched.find((l: any) => l.id === pv.lugar_id))
+        .filter(Boolean)
+        .map((l: any) => `${l.nombre} (slug: ${l.slug})`);
+      sections.push(
+        `[PÁGINA ACTUAL DEL USUARIO]\nEstá viendo la ficha del plato: "${match.nombre}" (slug: ${match.slug}, ruta: /plato/${match.slug}). Locales donde se sirve: ${servingPlaces.join(", ") || "Consultar locales"}.`
+      );
+    }
+  } else if (path.startsWith("/negocio/")) {
+    const slug = path.replace("/negocio/", "").split("/")[0];
+    const match = lugaresEnriched.find((l: any) => l.slug === slug);
+    if (match) {
+      currentPageInfo = { type: "negocio", slug: match.slug, nombre: match.nombre };
+      sections.push(
+        `[PÁGINA ACTUAL DEL USUARIO]\nEstá viendo la ficha del negocio: "${match.nombre}" (slug: ${match.slug}, ruta: /negocio/${match.slug}, provincia: ${match.provincia}). Menú: ${match.menu.join(", ") || "sin platos cargados"}.`
+      );
+    }
+  } else if (path.startsWith("/provincia/")) {
+    const slug = path.replace("/provincia/", "").split("/")[0];
+    const match = (provincias || []).find((p: any) => p.slug === slug);
+    if (match) {
+      currentPageInfo = { type: "provincia", slug: match.slug, nombre: match.nombre };
+      sections.push(
+        `[PÁGINA ACTUAL DEL USUARIO]\nEstá viendo la provincia: "${match.nombre}" (slug: ${match.slug}, ruta: /provincia/${match.slug}).`
+      );
+    }
+  } else {
+    sections.push(`[PÁGINA ACTUAL DEL USUARIO]\nRuta actual: ${path}`);
+  }
+
+  // 2. GPS Coordinates
+  if (hasCoords) {
+    sections.push(
+      `[UBICACIÓN GPS DEL USUARIO ACTIVA]\nLatitud: ${options.lat!.toFixed(5)}, Longitud: ${options.lng!.toFixed(5)}. Los locales abajo ya están ordenados del más cercano al más lejano.`
+    );
+  }
+
+  // 3. Top Ranking
+  const topRankingLines = (ranking || []).slice(0, 8).map((r: any, idx: number) => {
+    const url = r.es_especialidad && r.lugar_slug ? `/negocio/${r.lugar_slug}` : `/plato/${r.slug}`;
+    return `${idx + 1}. ${r.nombre} | ★${Number(r.promedio_rating || 0).toFixed(1)} (${r.total_resenas} reseñas) | ${r.precio_referencial ? `${r.precio_referencial} Bs` : "Consultar"} | ruta: ${url}`;
+  });
+  if (topRankingLines.length > 0) {
+    sections.push(`[RANKING REAL DE PLATOS (ORDENADO DE MEJOR A MENOR)]\n${topRankingLines.join("\n")}`);
+  }
+
+  // 4. All active dishes
+  const filteredPlatos = options.budget
+    ? (platos || []).filter((p: any) => p.precio_referencial != null && Number(p.precio_referencial) <= options.budget!)
+    : (platos || []);
+  const platosLines = filteredPlatos.map((p: any) => {
+    const precio = p.precio_referencial ? `${Number(p.precio_referencial)} Bs` : "Consultar";
+    return `- ${p.nombre} | slug: ${p.slug} | ruta: /plato/${p.slug} | provincia: ${p.provincias?.nombre || "—"} | ${precio}`;
+  });
+  sections.push(`[TODOS LOS PLATOS TÍPICOS ACTIVOS (${platosLines.length})]\n${platosLines.join("\n")}`);
+
+  // 5. All approved places
+  const lugaresLines = lugaresEnriched.map((l: any) => {
+    const dist = l.km !== null ? ` | a ${l.km.toFixed(1)} km` : "";
+    const menuStr = l.menu.length > 0 ? ` | platos: ${l.menu.join(", ")}` : "";
+    return `- ${l.nombre} | slug: ${l.slug} | ruta: /negocio/${l.slug} | provincia: ${l.provincia} | dir: ${l.direccion || "—"} | coords: (${l.lat}, ${l.lng})${dist}${menuStr}`;
+  });
+  sections.push(`[TODOS LOS LOCALES ACTIVOS Y APROBADOS (${lugaresLines.length})]\n${lugaresLines.join("\n")}`);
+
+  // 6. Provinces
+  const provLines = (provincias || []).map((p: any) => `${p.nombre} (/provincia/${p.slug})`);
+  sections.push(`[PROVINCIAS (16)]\n${provLines.join(", ")}`);
+
+  // 7. Role-specific context (strictly isolated)
+  if (options.role === "owner" && options.userEmail) {
+    const myLugar = await getLugarByOwnerEmail(options.userEmail);
+    if (myLugar) {
+      const myMenu = (pivots || [])
+        .filter((pv: any) => pv.lugar_id === myLugar.id)
+        .map((pv: any) => {
+          const pl = (platos || []).find((p: any) => p.id === pv.plato_id);
+          return pl ? `${pl.nombre}: ${pv.precio_aproximado ?? pl.precio_referencial ?? "—"} Bs` : null;
+        })
+        .filter(Boolean);
+      const mySpecs = (myLugar.especialidades || []).map((e) => `${e.nombre}: ${e.precio} Bs`);
+      sections.push(
+        `[TU NEGOCIO COMO PROPIETARIO]\nNombre: ${myLugar.nombre} (ruta: /negocio/${myLugar.slug})\nDirección: ${myLugar.direccion || "—"}\nTeléfono: ${myLugar.telefono || "—"}\nDescripción: ${myLugar.descripcion || "—"}\nMenú típico: ${myMenu.join(", ") || "sin asignar"}\nEspecialidades propias: ${mySpecs.join(", ") || "ninguna"}`
+      );
+    } else {
+      sections.push(`[TU NEGOCIO COMO PROPIETARIO]\nAún no tienes un local vinculado a tu correo (${options.userEmail}).`);
+    }
+  } else if (options.role === "admin") {
+    const [stats, sols, revs] = await Promise.all([
+      getAdminStats(),
+      getSolicitudes(),
+      getReviewsAdmin(),
+    ]);
+    const pendingSols = sols.filter((s) => s.status === "pendiente").slice(0, 8).map((s) => `#${s.id} "${s.nombre}" (${s.provincia})`);
+    const recentRevs = revs.slice(0, 8).map((r) => `#${r.id} "${r.titulo || "Sin título"}" ★${r.rating} (${r.plato?.nombre || r.lugar?.nombre || "General"})`);
+    sections.push(
+      `[RESUMEN ADMINISTRATIVO ACTUAL]\nPlatos activos: ${stats.totalPlatos} | Lugares aprobados: ${stats.totalLugares} | Solicitudes pendientes: ${stats.solicitudesPendientes} | Reseñas publicadas: ${stats.totalResenas}\nSolicitudes pendientes: ${pendingSols.join("; ") || "ninguna"}\nReseñas recientes: ${recentRevs.join("; ") || "ninguna"}`
+    );
+  }
+
+  const topDishRow = ranking?.[0];
+  const topDish = topDishRow
+    ? {
+        nombre: topDishRow.nombre,
+        slug: topDishRow.slug,
+        rating: Number(topDishRow.promedio_rating || 0),
+        total_resenas: Number(topDishRow.total_resenas || 0),
+        es_especialidad: Boolean(topDishRow.es_especialidad),
+        lugar_slug: topDishRow.lugar_slug ?? null,
+      }
+    : null;
+
+  const nearestRow = hasCoords && lugaresEnriched.length > 0 ? lugaresEnriched[0] : null;
+  const nearestPlace = nearestRow
+    ? {
+        nombre: nearestRow.nombre,
+        slug: nearestRow.slug,
+        direccion: nearestRow.direccion,
+        lat: nearestRow.lat,
+        lng: nearestRow.lng,
+        km: Number(nearestRow.km || 0),
+      }
+    : null;
+
+  return {
+    contextText: sections.join("\n\n"),
+    topDish,
+    nearestPlace,
+    currentPageInfo,
+  };
 }

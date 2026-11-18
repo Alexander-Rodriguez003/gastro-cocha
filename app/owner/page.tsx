@@ -61,6 +61,37 @@ export default function OwnerDashboard() {
   const [platePrecio, setPlatePrecio] = useState("");
   const [plateImagen, setPlateImagen] = useState("");
   const [plateSaving, setPlateSaving] = useState(false);
+  const [aiPrefillNotice, setAiPrefillNotice] = useState(false);
+
+  const applyOwnerPrefill = (data: any, plats: Plato[]) => {
+    if (!data || data.action !== "prefill_owner") return;
+    if (data.tab === "details" || data.tab === "platos" || data.tab === "specialties") {
+      setActiveTab(data.tab);
+    }
+    if (typeof data.telefono === "string" && data.telefono) setTelefono(data.telefono);
+    if (typeof data.direccion === "string" && data.direccion) setDireccion(data.direccion);
+    if (typeof data.descripcion === "string" && data.descripcion) setDescripcion(data.descripcion);
+
+    if (data.plato_nombre && plats.length > 0) {
+      const target = data.plato_nombre.toLowerCase();
+      const found = plats.find((p) => p.nombre.toLowerCase().includes(target) || target.includes(p.nombre.toLowerCase()));
+      if (found) {
+        setActiveTab("platos");
+        setEditingPlateId(found.id);
+        setPlatePrecio(data.precio != null ? String(data.precio) : String(found.pivot?.precio_aproximado || ""));
+        setPlateImagen(found.pivot?.imagen_url || "");
+      }
+    }
+
+    if (data.especialidad_nombre) {
+      setActiveTab("specialties");
+      setNewSpecName(data.especialidad_nombre);
+      if (data.especialidad_precio != null) setNewSpecPrecio(String(data.especialidad_precio));
+    }
+
+    setAiPrefillNotice(true);
+    setTimeout(() => setAiPrefillNotice(false), 8000);
+  };
 
   const fetchDetails = async () => {
     try {
@@ -74,6 +105,14 @@ export default function OwnerDashboard() {
         setDireccion(lug.direccion || "");
         setDescripcion(lug.descripcion || "");
         setImagenUrl(lug.imagen_url || "");
+
+        try {
+          const pending = sessionStorage.getItem("gastro_owner_prefill");
+          if (pending) {
+            sessionStorage.removeItem("gastro_owner_prefill");
+            applyOwnerPrefill(JSON.parse(pending), plats);
+          }
+        } catch {}
       } else {
         setError(data.error || "No autorizado o negocio no encontrado");
       }
@@ -87,6 +126,14 @@ export default function OwnerDashboard() {
   useEffect(() => {
     fetchDetails();
   }, []);
+
+  useEffect(() => {
+    const handleAiAction = (e: Event) => {
+      applyOwnerPrefill((e as CustomEvent).detail, platos);
+    };
+    window.addEventListener("gastro_action", handleAiAction);
+    return () => window.removeEventListener("gastro_action", handleAiAction);
+  }, [platos]);
 
   const handleUpdateDetails = async () => {
     if (!lugar) return;
@@ -245,6 +292,29 @@ export default function OwnerDashboard() {
           Ver en el sitio <LayoutGrid size={15} />
         </a>
       </div>
+
+      {aiPrefillNotice && (
+        <div
+          role="status"
+          style={{
+            background: "var(--color-amber-light)",
+            border: "1px solid var(--color-amber)",
+            borderRadius: "var(--radius-md)",
+            padding: "0.9rem 1.15rem",
+            marginBottom: "1.5rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            fontSize: "0.86rem",
+            color: "var(--color-ink)",
+          }}
+        >
+          <Sparkles size={17} color="var(--color-primary-dark)" />
+          <span>
+            <strong>Campos pre-rellenados por el asistente.</strong> Revisa los valores y pulsa Guardar para aplicarlos.
+          </span>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="tab-bar" style={{ marginBottom: "2rem" }}>

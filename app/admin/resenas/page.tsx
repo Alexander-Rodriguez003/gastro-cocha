@@ -1,124 +1,206 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { ChevronLeft, Check, X, Star } from "lucide-react";
+import { ChevronLeft, Trash2, Search, ExternalLink, MessageSquare } from "lucide-react";
 
 interface ResenaRow {
   id: number;
-  plato_slug: string;
-  tipo: "plato" | "lugar";
+  targetType: "plato" | "lugar";
+  targetName: string;
+  targetSlug: string;
   rating: number;
   titulo: string;
   comentario: string;
   usuario: string;
   fecha: string;
-  is_approved: boolean;
-  reviewed: boolean;
 }
 
 export default function AdminResenasPage() {
   const [resenas, setResenas] = useState<ResenaRow[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const fetchResenas = async () => {
-    try {
-      const res = await fetch("/api/admin/resenas");
-      const data = await res.json();
-      if (data.resenas) {
-        setResenas(data.resenas);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "plato" | "lugar">("all");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    fetchResenas();
+    fetch("/api/admin/resenas")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.resenas) setResenas(data.resenas);
+        else setErrorMsg(data.error || "No se pudieron cargar las reseñas.");
+      })
+      .catch(() => setErrorMsg("Error de conexión al cargar las reseñas."))
+      .finally(() => setLoading(false));
   }, []);
 
-  const moderate = async (id: number, approve: boolean) => {
+  const handleDelete = async (row: ResenaRow) => {
+    if (!confirm(`¿Eliminar la reseña sobre "${row.targetName}" de ${row.usuario}?`)) return;
+    setDeletingId(row.id);
+    setErrorMsg("");
     try {
-      const res = await fetch("/api/admin/resenas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, approve }),
-      });
+      const res = await fetch(`/api/admin/resenas?id=${row.id}`, { method: "DELETE" });
       if (res.ok) {
-        setResenas((prev) =>
-          prev.map((r) => (r.id === id ? { ...r, is_approved: approve, reviewed: true } : r))
-        );
+        setResenas((prev) => prev.filter((r) => r.id !== row.id));
       } else {
-        alert("Error al moderar la reseña.");
+        const data = await res.json().catch(() => ({}));
+        setErrorMsg(data.error || "No se pudo eliminar la reseña.");
       }
     } catch {
-      alert("Error de conexión con el servidor.");
+      setErrorMsg("Error de conexión al eliminar la reseña.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
-  const pendientes = resenas.filter((r) => !r.reviewed);
-  const aprobadas = resenas.filter((r) => r.reviewed && r.is_approved);
-  const rechazadas = resenas.filter((r) => r.reviewed && !r.is_approved);
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return resenas.filter((r) => {
+      if (filterType !== "all" && r.targetType !== filterType) return false;
+      if (!term) return true;
+      return (
+        r.targetName.toLowerCase().includes(term) ||
+        r.comentario.toLowerCase().includes(term) ||
+        r.titulo.toLowerCase().includes(term) ||
+        r.usuario.toLowerCase().includes(term)
+      );
+    });
+  }, [resenas, search, filterType]);
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
-      <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--color-text-muted)", textDecoration: "none", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
+    <div style={{ maxWidth: 1120, margin: "0 auto", padding: "2rem 1.5rem" }}>
+      <Link href="/admin" style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--color-muted)", textDecoration: "none", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
         <ChevronLeft size={16} /> Panel Admin
       </Link>
 
-      <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 800, fontSize: "1.75rem", marginBottom: "0.5rem", color: "var(--color-ink)" }}>
-        Moderar Reseñas
+      <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 800, fontSize: "1.75rem", marginBottom: "0.4rem", color: "var(--color-ink)", display: "flex", alignItems: "center", gap: 8 }}>
+        <MessageSquare size={24} color="var(--color-amber)" /> Supervisión de Reseñas ({resenas.length})
       </h1>
-      <p style={{ color: "var(--color-text-muted)", marginBottom: "2rem", fontSize: "0.9rem" }}>
-        Aprueba o rechaza reseñas antes de que sean visibles al público.
+      <p style={{ color: "var(--color-muted)", marginBottom: "1.5rem", fontSize: "0.9rem" }}>
+        Los comentarios se publican automáticamente tras pasar el filtro anti-ofensas. Si un dueño reporta una reseña dañina o abusiva, puedes eliminarla aquí.
       </p>
 
-      {/* Pendientes */}
-      <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.15rem", marginBottom: "1rem", color: "var(--color-primary-dark)" }}>
-        Pendientes ({pendientes.length})
-      </h2>
-      {pendientes.length === 0 ? (
-        <p style={{ color: "var(--color-text-muted)", fontStyle: "italic", marginBottom: "2rem" }}>Todas las reseñas están moderadas 🎉</p>
-      ) : (
-        <div style={{ display: "grid", gap: "0.75rem", marginBottom: "2.5rem" }}>
-          {pendientes.map((r) => (
-            <div key={r.id} className="card" style={{ padding: "1.25rem", borderLeft: "4px solid var(--color-primary-light)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem" }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.35rem" }}>
-                    <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>{r.titulo}</span>
-                    <span style={{ padding: "2px 8px", borderRadius: 999, fontSize: "0.7rem", background: r.tipo === "plato" ? "var(--color-surface-warm)" : "var(--color-info-bg)", color: r.tipo === "plato" ? "var(--color-primary-dark)" : "var(--color-info)" }}>
-                      {r.tipo === "plato" ? "🍽️ Plato" : "📍 Lugar"}
-                    </span>
-                  </div>
-                  <div style={{ color: "var(--color-primary)", marginBottom: "0.25rem", letterSpacing: 2, fontSize: "0.85rem" }}>
-                    {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
-                  </div>
-                  <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", lineHeight: 1.6, marginBottom: "0.35rem" }}>{r.comentario}</p>
-                  <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                    Por {r.usuario} · {r.fecha} · sobre: {r.plato_slug}
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <button onClick={() => moderate(r.id, true)} style={{ padding: "0.45rem 0.85rem", borderRadius: 10, background: "var(--color-secondary)", color: "white", border: "none", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: 4, fontSize: "0.8rem" }}>
-                    <Check size={14} /> Aprobar
-                  </button>
-                  <button onClick={() => moderate(r.id, false)} style={{ padding: "0.45rem 0.85rem", borderRadius: 10, background: "#EF4444", color: "white", border: "none", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: 4, fontSize: "0.8rem" }}>
-                    <X size={14} /> Rechazar
-                  </button>
-                </div>
-              </div>
-            </div>
+      {/* Search & Filter */}
+      <div className="card" style={{ padding: "1rem 1.25rem", marginBottom: "1.5rem", display: "flex", flexWrap: "wrap", gap: "0.85rem", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: 1, minWidth: 220 }}>
+          <Search size={16} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--color-muted)" }} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por plato, local, usuario o comentario..."
+            className="input-editorial"
+            style={{ paddingLeft: "2.35rem" }}
+          />
+        </div>
+        <div style={{ display: "flex", gap: "0.4rem" }}>
+          {[
+            { id: "all", label: "Todas" },
+            { id: "plato", label: "Platos" },
+            { id: "lugar", label: "Locales" },
+          ].map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => setFilterType(opt.id as "all" | "plato" | "lugar")}
+              style={{
+                padding: "0.45rem 0.9rem",
+                borderRadius: "var(--radius-pill)",
+                fontSize: "0.8rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                border: filterType === opt.id ? "1px solid var(--color-ink)" : "1px solid var(--color-border)",
+                background: filterType === opt.id ? "var(--color-ink)" : "var(--color-cream)",
+                color: filterType === opt.id ? "var(--color-cream)" : "var(--color-muted)",
+              }}
+            >
+              {opt.label}
+            </button>
           ))}
+        </div>
+      </div>
+
+      {errorMsg && (
+        <div role="alert" style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)", padding: "0.75rem 1rem", borderRadius: "var(--radius-md)", marginBottom: "1rem", fontSize: "0.85rem" }}>
+          {errorMsg}
         </div>
       )}
 
-      {/* Stats */}
-      <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", fontSize: "0.85rem", color: "var(--color-text-muted)" }}>
-        <span>✅ Aprobadas: {aprobadas.length}</span>
-        <span>❌ Rechazadas: {rechazadas.length}</span>
-      </div>
+      {loading ? (
+        <p style={{ color: "var(--color-muted)" }}>Cargando reseñas...</p>
+      ) : filtered.length === 0 ? (
+        <div className="card" style={{ padding: "2.5rem", textAlign: "center", color: "var(--color-muted)" }}>
+          No hay reseñas que coincidan con el filtro actual.
+        </div>
+      ) : (
+        <div style={{ display: "grid", gap: "0.85rem" }}>
+          {filtered.map((r) => {
+            const targetHref = r.targetSlug
+              ? r.targetType === "lugar"
+                ? `/negocio/${r.targetSlug}`
+                : `/plato/${r.targetSlug}`
+              : null;
+
+            return (
+              <div key={r.id} className="card" style={{ padding: "1.2rem 1.35rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.9rem" }}>
+                  <div style={{ flex: 1, minWidth: 240 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.4rem" }}>
+                      <span className={`badge ${r.targetType === "lugar" ? "badge-forest" : "badge-primary"}`}>
+                        {r.targetType === "lugar" ? "Local" : "Plato"}
+                      </span>
+                      {targetHref ? (
+                        <Link href={targetHref} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.02rem", color: "var(--color-ink)", display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                          {r.targetName} <ExternalLink size={12} />
+                        </Link>
+                      ) : (
+                        <strong style={{ fontFamily: "var(--font-serif)", fontSize: "1.02rem" }}>{r.targetName}</strong>
+                      )}
+                      <span className="stars" style={{ fontSize: "0.85rem", marginLeft: "0.25rem" }}>
+                        {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
+                      </span>
+                    </div>
+
+                    {r.titulo && (
+                      <div style={{ fontWeight: 600, fontSize: "0.92rem", color: "var(--color-ink-soft)", marginBottom: "0.25rem" }}>
+                        {r.titulo}
+                      </div>
+                    )}
+                    <p style={{ color: "var(--color-muted)", fontSize: "0.87rem", lineHeight: 1.55, marginBottom: "0.45rem" }}>
+                      {r.comentario}
+                    </p>
+                    <div style={{ fontSize: "0.76rem", color: "var(--color-muted)" }}>
+                      Por <strong>{r.usuario}</strong> · {r.fecha} · ID #{r.id}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={deletingId === r.id}
+                    onClick={() => handleDelete(r)}
+                    style={{
+                      padding: "0.45rem 0.9rem",
+                      borderRadius: "var(--radius-md)",
+                      background: "var(--color-danger-bg)",
+                      color: "var(--color-danger)",
+                      border: "1px solid rgba(220, 38, 38, 0.25)",
+                      cursor: deletingId === r.id ? "not-allowed" : "pointer",
+                      fontWeight: 600,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      fontSize: "0.8rem",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <Trash2 size={14} /> {deletingId === r.id ? "Eliminando..." : "Eliminar"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

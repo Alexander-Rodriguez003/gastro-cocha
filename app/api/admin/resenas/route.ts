@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getReviewsAdmin, updateReviewStatus } from "@/lib/data";
+import { getReviewsAdmin, deleteReviewAdmin } from "@/lib/data";
 import { isAdmin } from "@/lib/auth";
 
 export async function GET() {
@@ -8,45 +8,53 @@ export async function GET() {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
     const resenas = await getReviewsAdmin();
-    // Map to the structure expected by the frontend
-    const mapped = resenas.map((r) => ({
-      id: r.id,
-      plato_slug: r.plato_id ? "plato-" + r.plato_id : "lugar-" + r.lugar_id,
-      tipo: r.lugar_id ? "lugar" : "plato",
-      rating: r.rating,
-      titulo: r.titulo,
-      comentario: r.comentario,
-      usuario: r.user?.name || "Anónimo",
-      fecha: new Date().toISOString().split("T")[0],
-      is_approved: r.is_approved,
-      reviewed: (r as any).reviewed || r.is_approved,
-    }));
+    const mapped = resenas.map((r) => {
+      const isLugar = Boolean(r.lugar_id);
+      return {
+        id: r.id,
+        targetType: isLugar ? ("lugar" as const) : ("plato" as const),
+        targetName: isLugar
+          ? r.lugar?.nombre || `Local #${r.lugar_id}`
+          : r.plato?.nombre || `Plato #${r.plato_id}`,
+        targetSlug: isLugar ? r.lugar?.slug || "" : r.plato?.slug || "",
+        rating: r.rating,
+        titulo: r.titulo || "",
+        comentario: r.comentario,
+        usuario: r.user?.name || "Visitante",
+        fecha: r.fecha_visita || (r.created_at ? r.created_at.split("T")[0] : "—"),
+      };
+    });
 
     return NextResponse.json({ resenas: mapped });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function DELETE(request: NextRequest) {
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
-    const body = await request.json();
-    const { id, approve } = body;
-
-    if (id === undefined || approve === undefined) {
-      return NextResponse.json({ error: "ID y approve son requeridos" }, { status: 400 });
+    const { searchParams } = new URL(request.url);
+    const idParam = searchParams.get("id");
+    let id = idParam ? Number(idParam) : NaN;
+    if (Number.isNaN(id)) {
+      const body = await request.json().catch(() => ({}));
+      id = Number(body.id);
     }
 
-    const success = await updateReviewStatus(Number(id), Boolean(approve));
-    if (!success) {
+    if (!id || Number.isNaN(id)) {
+      return NextResponse.json({ error: "ID de reseña requerido" }, { status: 400 });
+    }
+
+    const ok = await deleteReviewAdmin(id);
+    if (!ok) {
       return NextResponse.json({ error: "Reseña no encontrada" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
   }
 }

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Star, MapPin, ChevronLeft, Phone, Sparkles, MessageSquare, ArrowRight, Compass, Utensils, Navigation, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import type { Lugar, Resena, PlatoConPivot } from "@/lib/types";
 import { OptimizedImage } from "./OptimizedImage";
+import { ReviewForm } from "./ReviewForm";
 
 interface NegocioDetailViewProps {
   initialLugar: Lugar;
@@ -15,65 +16,6 @@ interface NegocioDetailViewProps {
 export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDetailViewProps) {
   const lugar = initialLugar;
   const [localResenas, setLocalResenas] = useState<Resena[]>(resenas);
-  const [reviewAddedBanner, setReviewAddedBanner] = useState<string | null>(null);
-
-  useEffect(() => {
-    const savedReviews = localStorage.getItem(`gastro_reviews_lugar_${initialLugar.slug}`);
-    if (savedReviews) {
-      try {
-        const customList = JSON.parse(savedReviews) as Resena[];
-        setLocalResenas([...resenas, ...customList]);
-      } catch (e) {
-        console.error("Error loading custom local restaurant reviews:", e);
-      }
-    }
-  }, [initialLugar.slug, resenas]);
-
-  useEffect(() => {
-    const handleAiAction = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const data = customEvent.detail;
-      if (!data) return;
-
-      if (data.action === "add_review" && (data.lugar_slug === initialLugar.slug || data.lugar_name === initialLugar.nombre)) {
-        const newReview: Resena = {
-          id: Date.now(),
-          user_id: 99,
-          plato_id: null,
-          lugar_id: initialLugar.id,
-          rating: Number(data.rating || 5),
-          titulo: "Reseña cargada por el Asistente AI",
-          comentario: data.comentario || "¡Excelente servicio y comida tradicional exquisita!",
-          fecha_visita: null,
-          is_approved: true,
-          user: { id: 99, name: "Tú (vía Chatbot AI)" },
-        };
-
-        setLocalResenas((prev) => {
-          const updated = [...prev, newReview];
-          const savedReviews = localStorage.getItem(`gastro_reviews_lugar_${initialLugar.slug}`);
-          let customList: Resena[] = [];
-          if (savedReviews) {
-            try {
-              customList = JSON.parse(savedReviews);
-            } catch {}
-          }
-          customList.push(newReview);
-          localStorage.setItem(`gastro_reviews_lugar_${initialLugar.slug}`, JSON.stringify(customList));
-          return updated;
-        });
-
-        setReviewAddedBanner(`Tu valoración de ${newReview.rating} estrellas ha sido publicada.`);
-        setTimeout(() => setReviewAddedBanner(null), 7000);
-        document.getElementById("resenas-seccion")?.scrollIntoView({ behavior: "smooth" });
-      }
-    };
-
-    window.addEventListener("gastro_action", handleAiAction);
-    return () => {
-      window.removeEventListener("gastro_action", handleAiAction);
-    };
-  }, [initialLugar]);
 
   const hasReviews = localResenas.length > 0;
   const avgRating = hasReviews
@@ -87,34 +29,6 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
       <Link href="/negocios" style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--color-muted)", textDecoration: "none", fontSize: "0.85rem", marginBottom: "1.5rem", fontWeight: 500 }}>
         <ChevronLeft size={16} /> Todos los negocios
       </Link>
-
-      {reviewAddedBanner && (
-        <div
-          style={{
-            background: "var(--color-amber-light)",
-            border: "1px solid var(--color-amber)",
-            borderRadius: "var(--radius-lg)",
-            padding: "1.1rem 1.25rem",
-            marginBottom: "1.75rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "1rem",
-            boxShadow: "var(--shadow-sm)",
-          }}
-        >
-          <div style={{ background: "var(--color-ink)", color: "var(--color-cream)", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <Sparkles size={18} />
-          </div>
-          <div>
-            <div style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1rem", color: "var(--color-ink)" }}>
-              Reseña publicada por el asistente
-            </div>
-            <div style={{ fontSize: "0.85rem", color: "var(--color-muted)", marginTop: 2 }}>
-              {reviewAddedBanner}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Hero Cover Banner */}
       <div
@@ -386,12 +300,18 @@ export function NegocioDetailView({ initialLugar, platos, resenas }: NegocioDeta
           <div style={{ marginBottom: "1.25rem" }}>
             <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 700, fontSize: "1.65rem", display: "flex", alignItems: "center", gap: 8, color: "var(--color-ink)" }}>
               <MessageSquare size={22} color="var(--color-amber)" />
-              Opiniones de los clientes
+              Opiniones de los clientes ({localResenas.length})
             </h2>
             <p style={{ color: "var(--color-muted)", fontSize: "0.9rem", marginTop: 4 }}>
               Experiencias compartidas sobre este local.
             </p>
           </div>
+
+          <ReviewForm
+            lugarSlug={lugar.slug}
+            targetLabel={lugar.nombre}
+            onReviewAdded={(newResena) => setLocalResenas((prev) => [newResena, ...prev])}
+          />
 
           {localResenas.length > 0 ? (
             <div style={{ display: "grid", gap: "0.9rem" }}>

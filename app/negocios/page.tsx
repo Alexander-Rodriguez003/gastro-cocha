@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getLugaresByProvincia } from "@/lib/data";
 import { NegociosGrid } from "@/components/NegociosGrid";
 
@@ -9,10 +10,11 @@ export const metadata = {
 };
 
 export default async function NegociosPage() {
-  // Fetch all active/approved businesses
   const places = await getLugaresByProvincia();
 
   return (
-    <NegociosGrid initialLugares={places} />
+    <Suspense fallback={null}>
+      <NegociosGrid initialLugares={places} />
+    </Suspense>
   );
 }
