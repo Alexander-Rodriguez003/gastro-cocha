@@ -1,71 +1,118 @@
 # 🍽️ GastroCocha — Guía Gastronómica de Cochabamba
 
-Descubre los mejores platos típicos y restaurantes de las 16 provincias de Cochabamba, Bolivia. Con chatbot inteligente que recomienda por ubicación y presupuesto.
+Guía web de los platos típicos y restaurantes de las 16 provincias de Cochabamba (Bolivia), con mapa interactivo y chatbot que recomienda por ubicación, provincia y presupuesto.
 
-## 🚀 Deploy en 5 minutos
+- **Producción:** https://guiagastronomicacohala.dpdns.org
+- **Repositorio:** https://github.com/Alexander-Rodriguez003/gastro-cocha
+- **Dominio anterior:** `gastro-cocha.vercel.app` (redirige al nuevo)
 
-### 1. Supabase (Base de datos gratuita)
-1. Ir a [supabase.com](https://supabase.com) → Create new project
-2. Ir a **SQL Editor** → pegar el contenido de `supabase-setup.sql` → Run
-3. Ir a **Settings → API** → copiar `URL` y `anon key`
+## Stack
 
-### 2. Vercel (Hosting gratuito)
-1. Subir este repo a GitHub
-2. Ir a [vercel.com](https://vercel.com) → Import → seleccionar el repo
-3. En **Environment Variables**, agregar:
-   - `NEXT_PUBLIC_SUPABASE_URL` = tu URL de Supabase
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = tu anon key
-4. Click **Deploy** ✅
+| Capa | Tecnología |
+|---|---|
+| Framework | Next.js 16.2.6 (App Router, Turbopack) |
+| Lenguaje | TypeScript 5 |
+| UI | React 19 + CSS variables + estilos inline + Tailwind 4 (PostCSS) |
+| Base de datos | Supabase (PostgreSQL) vía `@supabase/supabase-js` |
+| Archivos | Supabase Storage (bucket público `gastro-images`) |
+| Mapas | Leaflet 1.9.4 |
+| IA | Gemini (principal), DeepSeek opcional, fallback mock |
+| Deploy | Vercel (auto-deploy desde `main`) |
 
-### 3. DeepSeek (Chatbot IA — opcional)
-1. Ir a [platform.deepseek.com](https://platform.deepseek.com)
-2. Crear API key → agregar en Vercel como `DEEPSEEK_API_KEY`
-3. Sin esta key, el chatbot funciona con respuestas inteligentes pre-programadas
-
-## 🧑‍💻 Desarrollo local
+## Desarrollo local
 
 ```bash
 npm install
-npm run dev
-# Abre http://localhost:3000
+cp .env.example .env.local   # completar valores reales
+npm run dev                  # http://localhost:3000
 ```
 
-### Credenciales de prueba
-- **Admin**: `admin@gastrococha.bo` / `admin123`
-- **Usuario**: `demo@gastrococha.bo` / `demo123`
+Scripts disponibles:
 
-## 📁 Estructura
-```
-gastro-next/
-├── app/                    # Páginas y API routes
-│   ├── page.tsx           # Home
-│   ├── login/             # Login/registro
-│   ├── plato/[slug]/      # Detalle de plato
-│   ├── provincia/[slug]/  # Detalle de provincia
-│   ├── ranking/           # Ranking global
-│   ├── registrar-negocio/ # Formulario público (preparado)
-│   ├── admin/             # Panel admin (protegido)
-│   └── api/               # Chatbot + Auth endpoints
-├── components/            # Componentes reutilizables
-├── lib/                   # Lógica de negocio
-│   ├── data.ts           # Capa de datos (mock/Supabase)
-│   ├── auth.ts           # Autenticación
-│   ├── seed-data.ts      # 16 provincias + platos
-│   └── utils.ts          # Haversine, formateo
-└── supabase-setup.sql    # SQL listo para Supabase
+```bash
+npm run dev      # servidor de desarrollo
+npm run build    # build de producción (verificación)
+npm run start    # servir build
+npm run lint     # ESLint
 ```
 
-## ✨ Funcionalidades
-- 🗺️ **16 provincias** de Cochabamba con platos típicos
-- 🤖 **Chatbot inteligente** por ubicación, presupuesto y provincia
-- 🛡️ **Panel admin** con moderación de reseñas y solicitudes
-- 📋 **Registro de negocios** preparado (activable por admin)
-- ⭐ **Ranking** y reseñas de platos y restaurantes
-- 📱 **Responsive** — funciona en móvil y desktop
+No hay suite de tests configurada todavía.
 
-## 💰 Costo
-| Servicio | Costo |
+## Variables de entorno
+
+Definidas en `.env.local` (nunca se commitea):
+
+| Variable | Obligatoria | Uso |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Sí | URL del proyecto Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Sí | Clave pública (cliente) |
+| `SUPABASE_SERVICE_KEY` | Sí | Service Role; **solo servidor** (consultas y Storage) |
+| `JWT_SECRET` | Sí | Firma HMAC de la cookie de sesión (fijo para sobrevivir reinicios) |
+| `GEMINI_API_KEY` | No | Chatbot con IA real; sin ella usa respuestas mock |
+
+> ⚠️ Las credenciales de usuarios se gestionan fuera del repositorio. No agregar contraseñas al código ni al README.
+
+## Base de datos
+
+1. Crear proyecto en [supabase.com](https://supabase.com).
+2. Ejecutar `supabase-setup.sql` completo en **SQL Editor** (crea tablas, índices y datos semilla).
+3. Crear un bucket de Storage llamado **`gastro-images`** y marcarlo como público (para fotos de platos y locales).
+4. Copiar `URL`, `anon key` y `service_role key` a `.env.local` y a Vercel.
+
+Tablas principales: `provincias`, `platos`, `lugares`, `plato_lugar`, `resenas`, `solicitudes`, `users`, `favoritos`, `fotos`, `app_settings`.
+
+## Roles y autenticación
+
+Sesión propia con cookie httpOnly `gastro_session` (payload Base64 + firma HMAC-SHA256 con `JWT_SECRET`). Contraseñas con SHA-256 + sal fija.
+
+| Rol | Acceso |
 |---|---|
-| Vercel (hosting) | **$0** |
-| Supabase (DB) | **$0** |
-| DeepSeek (chatbot) | **~$0.50/mes** |
+| `user` | Sitio público, reseñas |
+| `owner` | `/owner` — su negocio, platos, precios, especialidades y fotos |
+| `admin` | `/admin` — platos, lugares, solicitudes, reseñas y propietarios |
+
+El dueño de un negocio se vincula por `lugares.email_propietario` ↔ `users.email`.
+
+## Paneles
+
+**Admin** (`/admin`)
+- Platos y Lugares: CRUD completo persistido en Supabase (crear, editar, activar, destacar, eliminar, subir foto).
+- Solicitudes: aprobar/rechazar registros públicos. Al aprobar se crea el local.
+- Reseñas: moderación.
+- Propietarios: crear cuenta `owner`, enlazarla al local y resetear contraseñas.
+
+**Owner** (`/owner`)
+- Editar datos del local, precios y fotos de platos, y especialidades propias.
+
+## Estructura
+
+```
+app/
+├── page.tsx                 # Home con mapa
+├── provincias/ · provincia/[slug]/ · plato/[slug]/
+├── negocios/ · negocio/[slug]/ · ranking/
+├── registrar-negocio/       # Solicitud pública
+├── login/                   # Login + registro
+├── owner/                   # Panel del propietario
+├── admin/                   # Panel admin (layout protegido)
+└── api/                     # auth, chatbot, owner, admin, map, solicitudes, upload
+components/                  # Navbar, Chatbot, InteractiveMap, vistas, ImageUpload
+lib/
+├── data.ts                  # Acceso a Supabase (incluye CRUD admin)
+├── auth.ts                  # Sesión, login, roles, contraseñas
+├── validation.ts            # Sanitización y validación de entradas
+├── supabase.ts              # Clientes anon y Service Role
+└── types.ts · utils.ts · seed-data.ts
+supabase-setup.sql           # Esquema + datos semilla
+```
+
+## Deploy
+
+Vercel está conectado al repositorio: cada push a `main` publica en producción. Las variables de entorno se configuran en **Vercel → Project → Settings → Environment Variables**.
+
+## Estado y pendientes
+
+- ✅ Datos migrados a Supabase; admin persistente; subida de imágenes; validación server-side.
+- ⏳ Mejoras pendientes: diseño/UX, rendimiento (imágenes), accesibilidad y tests/CI.
+- ⏳ `app/admin/platos` y `app/admin/lugares` ya no usan `localStorage`, pero conviene revisar que no queden restos de datos mock en otras vistas.
+- ⏳ Sin tests automatizados.
