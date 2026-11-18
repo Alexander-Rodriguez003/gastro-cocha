@@ -38,11 +38,14 @@ export function InteractiveMap() {
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
   const focusMarkerRef = useRef<L.Marker | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
-  
+  const pickModeRef = useRef<boolean>(false);
+
   const [provincias, setProvincias] = useState<ProvinciaOption[]>([]);
   const [selectedSlug, setSelectedSlug] = useState<string>("");
   const [detectedProvincia, setDetectedProvincia] = useState<string>("—");
   const [platos, setPlatos] = useState<any[]>([]);
+  const [nearestPlaces, setNearestPlaces] = useState<any[]>([]);
+  const [pickLocationMode, setPickLocationMode] = useState<boolean>(false);
   const [statusMsg, setStatusMsg] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [loadingPlatos, setLoadingPlatos] = useState<boolean>(false);
@@ -77,6 +80,15 @@ export function InteractiveMap() {
 
       // Load all places initially
       loadPlacesMarkers();
+
+      // Support clicking the map to manually set user location
+      map.on("click", (evt: L.LeafletMouseEvent) => {
+        if (!pickModeRef.current) return;
+        pickModeRef.current = false;
+        setPickLocationMode(false);
+        map.getContainer().style.cursor = "";
+        applyUserCoordinates(evt.latlng.lat, evt.latlng.lng, 0, true);
+      });
     }
 
     return () => {
@@ -86,6 +98,13 @@ export function InteractiveMap() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    pickModeRef.current = pickLocationMode;
+    if (mapRef.current) {
+      mapRef.current.getContainer().style.cursor = pickLocationMode ? "crosshair" : "";
+    }
+  }, [pickLocationMode]);
 
   // 1.1 Listen for AI Chatbot Agent Events (Dynamic map focusing/province selection)
   useEffect(() => {
@@ -286,139 +305,162 @@ export function InteractiveMap() {
     return lat >= -18.5 && lat <= -15.5 && lng >= -67.5 && lng <= -64.5;
   };
 
+  const applyUserCoordinates = async (
+    lat: number,
+    lng: number,
+    accuracyMeters = 0,
+    isManual = false
+  ) => {
+    try {
+      setUserCoords({ lat, lng });
+      setErrorMsg("");
+
+      if (mapRef.current) {
+        const youIcon = L.divIcon({
+          className: "gastro-user-location-marker",
+          html: `<div style="
+            width: 18px;
+            height: 18px;
+            background: #3B82F6;
+            border: 3px solid #FFFFFF;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+            position: relative;
+          ">
+            <div style="
+              position: absolute;
+              top: -9px;
+              left: -9px;
+              width: 30px;
+              height: 30px;
+              border: 2px solid #3B82F6;
+              border-radius: 50%;
+              opacity: 0.6;
+              animation: markerPulse 1.5s infinite ease-out;
+            "></div>
+          </div>`,
+          iconSize: [18, 18],
+          iconAnchor: [9, 9],
+        });
+
+        if (userMarkerRef.current) {
+          userMarkerRef.current.remove();
+        }
+        const userMarker = L.marker([lat, lng], { icon: youIcon, draggable: true }).addTo(mapRef.current);
+        userMarker.on("dragend", () => {
+          const pos = userMarker.getLatLng();
+          applyUserCoordinates(pos.lat, pos.lng, 0, true);
+        });
+        userMarkerRef.current = userMarker;
+      }
+
+      if (!isCoordsInCochabamba(lat, lng)) {
+        setStatusMsg("");
+        setErrorMsg("Ubicación fuera del departamento de Cochabamba. Centrando en la capital como referencia.");
+        await handleProvinceChange("cercado");
+        return;
+      }
+
+      setStatusMsg("Detectando provincia...");
+      const detectRes = await fetch(`/api/map/provincia-por-coordenadas?lat=${lat}&lng=${lng}`);
+
+      if (detectRes.status === 204) {
+        setStatusMsg("");
+        setErrorMsg("Ubicación fuera de rango de provincias de Cochabamba. Centrando en la capital.");
+        await handleProvinceChange("cercado");
+        return;
+      }
+
+      if (!detectRes.ok) throw new Error();
+      const detected = await detectRes.json();
+
+      await handleProvinceChange(detected.slug);
+      if (mapRef.current) {
+        mapRef.current.setView([lat, lng], 14);
+      }
+
+      const lugRes = await fetch(`/api/map/lugares`);
+      const places = lugRes.ok ? await lugRes.json() : [];
+
+      const nearest = places
+        .map((p: any) => ({
+          ...p,
+          km: haversineKm(lat, lng, Number(p.lat), Number(p.lng)),
+        }))
+        .sort((a: any, b: any) => a.km - b.km)
+        .slice(0, 4);
+
+      setNearestPlaces(nearest);
+
+      if (nearest.length > 0 && mapRef.current) {
+        const listHtml = nearest
+          .slice(0, 3)
+          .map(
+            (c: any) =>
+              `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid #EAE7E0;">
+                <a href="/negocio/${c.slug}" style="color:#1A1714;font-weight:600;text-decoration:none;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${c.nombre} <span style="color:#665E57;font-weight:400;">(${c.km.toFixed(1)} km)</span></a>
+                <a href="https://www.google.com/maps/search/?api=1&query=${c.lat},${c.lng}" target="_blank" rel="noopener noreferrer" style="color:#FFFFFF;background:#1A1714;font-weight:600;text-decoration:none;font-size:10px;padding:2px 8px;border-radius:999px;white-space:nowrap;flex-shrink:0;">Ir</a>
+              </div>`
+          )
+          .join("");
+
+        const accuracyHint =
+          !isManual && accuracyMeters > 2000
+            ? `<div style="color:#665E57;font-size:10px;margin-top:2px;">Aprox. por red (±${Math.round(accuracyMeters / 1000)} km)</div>`
+            : `<div style="color:#665E57;font-size:10px;margin-top:2px;">Arrastra el punto azul para ajustar</div>`;
+
+        L.popup({
+          maxWidth: 235,
+          minWidth: 185,
+          autoPan: true,
+          autoPanPaddingTopLeft: [16, 48],
+          autoPanPaddingBottomRight: [16, 16],
+        })
+          .setLatLng([lat, lng])
+          .setContent(
+            `<div style="font-family:var(--font-body);font-size:11px;max-height:165px;overflow-y:auto;">
+              <strong style="color:#2A5C3F;font-size:12px;">Zona: ${detected.nombre}</strong>
+              ${accuracyHint}
+              <div style="margin-top:6px;">${listHtml}</div>
+            </div>`
+          )
+          .openOn(mapRef.current);
+      }
+
+      if (isManual) {
+        setStatusMsg(`Ubicación fijada manualmente en ${detected.nombre}. Puedes arrastrar el punto azul para afinar.`);
+      } else if (accuracyMeters > 2000) {
+        setStatusMsg(
+          `Zona estimada por red: ${detected.nombre} (±${Math.round(accuracyMeters / 1000)} km). Si estás en otro lugar, usa "Fijar punto".`
+        );
+      } else {
+        setStatusMsg(`Zona detectada: ${detected.nombre}`);
+      }
+      setTimeout(() => setStatusMsg(""), 4500);
+    } catch {
+      setErrorMsg("No se pudo detectar la provincia por ubicación.");
+      setStatusMsg("");
+    }
+  };
+
   const handleGeolocation = () => {
     if (!navigator.geolocation) {
-      setErrorMsg("Tu navegador no soporta geolocalización.");
+      setErrorMsg("Tu navegador no soporta geolocalización. Usa \"Fijar punto en el mapa\".");
       return;
     }
 
+    setPickLocationMode(false);
     setStatusMsg("Obteniendo tu ubicación...");
     setErrorMsg("");
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        try {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          setUserCoords({ lat, lng });
-
-          const accuracyMeters = Math.round(pos.coords.accuracy || 0);
-
-          // Add or replace user circle marker
-          if (mapRef.current) {
-            const youIcon = L.divIcon({
-              className: "gastro-user-location-marker",
-              html: `<div style="
-                width: 18px;
-                height: 18px;
-                background: #3B82F6;
-                border: 3px solid #FFFFFF;
-                border-radius: 50%;
-                box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
-                position: relative;
-              ">
-                <div style="
-                  position: absolute;
-                  top: -9px;
-                  left: -9px;
-                  width: 30px;
-                  height: 30px;
-                  border: 2px solid #3B82F6;
-                  border-radius: 50%;
-                  opacity: 0.6;
-                  animation: markerPulse 1.5s infinite ease-out;
-                "></div>
-              </div>`,
-              iconSize: [18, 18],
-              iconAnchor: [9, 9],
-            });
-
-            if (userMarkerRef.current) {
-              userMarkerRef.current.remove();
-            }
-            userMarkerRef.current = L.marker([lat, lng], { icon: youIcon })
-              .bindPopup(`<strong style="color:#3B82F6; font-family: var(--font-body);">Estás aquí</strong>`)
-              .addTo(mapRef.current);
-          }
-
-          // Check if coordinates are in Cochabamba
-          if (!isCoordsInCochabamba(lat, lng)) {
-            setStatusMsg("");
-            setErrorMsg("Ubicación fuera del departamento de Cochabamba. Centrando en la capital como referencia.");
-            await handleProvinceChange("cercado");
-            return;
-          }
-
-          // Detect nearest province
-          setStatusMsg("Detectando provincia...");
-          const detectRes = await fetch(`/api/map/provincia-por-coordenadas?lat=${lat}&lng=${lng}`);
-
-          if (detectRes.status === 204) {
-            setStatusMsg("");
-            setErrorMsg("Ubicación fuera de rango de provincias de Cochabamba. Centrando en la capital.");
-            await handleProvinceChange("cercado");
-            return;
-          }
-
-          if (!detectRes.ok) throw new Error();
-          const detected = await detectRes.json();
-
-          // Load province dishes/markers, then keep map centered on user's actual GPS position
-          await handleProvinceChange(detected.slug);
-          if (mapRef.current) {
-            mapRef.current.setView([lat, lng], 14);
-          }
-
-          // Get closest restaurants overall (not restricted to border of a single province)
-          const lugRes = await fetch(`/api/map/lugares`);
-          const places = lugRes.ok ? await lugRes.json() : [];
-
-          const nearest = places
-            .map((p: any) => ({
-              ...p,
-              km: haversineKm(lat, lng, Number(p.lat), Number(p.lng)),
-            }))
-            .sort((a: any, b: any) => a.km - b.km)
-            .slice(0, 5);
-
-          if (nearest.length > 0 && mapRef.current) {
-            const listHtml = nearest
-              .map((c: any) => `<li style="margin-bottom: 6px;"><a href="/negocio/${c.slug}" style="color: var(--color-ink); font-weight: 700; text-decoration: underline;">${c.nombre}</a> (${c.km.toFixed(2)} km) · <a href="https://www.google.com/maps/search/?api=1&query=${c.lat},${c.lng}" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); font-weight: 600; text-decoration: none; font-size: 11px;">Navegar</a></li>`)
-              .join("");
-
-            const accuracyHint = accuracyMeters > 2000
-              ? `<div style="color:var(--color-muted); font-size:10px; margin-top:4px;">Ubicación aproximada por red (±${Math.round(accuracyMeters / 1000)} km)</div>`
-              : "";
-
-            L.popup()
-              .setLatLng([lat, lng])
-              .setContent(`
-                <div style="font-family: var(--font-body); font-size: 12px; min-width: 210px;">
-                  <strong style="color:#3B82F6; font-size: 13px;">Ubicación detectada</strong><br/>
-                  <span style="color:var(--color-muted); font-size: 11px;">Zona: ${detected.nombre}</span>${accuracyHint}<br/><br/>
-                  <strong style="display: block; margin-bottom: 4px;">Locales más cercanos:</strong>
-                  <ul style="margin: 0; padding-left: 14px; list-style-type: disc;">
-                    ${listHtml}
-                  </ul>
-                </div>
-              `)
-              .openOn(mapRef.current);
-          }
-
-          setStatusMsg(
-            accuracyMeters > 2000
-              ? `Zona estimada por red: ${detected.nombre} (±${Math.round(accuracyMeters / 1000)} km). Si estás en otro municipio, puedes elegir tu provincia manualmente.`
-              : `Zona detectada: ${detected.nombre}`
-          );
-          setTimeout(() => setStatusMsg(""), 4000);
-        } catch (err) {
-          setErrorMsg("No se pudo detectar la provincia por ubicación.");
-          setStatusMsg("");
-        }
+        const accuracyMeters = Math.round(pos.coords.accuracy || 0);
+        await applyUserCoordinates(pos.coords.latitude, pos.coords.longitude, accuracyMeters, false);
       },
-      (err) => {
+      () => {
         setStatusMsg("");
-        setErrorMsg("Permiso de ubicación denegado o error de GPS.");
+        setErrorMsg("Permiso de ubicación denegado o error de GPS. También puedes usar \"Fijar punto en el mapa\".");
       },
       { enableHighAccuracy: true, timeout: 8000 }
     );
@@ -476,33 +518,57 @@ export function InteractiveMap() {
           </select>
         </div>
 
-        {/* GPS Location Button */}
+        {/* GPS Location + Manual Pin Buttons */}
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-muted)" }}>
+          <span style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-muted)" }}>
             Gastronomía a tu alrededor
-          </label>
-          <button
-            onClick={handleGeolocation}
-            className="btn-secondary"
-            style={{
-              padding: "0.75rem 1.25rem",
-              borderRadius: "var(--radius-pill)",
-              fontSize: "0.9rem",
-              fontWeight: 600,
-              width: "100%",
-              justifyContent: "center",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              border: "1px solid var(--color-ink)",
-              background: "transparent",
-              color: "var(--color-ink)",
-              cursor: "pointer",
-              transition: "background 0.2s, color 0.2s",
-            }}
-          >
-            <Compass size={16} className="gps-compass-icon" /> Usar mi ubicación GPS
-          </button>
+          </span>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={handleGeolocation}
+              className="btn-secondary"
+              style={{
+                padding: "0.7rem 1rem",
+                borderRadius: "var(--radius-pill)",
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                flex: "1 1 150px",
+                justifyContent: "center",
+                display: "flex",
+                alignItems: "center",
+                gap: 7,
+              }}
+            >
+              <Compass size={15} className="gps-compass-icon" /> Usar mi GPS
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const next = !pickLocationMode;
+                setPickLocationMode(next);
+                setErrorMsg("");
+                setStatusMsg(next ? "Toca o haz clic en el mapa para fijar tu ubicación exacta." : "");
+              }}
+              className={pickLocationMode ? "btn-primary" : "btn-ghost"}
+              style={{
+                padding: "0.7rem 0.95rem",
+                borderRadius: "var(--radius-pill)",
+                fontSize: "0.82rem",
+                fontWeight: 600,
+                flex: "1 1 130px",
+                justifyContent: "center",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                background: pickLocationMode ? "var(--color-amber)" : "var(--color-bg-card)",
+                borderColor: pickLocationMode ? "var(--color-amber)" : "var(--color-border)",
+                color: pickLocationMode ? "#FFFFFF" : "var(--color-ink)",
+              }}
+            >
+              <MapPin size={14} /> {pickLocationMode ? "Toca el mapa..." : "Fijar punto"}
+            </button>
+          </div>
         </div>
 
         {/* Status / Detected info */}
@@ -590,13 +656,76 @@ export function InteractiveMap() {
         >
           <div
             ref={mapContainerRef}
+            className="gastro-map-canvas"
             style={{
-              height: 480,
               width: "100%",
               zIndex: 1,
             }}
           />
         </div>
+
+        {/* Nearest places strip (easy tap on mobile without fighting popup) */}
+        {nearestPlaces.length > 0 && (
+          <div
+            style={{
+              background: "var(--color-bg-card)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "var(--radius-lg)",
+              padding: "1.1rem 1.25rem",
+            }}
+          >
+            <div style={{ fontSize: "0.76rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--color-forest)", marginBottom: "0.75rem" }}>
+              Locales más cercanos a tu punto {userCoords ? `(${detectedProvincia})` : ""}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "0.75rem" }}>
+              {nearestPlaces.map((c: any) => (
+                <div
+                  key={c.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "0.65rem",
+                    padding: "0.65rem 0.85rem",
+                    borderRadius: "var(--radius-md)",
+                    background: "var(--color-cream)",
+                    border: "1px solid var(--color-border-light)",
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <a
+                      href={`/negocio/${c.slug}`}
+                      style={{
+                        fontFamily: "var(--font-serif)",
+                        fontWeight: 700,
+                        fontSize: "0.92rem",
+                        color: "var(--color-ink)",
+                        display: "block",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {c.nombre}
+                    </a>
+                    <span style={{ fontSize: "0.75rem", color: "var(--color-muted)" }}>
+                      {c.km.toFixed(1)} km
+                    </span>
+                  </div>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${c.lat},${c.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary"
+                    style={{ padding: "0.35rem 0.8rem", fontSize: "0.75rem", flexShrink: 0 }}
+                  >
+                    Navegar
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Dynamic Plates List */}
         <div>
@@ -675,6 +804,14 @@ export function InteractiveMap() {
         </div>
       </div>
       <style>{`
+        .gastro-map-canvas {
+          height: 460px;
+        }
+        @media (max-width: 640px) {
+          .gastro-map-canvas {
+            height: 340px;
+          }
+        }
         @keyframes markerPulse {
           0% { transform: scale(0.35); opacity: 1; }
           100% { transform: scale(1.3); opacity: 0; }

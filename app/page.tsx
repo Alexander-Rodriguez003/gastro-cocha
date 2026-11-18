@@ -214,143 +214,206 @@ export default async function Home() {
       <hr className="divider" />
 
       {/* ═══════════════════════════════════════════
-          TWO-COL CARDS — Nuestros Platos + Para Grupos
-          (mirrors: "Our Menu" | "Pizza Party")
+          ASYMMETRICAL EDITORIAL SPREAD
+          Nuestros Platos + Cocina en Comunidad (/kitchen-host.jpg)
           ═══════════════════════════════════════════ */}
       <section
         style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
           borderBottom: "1px solid var(--color-border)",
+          background: "var(--color-cream)",
         }}
-        className="cards-grid"
       >
-        {/* Card 1 — Nuestros Platos */}
-        <div style={{ borderRight: "1px solid var(--color-border)" }}>
-          {/* Image */}
-          <div className="card-img-wrap" style={{ position: "relative", width: "100%", aspectRatio: "4/3" }}>
-            <Image
-              src="/dining-group.jpg"
-              alt="Personas compartiendo comida tradicional boliviana"
-              fill
-              style={{ objectFit: "cover", objectPosition: "center" }}
-              sizes="50vw"
-            />
-          </div>
-          {/* Text */}
-          <div style={{ padding: "2rem 2.5rem 2.5rem" }}>
-            <h2
-              style={{
-                fontFamily: "var(--font-serif)",
-                fontWeight: 700,
-                fontSize: "1.5rem",
-                color: "var(--color-ink)",
-                marginBottom: "0.75rem",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              Nuestros Platos
-            </h2>
-            <p
-              style={{
-                fontSize: "0.875rem",
-                color: "var(--color-muted)",
-                lineHeight: 1.7,
-                marginBottom: "1.25rem",
-                maxWidth: 380,
-              }}
-            >
-              Platos típicos de las 16 provincias: silpancho, pique macho, pichón de Cliza,
-              trucha del Chapare, sopa de maní y más. Todos con su historia, ingredientes
-              y los mejores lugares donde encontrarlos.
-            </p>
-            <Link href="/ranking" className="section-link">
-              Ver más
-              <ChevronRight size={13} />
-            </Link>
-          </div>
-        </div>
+        <div
+          className="editorial-spread"
+          style={{
+            maxWidth: 1280,
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "1.32fr 1fr",
+            alignItems: "stretch",
+          }}
+        >
+          {/* Left wide column — Foto principal + tira de platos + texto */}
+          <div
+            className="editorial-col-left"
+            style={{
+              borderRight: "1px solid var(--color-border)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div className="card-img-wrap" style={{ position: "relative", width: "100%", aspectRatio: "16/10" }}>
+              <Image
+                src="/dining-group.jpg"
+                alt="Personas compartiendo comida tradicional boliviana"
+                fill
+                style={{ objectFit: "cover", objectPosition: "center" }}
+                sizes="(max-width: 768px) 100vw, 57vw"
+              />
+            </div>
 
-        {/* Card 2 — Registra tu Negocio */}
-        <div>
-          <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", overflow: "hidden", background: "var(--color-amber-light)" }}>
+            {/* Secondary asymmetric dish strip */}
             <div
               style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "2rem",
-                background: "linear-gradient(135deg, #F3E8D8 0%, #EAD5B7 100%)",
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: "1px",
+                background: "var(--color-border)",
+                borderTop: "1px solid var(--color-border)",
+                borderBottom: "1px solid var(--color-border)",
               }}
             >
-              <div
+              {[
+                { src: "/images/silpancho.png", alt: "Silpancho cochabambino", href: "/plato/silpancho", label: "Silpancho" },
+                { src: "/images/pichon-cliza.png", alt: "Pichón de Cliza", href: "/plato/pichon-cliza", label: "Pichón de Cliza" },
+                { src: "/images/chorizo-tarateno.png", alt: "Chorizo Tarateño", href: "/plato/chorizo-tarateno", label: "Chorizo Tarateño" },
+              ].map((dish) => (
+                <Link
+                  key={dish.href}
+                  href={dish.href}
+                  style={{ position: "relative", aspectRatio: "4/3", overflow: "hidden", display: "block", background: "var(--color-amber-light)" }}
+                >
+                  <Image
+                    src={dish.src}
+                    alt={dish.alt}
+                    fill
+                    style={{ objectFit: "cover" }}
+                    sizes="(max-width: 768px) 33vw, 20vw"
+                  />
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: 8,
+                      bottom: 8,
+                      background: "rgba(26, 23, 20, 0.78)",
+                      color: "#F7F4EE",
+                      fontSize: "0.7rem",
+                      fontWeight: 600,
+                      padding: "0.2rem 0.55rem",
+                      borderRadius: "var(--radius-pill)",
+                    }}
+                  >
+                    {dish.label}
+                  </span>
+                </Link>
+              ))}
+            </div>
+
+            <div className="editorial-copy" style={{ padding: "2.25rem 2.5rem 2.75rem" }}>
+              <span className="badge badge-primary" style={{ marginBottom: "0.85rem" }}>
+                Recetas y tradición
+              </span>
+              <h2
                 style={{
-                  width: "100%",
-                  maxWidth: 360,
-                  background: "rgba(255, 255, 255, 0.9)",
-                  border: "1px solid var(--color-border)",
-                  borderRadius: "var(--radius-lg)",
-                  padding: "1.5rem",
-                  boxShadow: "var(--shadow-md)",
+                  fontFamily: "var(--font-serif)",
+                  fontWeight: 800,
+                  fontSize: "clamp(1.5rem, 2.5vw, 1.9rem)",
+                  color: "var(--color-ink)",
+                  marginBottom: "0.75rem",
+                  letterSpacing: "-0.015em",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-                  <span className="badge badge-forest">Red GastroCocha</span>
-                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-primary-dark)" }}>Gratis</span>
-                </div>
-                <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.25rem", fontWeight: 700, color: "var(--color-ink)", lineHeight: 1.2, marginBottom: "1rem" }}>
-                  Gastronomía en comunidad
-                </p>
-                <ul style={{ listStyle: "none", display: "grid", gap: "0.55rem", fontSize: "0.82rem", color: "var(--color-ink-soft)" }}>
-                  <li style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--color-forest)", flexShrink: 0 }} />
-                    Ubicación visible en el mapa GPS
-                  </li>
-                  <li style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--color-amber)", flexShrink: 0 }} />
-                    Menú, precios y especialidades propias
-                  </li>
-                  <li style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--color-ink)", flexShrink: 0 }} />
-                    Recomendado por el asistente
-                  </li>
-                </ul>
-              </div>
+                Nuestros Platos
+              </h2>
+              <p
+                style={{
+                  fontSize: "0.9rem",
+                  color: "var(--color-muted)",
+                  lineHeight: 1.7,
+                  marginBottom: "1.25rem",
+                  maxWidth: 460,
+                }}
+              >
+                Platos típicos de las 16 provincias: silpancho, pique macho, pichón de Cliza,
+                trucha del Chapare, fricasé y más. Todos con su historia, ingredientes y los
+                locales reales donde probarlos.
+              </p>
+              <Link href="/ranking" className="section-link">
+                Explorar ranking y platos
+                <ChevronRight size={13} />
+              </Link>
             </div>
           </div>
-          {/* Text */}
-          <div style={{ padding: "2rem 2.5rem 2.5rem" }}>
-            <h2
-              style={{
-                fontFamily: "var(--font-serif)",
-                fontWeight: 700,
-                fontSize: "1.5rem",
-                color: "var(--color-ink)",
-                marginBottom: "0.75rem",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              Registra tu Negocio
-            </h2>
-            <p
-              style={{
-                fontSize: "0.875rem",
-                color: "var(--color-muted)",
-                lineHeight: 1.7,
-                marginBottom: "1.25rem",
-                maxWidth: 380,
-              }}
-            >
-              ¿Tienes un restaurante, pensión o puesto de comida en Cochabamba?
-              Regístralo en nuestra plataforma y llega a más viajeros y locales que
-              buscan sabores auténticos de la región.
-            </p>
-            <Link href="/registrar-negocio" className="section-link">
-              Registrar
-              <ChevronRight size={13} />
-            </Link>
+
+          {/* Right offset column — Texto arriba + fotografía documental abajo */}
+          <div
+            className="editorial-col-right"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <div className="editorial-copy" style={{ padding: "2.75rem 2.5rem 2.25rem" }}>
+              <span className="badge badge-forest" style={{ marginBottom: "0.85rem" }}>
+                Para cocineros y locales
+              </span>
+              <h2
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontWeight: 800,
+                  fontSize: "clamp(1.5rem, 2.5vw, 1.9rem)",
+                  color: "var(--color-ink)",
+                  marginBottom: "0.75rem",
+                  letterSpacing: "-0.015em",
+                  lineHeight: 1.12,
+                }}
+              >
+                Registra tu Negocio
+              </h2>
+              <p
+                style={{
+                  fontSize: "0.9rem",
+                  color: "var(--color-muted)",
+                  lineHeight: 1.7,
+                  marginBottom: "1.5rem",
+                }}
+              >
+                ¿Tienes un restaurante, picantería o puesto tradicional en Cochabamba?
+                Súmate sin costo: aparecerás en el mapa GPS, con tu menú, precios y
+                recomendaciones del asistente.
+              </p>
+              <Link href="/registrar-negocio" className="btn-primary">
+                Registrar mi negocio
+                <ChevronRight size={15} />
+              </Link>
+            </div>
+
+            <div style={{ marginTop: "auto" }}>
+              <div
+                className="card-img-wrap"
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  aspectRatio: "4/3",
+                  borderTop: "1px solid var(--color-border)",
+                }}
+              >
+                <Image
+                  src="/kitchen-host.jpg"
+                  alt="Cocinera cochabambina sirviendo platos tradicionales en picantería"
+                  fill
+                  style={{ objectFit: "cover", objectPosition: "center" }}
+                  sizes="(max-width: 768px) 100vw, 43vw"
+                />
+              </div>
+              <div
+                style={{
+                  padding: "0.95rem 1.75rem",
+                  borderTop: "1px solid var(--color-border)",
+                  background: "var(--color-bg-card)",
+                  fontSize: "0.78rem",
+                  color: "var(--color-muted)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "0.5rem",
+                }}
+              >
+                <span>Mapa GPS + Menú propio</span>
+                <strong style={{ color: "var(--color-forest)" }}>Registro gratuito</strong>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -358,8 +421,8 @@ export default async function Home() {
       {/* ═══════════════════════════════════════════
           MAPA INTERACTIVO
           ═══════════════════════════════════════════ */}
-      <section id="mapa-gastronomico" style={{ maxWidth: 1280, margin: "0 auto", padding: "4rem 2rem" }}>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
+      <section id="mapa-gastronomico" className="home-section-pad" style={{ maxWidth: 1280, margin: "0 auto", padding: "4rem 2rem" }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "1.75rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <span className="badge badge-ink" style={{ marginBottom: "0.75rem" }}>
               <Navigation size={10} />
@@ -377,16 +440,14 @@ export default async function Home() {
               Mapa Gastronómico
             </h2>
             <p style={{ color: "var(--color-muted)", fontSize: "0.875rem", marginTop: "0.4rem" }}>
-              Usa tu GPS para descubrir platos y restaurantes más cercanos a ti.
+              Usa tu GPS o fija tu punto en el mapa para descubrir platos y restaurantes cercanos.
             </p>
           </div>
           <Link href="/negocios" className="section-link">
             Ver todos los negocios <ChevronRight size={13} />
           </Link>
         </div>
-        <div style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", border: "1px solid var(--color-border)" }}>
-          <MapWrapper />
-        </div>
+        <MapWrapper />
       </section>
 
       <hr className="divider" />
@@ -501,14 +562,20 @@ export default async function Home() {
             grid-template-columns: 1fr !important;
           }
           .split-section-body {
-            padding: 2.5rem 1.5rem !important;
+            padding: 2.25rem 1.25rem !important;
           }
-          .cards-grid {
+          .editorial-spread {
             grid-template-columns: 1fr !important;
           }
-          .cards-grid > div:first-child {
+          .editorial-col-left {
             border-right: none !important;
             border-bottom: 1px solid var(--color-border);
+          }
+          .editorial-copy {
+            padding: 1.75rem 1.25rem !important;
+          }
+          .home-section-pad {
+            padding: 2.5rem 1.25rem !important;
           }
         }
       `}</style>
